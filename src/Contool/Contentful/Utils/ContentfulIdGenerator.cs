@@ -7,16 +7,16 @@ internal class ContentfulIdGenerator
 {
     private const int IdLength = 22;
     private const string CharSet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    private static readonly RandomNumberGenerator _rng = RandomNumberGenerator.Create();
+    private static readonly RandomNumberGenerator Rng = RandomNumberGenerator.Create();
 
     public static string NewId()
     {
         var result = new StringBuilder("contool-", IdLength + 8); // prefix + ID
         var buffer = new byte[IdLength];
 
-        _rng.GetBytes(buffer);
+        Rng.GetBytes(buffer);
 
-        foreach (byte b in buffer)
+        foreach (var b in buffer)
         {
             result.Append(CharSet[b % CharSet.Length]);
         }

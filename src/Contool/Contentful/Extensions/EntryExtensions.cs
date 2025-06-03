@@ -7,8 +7,7 @@ public static class EntryExtensions
 {
     public static bool IsDraft<T>(this Entry<T> entry)
     {
-        return entry.SystemProperties.PublishedVersion is null 
-            || entry.SystemProperties.PublishedVersion == 0;
+        return entry.SystemProperties.PublishedVersion is null or 0;
     }
 
     public static bool IsChanged<T>(this Entry<T> entry)

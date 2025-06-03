@@ -13,7 +13,7 @@ internal class CsvInputReader : IInputReader
     {
         var input = new Content();
 
-        using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+        await using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
         using var reader = new StreamReader(stream);
         using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
 

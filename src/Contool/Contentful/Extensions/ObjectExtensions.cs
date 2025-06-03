@@ -12,7 +12,7 @@ namespace Contool.Contentful.Extensions;
 
 internal static class ObjectExtensions
 {
-    private static readonly JsonSerializerSettings _jsonSettings = new() { Converters = [new ContentJsonConverter()] };
+    private static readonly JsonSerializerSettings JsonSettings = new() { Converters = [new ContentJsonConverter()] };
 
     public static object? ToLink(this object value, string linkType)
     {
@@ -27,9 +27,7 @@ internal static class ObjectExtensions
             .FromObject(link)
             .ToObject<ExpandoObject>();
 
-        if (jObj is null) return null;
-
-        return JObject.FromObject(jObj, JsonSerializer.Create(new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() }));
+        return jObj is null ? null : JObject.FromObject(jObj, JsonSerializer.Create(new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() }));
     }
 
     public static object? ToDocument(this object? value)
@@ -42,15 +40,15 @@ internal static class ObjectExtensions
         var doc = new Document
         {
             NodeType = "document",
-            Data = new(),
+            Data = new GenericStructureData(),
             Content = [new Paragraph()
             {
                 NodeType = "paragraph",
-                Data = new(),
+                Data = new GenericStructureData(),
                 Content = [new Text()
                 {
                     NodeType = "text",
-                    Data = new(),
+                    Data = new GenericStructureData(),
                     Marks = [],
                     Value = (string)value
                 }]
@@ -61,9 +59,7 @@ internal static class ObjectExtensions
             .FromObject(doc)
             .ToObject<ExpandoObject>();
 
-        if (jObj is null) return null;
-
-        return JObject.FromObject(jObj, JsonSerializer.Create(new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() }));
+        return jObj is null ? null : JObject.FromObject(jObj, JsonSerializer.Create(new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() }));
     }
 
     public static DateTime? ToDateTime(this object? value)
@@ -78,12 +74,12 @@ internal static class ObjectExtensions
         return date.StripMilliseconds();
     }
 
-    public static DateTime StripMilliseconds(this DateTime dateTime)
+    private static DateTime StripMilliseconds(this DateTime dateTime)
     {
         return new DateTime(dateTime.Year, dateTime.Month, dateTime.Day, dateTime.Hour, dateTime.Minute, dateTime.Second, dateTime.Kind);
     }
 
-    public static string? ToArrayString(this object? list, Schema schema, string arrayDelimiter = "|")
+    public static string? ToArrayString(this object? list, Schema? schema, string arrayDelimiter = "|")
     {
         if (list == null) return null;
 
@@ -94,72 +90,68 @@ internal static class ObjectExtensions
             return null;
         }
 
-        if (schema.Type == "Link")
-        {
-            return string.Join(arrayDelimiter, jTokenList.Select(t => t["sys"]?["id"]?.ToString()));
-        }
-
-        return string.Join(arrayDelimiter, jTokenList.Select(o => o.ToString()));
+        return string.Join(arrayDelimiter, schema.Type == "Link" 
+            ? jTokenList.Select(t => t["sys"]?["id"]?.ToString()) 
+            : jTokenList.Select(o => o.ToString()));
     }
 
     public static string? ToMarkDown(this object? richText)
     {
         if (richText == null) return null;
 
-        var document = richText.ToString()?.DeserializeFromJsonString<Document>(_jsonSettings); ;
+        var document = richText.ToString()?.DeserializeFromJsonString<Document>(JsonSettings); ;
 
         if (document is null) return null;
 
-        var _htmlRenderer = new HtmlRenderer();
+        var htmlRenderer = new HtmlRenderer();
 
-        var html = _htmlRenderer.ToHtml(document).Result;
+        var html = htmlRenderer.ToHtml(document).Result;
 
         var converter = new Converter();
 
         return converter.Convert(html);
     }
 
-    public static JArray? ToObjectArray(this object? value, Schema schema)
+    public static JArray? ToObjectArray(this object? value, Schema? schema)
     {
-        var arrayDelimiter = "|";
-        var arrayCfDelimiter = ",";
+        const string arrayDelimiter = "|";
+        const string arrayCfDelimiter = ",";
 
-        if (value is string stringValue)
+        if (value is not string stringValue)
+            return null;
+        
+        var obj = new JArray();
+
+        string[] arr;
+
+        if (stringValue.Contains(arrayDelimiter))
         {
-            var obj = new JArray();
+            arr = [.. stringValue.Split(arrayDelimiter).Select(s => s.Trim())];
+        }
+        else if (stringValue.Contains(arrayCfDelimiter))
+        {
+            arr = [.. stringValue.Split(arrayCfDelimiter).Select(s => s.Trim())];
+        }
+        else
+        {
+            arr = [stringValue];
+        }
 
-            string[] arr;
-
-            if (stringValue.Contains(arrayDelimiter))
+        foreach (var arrayItem in arr)
+        {
+            if (schema?.LinkType == "Link")
             {
-                arr = [.. stringValue.Split(arrayDelimiter).Select(s => s.Trim())];
-            }
-            else if (stringValue.Contains(arrayCfDelimiter))
-            {
-                arr = [.. stringValue.Split(arrayCfDelimiter).Select(s => s.Trim())];
+                var item = ToLink(arrayItem, schema.LinkType);
+                if (item is not null)
+                {
+                    obj.Add(item);
+                }
             }
             else
             {
-                arr = [stringValue];
+                obj.Add(arrayItem);
             }
-
-            foreach (var arrayItem in arr)
-            {
-                if (schema.LinkType == "Link")
-                {
-                    var item = ToLink(arrayItem, schema.LinkType);
-                    if (item is not null)
-                    {
-                        obj.Add(item);
-                    }
-                }
-                else
-                {
-                    obj.Add(arrayItem);
-                }
-            }
-            return obj;
         }
-        return null;
+        return obj;
     }
 }

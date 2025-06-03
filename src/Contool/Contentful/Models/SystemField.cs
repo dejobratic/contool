@@ -43,44 +43,38 @@ public abstract class SystemField(string name)
     }
 }
 
-class SysIdField : SystemField
+class SysIdField() : SystemField("sys.Id")
 {
-    public SysIdField() : base("sys.Id") { }
     public override object? Extract(SystemProperties sys) => sys.Id;
     public override void Apply(SystemProperties sys, object? value) => sys.Id = value?.ToString();
 }
 
-class SysTypeField : SystemField
+class SysTypeField() : SystemField("sys.Type")
 {
-    public SysTypeField() : base("sys.Type") { }
     public override object? Extract(SystemProperties sys) => sys.Type;
     public override void Apply(SystemProperties sys, object? value) => sys.Type = value?.ToString();
 }
 
-class SysContentTypeField : SystemField
+class SysContentTypeField() : SystemField("sys.ContentType")
 {
-    public SysContentTypeField() : base("sys.ContentType") { }
     public override object? Extract(SystemProperties sys) => sys.ContentType?.SystemProperties.Id;
     public override void Apply(SystemProperties sys, object? value) => sys.ContentType.SystemProperties.Id = value?.ToString();
 }
 
-class SysSpaceField : SystemField
+class SysSpaceField() : SystemField("sys.Space")
 {
-    public SysSpaceField() : base("sys.Space") { }
     public override object? Extract(SystemProperties sys) => sys.Space?.SystemProperties.Id;
     public override void Apply(SystemProperties sys, object? value) => sys.Space.SystemProperties.Id = value?.ToString();
 }
 
-class SysEnvironmentField : SystemField
+class SysEnvironmentField() : SystemField("sys.Environment")
 {
-    public SysEnvironmentField() : base("sys.Environment") { }
     public override object? Extract(SystemProperties sys) => sys.Environment?.SystemProperties.Id;
     public override void Apply(SystemProperties sys, object? value) => sys.Environment.SystemProperties.Id = value?.ToString();
 }
 
-class SysVersionField : SystemField
+class SysVersionField() : SystemField("sys.Version")
 {
-    public SysVersionField() : base("sys.Version") { }
     public override object? Extract(SystemProperties sys) => sys.Version;
     public override void Apply(SystemProperties sys, object? value)
     {
@@ -88,9 +82,8 @@ class SysVersionField : SystemField
     }
 }
 
-class SysPublishedVersionField : SystemField
+class SysPublishedVersionField() : SystemField("sys.PublishedVersion")
 {
-    public SysPublishedVersionField() : base("sys.PublishedVersion") { }
     public override object? Extract(SystemProperties sys) => sys.PublishedVersion;
     public override void Apply(SystemProperties sys, object? value)
     {
@@ -98,9 +91,8 @@ class SysPublishedVersionField : SystemField
     }
 }
 
-class SysArchivedVersionField : SystemField
+class SysArchivedVersionField() : SystemField("sys.ArchivedVersion")
 {
-    public SysArchivedVersionField() : base("sys.ArchivedVersion") { }
     public override object? Extract(SystemProperties sys) => sys.ArchivedVersion;
     public override void Apply(SystemProperties sys, object? value)
     {
@@ -108,9 +100,8 @@ class SysArchivedVersionField : SystemField
     }
 }
 
-class SysCreatedAtField : SystemField
+class SysCreatedAtField() : SystemField("sys.CreatedAt")
 {
-    public SysCreatedAtField() : base("sys.CreatedAt") { }
     public override object? Extract(SystemProperties sys) => sys.CreatedAt;
     public override void Apply(SystemProperties sys, object? value)
     {
@@ -118,9 +109,8 @@ class SysCreatedAtField : SystemField
     }
 }
 
-class SysUpdatedAtField : SystemField
+class SysUpdatedAtField() : SystemField("sys.UpdatedAt")
 {
-    public SysUpdatedAtField() : base("sys.UpdatedAt") { }
     public override object? Extract(SystemProperties sys) => sys.UpdatedAt;
     public override void Apply(SystemProperties sys, object? value)
     {
@@ -128,9 +118,8 @@ class SysUpdatedAtField : SystemField
     }
 }
 
-class SysPublishedAtField : SystemField
+class SysPublishedAtField() : SystemField("sys.PublishedAt")
 {
-    public SysPublishedAtField() : base("sys.PublishedAt") { }
     public override object? Extract(SystemProperties sys) => sys.PublishedAt;
     public override void Apply(SystemProperties sys, object? value)
     {
@@ -138,9 +127,8 @@ class SysPublishedAtField : SystemField
     }
 }
 
-class SysFirstPublishedAtField : SystemField
+class SysFirstPublishedAtField() : SystemField("sys.FirstPublishedAt")
 {
-    public SysFirstPublishedAtField() : base("sys.FirstPublishedAt") { }
     public override object? Extract(SystemProperties sys) => sys.FirstPublishedAt;
     public override void Apply(SystemProperties sys, object? value)
     {
@@ -148,9 +136,8 @@ class SysFirstPublishedAtField : SystemField
     }
 }
 
-class SysArchivedAtField : SystemField
+class SysArchivedAtField() : SystemField("sys.ArchivedAt")
 {
-    public SysArchivedAtField() : base("sys.ArchivedAt") { }
     public override object? Extract(SystemProperties sys) => sys.ArchivedAt;
     public override void Apply(SystemProperties sys, object? value)
     {

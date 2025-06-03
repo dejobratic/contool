@@ -5,7 +5,7 @@ namespace Contool.Services;
 
 internal class JsonOutputWriter : IOutputWriter
 {
-    private static readonly JsonSerializerOptions _jsonOptions = new()
+    private static readonly JsonSerializerOptions JsonOptions = new()
     {
         WriteIndented = true,
     };
@@ -38,6 +38,6 @@ internal class JsonOutputWriter : IOutputWriter
         }
 
         await using var stream = new FileStream(outputPath, FileMode.Create, FileAccess.Write, FileShare.None);
-        await JsonSerializer.SerializeAsync(stream, normalizedRows, _jsonOptions, cancellationToken);
+        await JsonSerializer.SerializeAsync(stream, normalizedRows, JsonOptions, cancellationToken);
     }
 }

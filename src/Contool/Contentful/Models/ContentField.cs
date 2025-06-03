@@ -8,7 +8,7 @@ public class ContentField(Field field, ContentLocales locales)
     public string Id { get; } = field.Id;
     public FieldType Type { get; } = FieldType.FromName(field.Type);
     public string[] Locales { get; } = field.Localized ? locales.GetAllLocales() : [locales.DefaultLocale];
-    public Schema Schema { get; } = field.Items;
+    private Schema? Schema { get; } = field.Items;
 
     public IEnumerable<string> FieldNames =>
         Locales.Select(locale => new ContentFieldName(Id, Type, locale).Value);

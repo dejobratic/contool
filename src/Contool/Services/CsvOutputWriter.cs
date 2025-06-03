@@ -13,8 +13,8 @@ internal class CsvOutputWriter : IOutputWriter
         if (output.Headings.Length == 0)
             throw new InvalidOperationException("No headings found in output.");
 
-        using var writer = new StreamWriter(output.FullPath);
-        using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
+        await using var writer = new StreamWriter(output.FullPath);
+        await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
 
         // Write header
         foreach (var header in output.Headings)
