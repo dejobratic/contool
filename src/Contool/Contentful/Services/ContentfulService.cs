@@ -13,12 +13,17 @@ internal class ContentfulService(IContentfulManagementClient client) : IContentf
         return await client.GetLocalesCollection(cancellationToken: cancellationToken);
     }
 
-    public async Task<IEnumerable<ContentType>> GetContentTypesAsync(string? spaceId = null, CancellationToken cancellationToken = default)
+    public async Task<ContentType?> GetContentTypeAsync(string contentTypeId, string environment, CancellationToken cancellationToken)
     {
-        return await client.GetContentTypes(spaceId, cancellationToken);
+        return await client.GetContentType(contentTypeId, cancellationToken: cancellationToken);
+    }
+    
+    public async Task<IEnumerable<ContentType>> GetContentTypesAsync(CancellationToken cancellationToken = default)
+    {
+        return await client.GetContentTypes(cancellationToken: cancellationToken);
     }
 
-    public async IAsyncEnumerable<Entry<dynamic>> GetEntriesAsync(string contentTypeId, string? spaceId = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    public async IAsyncEnumerable<Entry<dynamic>> GetEntriesAsync(string contentTypeId, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         int skip = 0;
         int pageSize = 100;
@@ -35,7 +40,7 @@ internal class ContentfulService(IContentfulManagementClient client) : IContentf
                 .Build();
 
             var entries = await client
-                .GetEntriesCollection<Entry<dynamic>>(queryString, spaceId, cancellationToken);
+                .GetEntriesCollection<Entry<dynamic>>(queryString, cancellationToken: cancellationToken);
 
             if (entries == null || !entries.Any())
             {
@@ -58,28 +63,26 @@ internal class ContentfulService(IContentfulManagementClient client) : IContentf
         }
     }
 
-    public async Task UpsertEntriesAsync(IEnumerable<Entry<dynamic>> entries, string? spaceId = null, CancellationToken cancellationToken = default)
+    public async Task UpsertEntriesAsync(IEnumerable<Entry<dynamic>> entries, CancellationToken cancellationToken = default)
     {
         foreach (var entry in entries)
         {
             await client.CreateOrUpdateEntry(
                 entry.Fields,
                 entry.SystemProperties?.Id,
-                spaceId: spaceId,
                 contentTypeId: entry.SystemProperties?.ContentType?.SystemProperties?.Id,
                 version: entry.SystemProperties?.Version ?? 0,
                 cancellationToken: cancellationToken);
         }
     }
 
-    public async Task PublishEntriesAsync(IEnumerable<Entry<dynamic>> entries, string? spaceId = null, CancellationToken cancellationToken = default)
+    public async Task PublishEntriesAsync(IEnumerable<Entry<dynamic>> entries, CancellationToken cancellationToken = default)
     {
         foreach (var entry in entries)
         {
             await client.PublishEntry(
                 entryId: entry.SystemProperties?.Id,
                 version: entry.SystemProperties?.Version ?? 0,
-                spaceId: spaceId,
                 cancellationToken: cancellationToken);
         }
     }

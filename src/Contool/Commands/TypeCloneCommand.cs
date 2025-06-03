@@ -16,19 +16,32 @@ internal class TypeCloneCommandHandler(
     public async Task HandleAsync(TypeCloneCommand command, CancellationToken cancellationToken = default)
     {
         var sourceContentType = await GetContentTypeAsync(command.ContentTypeId, command.SourceEnvironmentId, cancellationToken);
+
+        var targetContentType = await GetOrCreateContentTypeAsync(command.ContentTypeId, command.TargetEnvironmentId, cancellationToken);
         
-        var targetContentType = await GetContentTypeAsync(command.ContentTypeId, command.TargetEnvironmentId, cancellationToken);
+        if (!AreEquivalent(sourceContentType, targetContentType))
+            throw new InvalidOperationException($"Content types '{command.ContentTypeId}' in source and target environments are not equivalent.");
 
-        // throw exception if their definitions are different
-        if (AreEquivalent(sourceContentType, targetContentType))
+        var buffer = new List<Entry<dynamic>>(capacity: 50);
+        await foreach (var entry in contentfulService.GetEntriesAsync(command.ContentTypeId, command.SourceEnvironmentId, cancellationToken))
         {
-            await CloneContentTypesAsync(sourceContentType, targetContentType, cancellationToken);
+            buffer.Add(entry);
+            
+            if (buffer.Count != buffer.Capacity)
+                continue;
+            
+            await contentfulService.UpsertEntriesAsync(command.ContentTypeId, command.TargetEnvironmentId, cancellationToken);
+            buffer.Clear();
         }
-
-        throw new InvalidOperationException($"Content types '{command.ContentTypeId}' in source and target environments are not equivalent.");
     }
 
-    private Task<ContentType> GetContentTypeAsync(string contentTypeId, string environmentId, CancellationToken cancellationToken)
+    private Task<ContentType?> GetContentTypeAsync(string contentTypeId, string environmentId, CancellationToken cancellationToken)
+    {
+        return contentfulService.GetContentTypeAsync(contentTypeId, environmentId, cancellationToken)
+            ?? throw new ArgumentException($"Content type '{contentTypeId}' does not exist on environment '{environmentId}'.");
+    }
+    
+    private Task<ContentType> GetOrCreateContentTypeAsync(string contentTypeId, string environmentId, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
@@ -38,12 +51,5 @@ internal class TypeCloneCommandHandler(
         // Implement logic to compare the structure and fields of the content types
         return true; // Placeholder for actual comparison logic
     }
-
-    private Task CloneContentTypesAsync(ContentType sourceContentType, ContentType targetContentType, CancellationToken cancellationToken)
-    {
-        // Implement logic to clone the content type from source to target environment
-        throw new NotImplementedException("Cloning content types is not implemented yet.");
-    }
-
 }
 
