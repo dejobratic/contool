@@ -1,25 +1,19 @@
 ﻿using Contool.Commands;
 using Contool.Contentful.Services;
 using Contool.Services;
-using Contentful.Core;
 using Contentful.Core.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console;
+using Microsoft.Extensions.Configuration;
 
-
-var options = new ContentfulOptions
-{
-
-};
+var configuration = new ConfigurationBuilder()
+    .AddUserSecrets<Program>()
+    .Build();
 
 var serviceProvider = new ServiceCollection()
-    .AddSingleton(options)
+    .Configure<ContentfulOptions>(configuration.GetSection("ContentfulOptions"))
     .AddHttpClient()
-    .AddSingleton<IContentfulManagementClient>(ctx =>
-        new ContentfulManagementClient(
-            ctx.GetRequiredService<IHttpClientFactory>().CreateClient(),
-            ctx.GetRequiredService<ContentfulOptions>()))
-    .AddSingleton<IContentfulService, ContentfulService>()
+    .AddSingleton<IContentfulServiceBuilder, ContentfulServiceBuilder>()
     .AddSingleton<IContentEntrySerializerFactory, ContentEntrySerializerFactory>()
     .AddSingleton<IContentDownloader, ContentDownloader>()
     .AddSingleton<IOutputWriterFactory, OutputWriterFactory>()
@@ -32,12 +26,15 @@ var serviceProvider = new ServiceCollection()
     //.AddSingleton<IInputReader, JsonInputReader>()
     .AddSingleton<ContentDownloadCommandHandler>()
     .AddSingleton<ContentUploadCommandHandler>()
+    .AddSingleton<ContentPublishCommand>()
+    .AddSingleton<TypeCloneCommandHandler>()
     .BuildServiceProvider();
 
 var downloadCommand = new ContentDownloadCommand
 {
     ContentTypeId = "brand",
-    OutputPath = @"C:\Users\dejanbratic",
+    EnvironmentId = "master",
+    OutputPath = @"C:\Users\dejanbratic\Desktop\contool-playground",
     OutputFormat = "csv",
 };
 
@@ -49,12 +46,25 @@ await downloadCommandHanlder.HandleAsync(downloadCommand);
 var uploadCommand = new ContentUploadCommand
 {
     ContentTypeId = "brand",
-    InputPath = @"C:\Users\dejanbratic\brand.csv",
+    EnvironmentId = "master",
+    InputPath = @"C:\Users\dejanbratic\Desktop\contool-playground\brand.csv",
     ShouldPublish = true,
 };
 
 var uploadCommandHandler = serviceProvider.GetRequiredService<ContentUploadCommandHandler>();
 
-await uploadCommandHandler.HandleAsync(uploadCommand);
+//await uploadCommandHandler.HandleAsync(uploadCommand);
+
+var cloneCommand = new TypeCloneCommand
+{
+    ContentTypeId = "brand",
+    EnvironmentId = "master",
+    TargetEnvironmentId = "production",
+    ShouldPublish = true,
+};
+
+var cloneCommandHandler = serviceProvider.GetRequiredService<TypeCloneCommandHandler>();
+
+await cloneCommandHandler.HandleAsync(cloneCommand);
 
 AnsiConsole.Markup("[underline red]Hello[/] World!");

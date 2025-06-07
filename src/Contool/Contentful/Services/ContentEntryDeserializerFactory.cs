@@ -4,17 +4,17 @@ using Contentful.Core.Search;
 
 namespace Contool.Contentful.Services;
 
-internal class ContentEntryDeserializerFactory(IContentfulService contentfulService) : IContentEntryDeserializerFactory
+internal class ContentEntryDeserializerFactory : IContentEntryDeserializerFactory
 {
-    public async Task<IContentEntryDeserializer> CreateAsync(string contentTypeId, CancellationToken cancellationToken = default)
+    public async Task<IContentEntryDeserializer> CreateAsync(string contentTypeId, IContentfulService contentfulService, CancellationToken cancellationToken = default)
     {
-        var contentType = await GetContentTypeByIdAsync(contentTypeId, cancellationToken);
-        var contentLocales = await GetContentLocalesAsync(cancellationToken);
+        var contentType = await GetContentTypeByIdAsync(contentTypeId, contentfulService, cancellationToken);
+        var contentLocales = await GetContentLocalesAsync(contentfulService, cancellationToken);
 
         return new ContentEntryDeserializer(contentType, contentLocales);
     }
 
-    private async Task<ContentType> GetContentTypeByIdAsync(string contentTypeId, CancellationToken cancellationToken)
+    private async Task<ContentType> GetContentTypeByIdAsync(string contentTypeId, IContentfulService contentfulService, CancellationToken cancellationToken)
     {
         var contentTypes = await contentfulService.GetContentTypesAsync(cancellationToken: cancellationToken);
 
@@ -22,7 +22,7 @@ internal class ContentEntryDeserializerFactory(IContentfulService contentfulServ
             ?? throw new ArgumentException($"Content type '{contentTypeId}' is not valid.");
     }
 
-    private async Task<ContentLocales> GetContentLocalesAsync(CancellationToken cancellationToken)
+    private async Task<ContentLocales> GetContentLocalesAsync(IContentfulService contentfulService, CancellationToken cancellationToken)
     {
         var locales = await contentfulService.GetLocalesAsync(cancellationToken);
 

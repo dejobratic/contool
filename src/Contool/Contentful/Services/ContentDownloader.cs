@@ -3,14 +3,14 @@ using Contool.Models;
 
 namespace Contool.Contentful.Services;
 
-internal class ContentDownloader(IContentfulService contentfulService) : IContentDownloader
+internal class ContentDownloader : IContentDownloader
 {
     public async Task<OutputContent> DownloadAsync(ContentDownloadRequest request, CancellationToken cancellationToken)
     {
         var output = CreateOutput(request);
         output.SetHeadings(request.Serializer.FieldNames);
 
-        await foreach (var entry in contentfulService.GetEntriesAsync(request.ContentTypeId, cancellationToken: cancellationToken))
+        await foreach (var entry in request.ContentfulService.GetEntriesAsync(request.ContentTypeId, cancellationToken: cancellationToken))
         {
             var serialized = request.Serializer.Serialize(entry);
             output.AddRow(serialized);

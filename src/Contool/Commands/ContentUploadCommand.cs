@@ -5,7 +5,7 @@ using Contool.Services;
 
 namespace Contool.Commands;
 
-internal class ContentUploadCommand
+internal class ContentUploadCommand : CommandBase
 {
     public string ContentTypeId { get; init; } = default!;
     public string InputPath { get; init; } = default!;
@@ -14,6 +14,7 @@ internal class ContentUploadCommand
 
 internal class ContentUploadCommandHandler(
     IInputReaderFactory inputReaderFactory,
+    IContentfulServiceBuilder contentfulServiceBuilder,
     IContentEntryDeserializerFactory deserializerFactory,
     IContentUploader contentUploader)
 {
@@ -22,10 +23,18 @@ internal class ContentUploadCommandHandler(
         var inputReader = inputReaderFactory.Create(GetFileSource(command));
         var input = await inputReader.ReadAsync(command.InputPath, cancellationToken);
 
-        var deserializer = await deserializerFactory
-            .CreateAsync(command.ContentTypeId, cancellationToken);
+        var contentfulService = contentfulServiceBuilder
+            .WithSpaceId(command.SpaceId)
+            .WithEnvironmentId(command.EnvironmentId)
+            .Build();
 
-        await contentUploader.UploadAsync(CreateContentUploadRequest(command, input, deserializer), cancellationToken);
+        var deserializer = await deserializerFactory
+            .CreateAsync(command.ContentTypeId, contentfulService, cancellationToken);
+
+        // Upload content using the same service
+        await contentUploader.UploadAsync(
+            CreateContentUploadRequest(command, input, deserializer, contentfulService),
+            cancellationToken);
     }
 
     private static DataSource GetFileSource(ContentUploadCommand command)
@@ -34,13 +43,18 @@ internal class ContentUploadCommandHandler(
         return DataSource.From(fileExtension);
     }
 
-    private static ContentUploadRequest CreateContentUploadRequest(ContentUploadCommand command, Content input, IContentEntryDeserializer deserializer)
+    private static ContentUploadRequest CreateContentUploadRequest(
+        ContentUploadCommand command,
+        Content input,
+        IContentEntryDeserializer deserializer,
+        IContentfulService contentfulService)
     {
         return new ContentUploadRequest
         {
             Content = input,
+            Publish = command.ShouldPublish,
             Deserializer = deserializer,
-            ShouldPublishContent = command.ShouldPublish,
+            ContentfulService = contentfulService
         };
     }
 }

@@ -5,12 +5,14 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <UserSecretsId>9fe82b91-2cd8-4b9f-a8a6-2f6cd2052a23</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="contentful.csharp" Version="8.4.1" />
     <PackageReference Include="CsvHelper" Version="33.0.1" />
     <PackageReference Include="Html2Markdown" Version="7.0.3.11" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="6.0.1" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.5" />
     <PackageReference Include="Spectre.Console" Version="0.50.0" />
     <PackageReference Include="Spectre.Console.Cli" Version="0.50.0" />

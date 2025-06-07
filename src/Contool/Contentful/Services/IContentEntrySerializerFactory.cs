@@ -2,5 +2,5 @@
 
 internal interface IContentEntrySerializerFactory
 {
-    Task<IContentEntrySerializer> CreateAsync(string contentTypeId, CancellationToken cancellationToken);
+    Task<IContentEntrySerializer> CreateAsync(string contentTypeId, IContentfulService contentfulService, CancellationToken cancellationToken);
 }

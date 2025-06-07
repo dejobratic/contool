@@ -6,6 +6,7 @@ internal class Content
 {
     public ContentFieldName[] Headings { get; private set; } = [];
 
+
     private readonly List<dynamic> _rows = [];
     public IReadOnlyList<dynamic> Rows => _rows.AsReadOnly();
 

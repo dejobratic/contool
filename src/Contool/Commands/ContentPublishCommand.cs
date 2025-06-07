@@ -4,16 +4,21 @@ using Contentful.Core.Models;
 
 namespace Contool.Commands;
 
-internal class ContentPublishCommand
+internal class ContentPublishCommand : CommandBase
 {
-    public string ContentTypeId { get; set; } = default!;
+    public string ContentTypeId { get; init; } = default!;
 }
 
 internal class ContentPublishCommandHandler(
-    IContentfulService contentfulService)
+    IContentfulServiceBuilder contentfulServiceBuilder)
 {
     public async Task HandleAsync(ContentPublishCommand command, CancellationToken cancellationToken = default)
     {
+        var contentfulService = contentfulServiceBuilder
+            .WithSpaceId(command.SpaceId)
+            .WithEnvironmentId(command.EnvironmentId)
+            .Build();
+
         var unpublishedEntries = new List<Entry<dynamic>>();
 
         await foreach (var entry in contentfulService.GetEntriesAsync(command.ContentTypeId, cancellationToken: cancellationToken))

@@ -1,55 +1,90 @@
 ﻿using Contool.Contentful.Services;
 using Contentful.Core.Models;
+using Contool.Contentful.Extensions;
 
 namespace Contool.Commands;
 
-internal class TypeCloneCommand
+internal class TypeCloneCommand : CommandBase
 {
     public string ContentTypeId { get; init; } = default!;
-    public string SourceEnvironmentId { get; init; } = default!;
+
     public string TargetEnvironmentId { get; init; } = default!;
+
+    public bool ShouldPublish { get; init; }
 }
 
 internal class TypeCloneCommandHandler(
-    IContentfulService contentfulService)
+    IContentfulServiceBuilder contentfulServiceBuilder)
 {
     public async Task HandleAsync(TypeCloneCommand command, CancellationToken cancellationToken = default)
     {
-        var sourceContentType = await GetContentTypeAsync(command.ContentTypeId, command.SourceEnvironmentId, cancellationToken);
+        var sourceContentfulService = contentfulServiceBuilder
+            .WithSpaceId(command.SpaceId)
+            .WithEnvironmentId(command.EnvironmentId)
+            .Build();
 
-        var targetContentType = await GetOrCreateContentTypeAsync(command.ContentTypeId, command.TargetEnvironmentId, cancellationToken);
-        
-        if (!AreEquivalent(sourceContentType, targetContentType))
-            throw new InvalidOperationException($"Content types '{command.ContentTypeId}' in source and target environments are not equivalent.");
+        var sourceContentType = await GetContentTypeAsync(
+            command.ContentTypeId, sourceContentfulService, required: true, cancellationToken);
 
+        var targetContentfulService = contentfulServiceBuilder
+            .WithSpaceId(command.SpaceId)
+            .WithEnvironmentId(command.TargetEnvironmentId)
+            .Build();
+
+        var targetContentType = await GetContentTypeAsync(
+            command.ContentTypeId, targetContentfulService, required: false, cancellationToken);
+
+        targetContentType ??= await CloneContentTypeAsync(
+            sourceContentType!, targetContentfulService, cancellationToken);
+
+        if (sourceContentType!.IsEquivalentTo(targetContentType))
+        {
+            await CloneEntriesAsync(command, sourceContentfulService, targetContentfulService, cancellationToken);
+            return;
+        }
+
+        throw new InvalidOperationException($"Content types '{command.ContentTypeId}' in source and target environments are not equivalent.");
+    }
+
+    private static async Task<ContentType?> GetContentTypeAsync(string contentTypeId, IContentfulService contentfulService, bool required = false, CancellationToken cancellationToken = default)
+    {
+        var contentType = await contentfulService.GetContentTypeAsync(contentTypeId, cancellationToken);
+
+        return contentType is null && required
+            ? throw new ArgumentException($"Content type '{contentTypeId}' does not exist.")
+            : contentType;
+    }
+
+    private static async Task<ContentType> CloneContentTypeAsync(ContentType contentType, IContentfulService contentfulService, CancellationToken cancellationToken)
+    {
+        return await contentfulService.CreateContentTypeAsync(contentType.Clone(), cancellationToken);
+    }
+
+    private static async Task CloneEntriesAsync(TypeCloneCommand command, IContentfulService sourceContentfulService, IContentfulService targetContentfulService, CancellationToken cancellationToken)
+    {
         var buffer = new List<Entry<dynamic>>(capacity: 50);
-        await foreach (var entry in contentfulService.GetEntriesAsync(command.ContentTypeId, command.SourceEnvironmentId, cancellationToken))
+        await foreach (var entry in sourceContentfulService.GetEntriesAsync(command.ContentTypeId, cancellationToken))
         {
             buffer.Add(entry);
-            
+
             if (buffer.Count != buffer.Capacity)
                 continue;
-            
-            await contentfulService.UpsertEntriesAsync(command.ContentTypeId, command.TargetEnvironmentId, cancellationToken);
+
+            await targetContentfulService.UpsertEntriesAsync(
+                buffer,
+                publish: command.ShouldPublish,
+                cancellationToken);
+
             buffer.Clear();
         }
-    }
 
-    private Task<ContentType?> GetContentTypeAsync(string contentTypeId, string environmentId, CancellationToken cancellationToken)
-    {
-        return contentfulService.GetContentTypeAsync(contentTypeId, environmentId, cancellationToken)
-            ?? throw new ArgumentException($"Content type '{contentTypeId}' does not exist on environment '{environmentId}'.");
-    }
-    
-    private Task<ContentType> GetOrCreateContentTypeAsync(string contentTypeId, string environmentId, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-    }
-
-    private static bool AreEquivalent(ContentType sourceContentType, ContentType targetContentType)
-    {
-        // Implement logic to compare the structure and fields of the content types
-        return true; // Placeholder for actual comparison logic
+        if (buffer.Count > 0)
+        {
+            await targetContentfulService.UpsertEntriesAsync(
+                buffer,
+                publish: command.ShouldPublish,
+                cancellationToken);
+        }
     }
 }
 
