@@ -1,4 +1,5 @@
 ﻿using Contentful.Core.Models;
+using Contool.Contentful.Utils;
 
 namespace Contool.Contentful.Models;
 
@@ -9,7 +10,6 @@ public abstract class SystemField(string name)
     public abstract object? Extract(SystemProperties sys);
 
     public abstract void Apply(SystemProperties sys, object? value);
-
 
     public static readonly SystemField[] All =
     [
@@ -49,7 +49,13 @@ class SysIdField() : SystemField("sys.Id")
 {
     public override object? Extract(SystemProperties sys) => sys.Id;
 
-    public override void Apply(SystemProperties sys, object? value) => sys.Id = value?.ToString();
+    public override void Apply(SystemProperties sys, object? value)
+    {
+        sys.Id = value?.ToString();
+
+        if (string.IsNullOrEmpty(sys.Id))
+            sys.Id = ContentfulIdGenerator.NewId();
+    }
 }
 
 class SysTypeField() : SystemField("sys.Type")
@@ -86,7 +92,8 @@ class SysVersionField() : SystemField("sys.Version")
 
     public override void Apply(SystemProperties sys, object? value)
     {
-        if (int.TryParse(value?.ToString(), out var v)) sys.Version = v;
+        _ = int.TryParse(value?.ToString(), out int v);
+        sys.Version = v;
     }
 }
 

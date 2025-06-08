@@ -54,7 +54,7 @@ await downloadCommandHanlder.HandleAsync(downloadCommand);
 var uploadCommand = new ContentUploadCommand
 {
     ContentTypeId = "brand",
-    EnvironmentId = "master",
+    EnvironmentId = "production",
     InputPath = @"C:\Users\dejanbratic\Desktop\contool-playground\brand.csv",
     ShouldPublish = true,
 };
@@ -73,6 +73,6 @@ var cloneCommand = new TypeCloneCommand
 
 var cloneCommandHandler = serviceProvider.GetRequiredService<TypeCloneCommandHandler>();
 
-await cloneCommandHandler.HandleAsync(cloneCommand);
+//await cloneCommandHandler.HandleAsync(cloneCommand);
 
 AnsiConsole.Markup($"[underline red]Hello[/] World! Total time: {stopwatch.ElapsedMilliseconds} ms");

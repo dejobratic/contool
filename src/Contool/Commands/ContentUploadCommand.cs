@@ -8,7 +8,9 @@ namespace Contool.Commands;
 internal class ContentUploadCommand : CommandBase
 {
     public string ContentTypeId { get; init; } = default!;
+
     public string InputPath { get; init; } = default!;
+
     public bool ShouldPublish { get; init; }
 }
 
