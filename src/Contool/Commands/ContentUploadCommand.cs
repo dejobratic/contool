@@ -31,7 +31,6 @@ internal class ContentUploadCommandHandler(
         var deserializer = await deserializerFactory
             .CreateAsync(command.ContentTypeId, contentfulService, cancellationToken);
 
-        // Upload content using the same service
         await contentUploader.UploadAsync(
             CreateContentUploadRequest(command, input, deserializer, contentfulService),
             cancellationToken);

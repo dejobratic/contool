@@ -53,7 +53,11 @@ internal class ContentEntryDeserializer(ContentType contentType, ContentLocales 
                     SystemProperties = new SystemProperties()
                 },
             },
-            Metadata = new ContentfulMetadata(),
+            Metadata = new ContentfulMetadata
+            {
+                Tags = [],
+                Concepts = [],
+            },
             Fields = new JObject(),
         };
     }

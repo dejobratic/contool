@@ -1,6 +1,7 @@
 ﻿using Contool.Contentful.Services;
 using Contentful.Core.Models;
 using Contool.Contentful.Extensions;
+using Contool.Contentful.Models;
 
 namespace Contool.Commands;
 
@@ -14,7 +15,8 @@ internal class TypeCloneCommand : CommandBase
 }
 
 internal class TypeCloneCommandHandler(
-    IContentfulServiceBuilder contentfulServiceBuilder)
+    IContentfulServiceBuilder contentfulServiceBuilder,
+    IContentCloner contentCloner)
 {
     public async Task HandleAsync(TypeCloneCommand command, CancellationToken cancellationToken = default)
     {
@@ -39,7 +41,9 @@ internal class TypeCloneCommandHandler(
 
         if (sourceContentType!.IsEquivalentTo(targetContentType))
         {
-            await CloneEntriesAsync(command, sourceContentfulService, targetContentfulService, cancellationToken);
+            await contentCloner.CloneContentEntriesAsync(
+                CreateCloneEntriesRequest(command, sourceContentfulService, targetContentfulService), cancellationToken);
+
             return;
         }
 
@@ -60,31 +64,15 @@ internal class TypeCloneCommandHandler(
         return await contentfulService.CreateContentTypeAsync(contentType.Clone(), cancellationToken);
     }
 
-    private static async Task CloneEntriesAsync(TypeCloneCommand command, IContentfulService sourceContentfulService, IContentfulService targetContentfulService, CancellationToken cancellationToken)
+    private static ContentEntryCloneRequest CreateCloneEntriesRequest(TypeCloneCommand command, IContentfulService sourceContentfulService, IContentfulService targetContentfulService)
     {
-        var buffer = new List<Entry<dynamic>>(capacity: 50);
-        await foreach (var entry in sourceContentfulService.GetEntriesAsync(command.ContentTypeId, cancellationToken))
+        return new ContentEntryCloneRequest
         {
-            buffer.Add(entry);
-
-            if (buffer.Count != buffer.Capacity)
-                continue;
-
-            await targetContentfulService.UpsertEntriesAsync(
-                buffer,
-                publish: command.ShouldPublish,
-                cancellationToken);
-
-            buffer.Clear();
-        }
-
-        if (buffer.Count > 0)
-        {
-            await targetContentfulService.UpsertEntriesAsync(
-                buffer,
-                publish: command.ShouldPublish,
-                cancellationToken);
-        }
+            ContentTypeId = command.ContentTypeId,
+            SourceContentfulService = sourceContentfulService,
+            TargetContentfulService = targetContentfulService,
+            ShouldPublish = command.ShouldPublish,
+        };
     }
 }
 

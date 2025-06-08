@@ -5,6 +5,10 @@ using Contentful.Core.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console;
 using Microsoft.Extensions.Configuration;
+using System.Diagnostics;
+
+var stopwatch = Stopwatch.StartNew();
+stopwatch.Start();
 
 var configuration = new ConfigurationBuilder()
     .AddUserSecrets<Program>()
@@ -13,6 +17,9 @@ var configuration = new ConfigurationBuilder()
 var serviceProvider = new ServiceCollection()
     .Configure<ContentfulOptions>(configuration.GetSection("ContentfulOptions"))
     .AddHttpClient()
+    .AddSingleton<IContentfulManagementClientAdapterFactory, ContentfulManagementClientAdapterFactory>()
+    .AddSingleton<Func<IContentfulManagementClientAdapter, IContentfulManagementClientAdapter>>(sp => 
+        adapter => new ContentfulManagementClientAdapterResiliencyDecorator(adapter))
     .AddSingleton<IContentfulServiceBuilder, ContentfulServiceBuilder>()
     .AddSingleton<IContentEntrySerializerFactory, ContentEntrySerializerFactory>()
     .AddSingleton<IContentDownloader, ContentDownloader>()
@@ -23,6 +30,7 @@ var serviceProvider = new ServiceCollection()
     .AddSingleton<IContentUploader, ContentUploader>()
     .AddSingleton<IInputReaderFactory, InputReaderFactory>()
     .AddSingleton<IInputReader, CsvInputReader>()
+    .AddSingleton<IContentCloner, ContentCloner>()
     //.AddSingleton<IInputReader, JsonInputReader>()
     .AddSingleton<ContentDownloadCommandHandler>()
     .AddSingleton<ContentUploadCommandHandler>()
@@ -53,7 +61,7 @@ var uploadCommand = new ContentUploadCommand
 
 var uploadCommandHandler = serviceProvider.GetRequiredService<ContentUploadCommandHandler>();
 
-//await uploadCommandHandler.HandleAsync(uploadCommand);
+await uploadCommandHandler.HandleAsync(uploadCommand);
 
 var cloneCommand = new TypeCloneCommand
 {
@@ -67,4 +75,4 @@ var cloneCommandHandler = serviceProvider.GetRequiredService<TypeCloneCommandHan
 
 await cloneCommandHandler.HandleAsync(cloneCommand);
 
-AnsiConsole.Markup("[underline red]Hello[/] World!");
+AnsiConsole.Markup($"[underline red]Hello[/] World! Total time: {stopwatch.ElapsedMilliseconds} ms");

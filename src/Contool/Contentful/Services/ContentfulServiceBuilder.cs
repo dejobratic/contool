@@ -5,10 +5,10 @@ using Microsoft.Extensions.Options;
 namespace Contool.Contentful.Services;
 
 internal class ContentfulServiceBuilder(
-    IHttpClientFactory httpClientFactory,
+    IContentfulManagementClientAdapterFactory adapterFactory,
     IOptions<ContentfulOptions> options) : IContentfulServiceBuilder
 {
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
+    private readonly IContentfulManagementClientAdapterFactory _adapterFactory = adapterFactory;
     private readonly ContentfulOptions _options = options.Value;
 
     private string? _spaceId;
@@ -35,17 +35,11 @@ internal class ContentfulServiceBuilder(
 
     public IContentfulService Build()
     {
-        return new ContentfulService(
-            new ContentfulManagementClient(
-            _httpClientFactory.CreateClient(),
-            new ContentfulOptions
-            {
-                ManagementApiKey = _options.ManagementApiKey,
-                DeliveryApiKey = _options.DeliveryApiKey,
-                PreviewApiKey = _options.PreviewApiKey,
-                SpaceId = _spaceId ?? _options.SpaceId,
-                Environment = _environmentId ?? _options.Environment,
-                UsePreviewApi = _usePreviewApi,
-            }));
+        var adapter = _adapterFactory.Create(
+            _spaceId ?? _options.SpaceId,
+            _environmentId ?? _options.Environment,
+            _usePreviewApi);
+
+        return new ContentfulService(adapter);
     }
 }
