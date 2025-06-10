@@ -6,8 +6,11 @@ namespace Contool.Contentful.Models;
 public class ContentField(Field field, ContentLocales locales)
 {
     public string Id { get; } = field.Id;
+
     public FieldType Type { get; } = FieldType.FromName(field.Type);
-    public string[] Locales { get; } = field.Localized ? locales.GetAllLocales() : [locales.DefaultLocale];
+
+    public string[] Locales { get; } = field.Localized ? [.. locales] : [locales.DefaultLocale];
+
     private Schema? Schema { get; } = field.Items;
 
     public IEnumerable<string> FieldNames =>
@@ -15,13 +18,12 @@ public class ContentField(Field field, ContentLocales locales)
 
     public object? Serialize(JObject fields, string localeCode)
     {
-        if (!fields.TryGetValue(Id, out var value))
-            return null;
-
-        if (value is JObject localizedObj && localizedObj.TryGetValue(localeCode, out var token))
+        if (fields.TryGetValue(Id, out var value)
+            && value is JObject localizedObj
+            && localizedObj.TryGetValue(localeCode, out var token))
             return Type.GetValue(token, Schema);
 
-        return Type.GetValue(value, Schema);
+        return null;
     }
 
     public void Deserialize(JObject fields, string localeCode, object? rawValue)

@@ -1,6 +1,6 @@
 ﻿namespace Contool.Contentful.Models;
 
-internal class Link(string linkType, string id)
+internal class Link(string? linkType, string id)
 {
     public static string Type = "Link";
 

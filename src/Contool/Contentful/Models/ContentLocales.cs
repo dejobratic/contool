@@ -1,18 +1,21 @@
 ﻿using Contentful.Core.Models.Management;
+using System.Collections;
 
 namespace Contool.Contentful.Models;
 
-public class ContentLocales(IEnumerable<Locale> locales)
+public class ContentLocales(IEnumerable<Locale> locales) : IEnumerable<string>
 {
+    private readonly List<string> _locales = [.. locales
+        .Select(l => l.Code)
+        .OrderBy(l => l)];
+
     public string DefaultLocale { get; } = locales
         .First(l => l.Default)
         .Code;
 
-    public string[] Locales { get; } = [.. locales
-        .Where(l => !l.Default)
-        .Select(l => l.Code)
-        .OrderBy(l => l)];
+    public IEnumerator<string> GetEnumerator()
+        => _locales.GetEnumerator();
 
-    public string[] GetAllLocales() 
-        => [DefaultLocale, .. Locales];
+    IEnumerator IEnumerable.GetEnumerator()
+        => GetEnumerator();
 }

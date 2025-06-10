@@ -1,7 +1,7 @@
-﻿using Contool.Contentful.Models;
-using Contool.Extensions;
-using Contentful.Core.Configuration;
+﻿using Contentful.Core.Configuration;
 using Contentful.Core.Models;
+using Contool.Contentful.Models;
+using Contool.Infrastructure.Extensions;
 using Html2Markdown;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -12,9 +12,13 @@ namespace Contool.Contentful.Extensions;
 
 internal static class ObjectExtensions
 {
-    private static readonly JsonSerializerSettings JsonSettings = new() { Converters = [new ContentJsonConverter()] };
+    private static readonly JsonSerializerSettings JsonSettings = new() 
+    { 
+        Converters = [new ContentJsonConverter()],
+        ContractResolver = new CamelCasePropertyNamesContractResolver(),
+    };
 
-    public static object? ToLink(this object value, string linkType)
+    public static object? ToLink(this object value, string? linkType)
     {
         if (value is string linkValue && string.IsNullOrEmpty(linkValue))
         {
@@ -27,7 +31,7 @@ internal static class ObjectExtensions
             .FromObject(link)
             .ToObject<ExpandoObject>();
 
-        return jObj is null ? null : JObject.FromObject(jObj, JsonSerializer.Create(new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() }));
+        return jObj is null ? null : JObject.FromObject(jObj, JsonSerializer.Create(JsonSettings));
     }
 
     public static object? ToDocument(this object? value)
@@ -59,7 +63,7 @@ internal static class ObjectExtensions
             .FromObject(doc)
             .ToObject<ExpandoObject>();
 
-        return jObj is null ? null : JObject.FromObject(jObj, JsonSerializer.Create(new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() }));
+        return jObj is null ? null : JObject.FromObject(jObj, JsonSerializer.Create(JsonSettings));
     }
 
     public static DateTime? ToDateTime(this object? value)
@@ -90,18 +94,20 @@ internal static class ObjectExtensions
             return null;
         }
 
-        return string.Join(arrayDelimiter, schema.Type == "Link" 
-            ? jTokenList.Select(t => t["sys"]?["id"]?.ToString()) 
+        return string.Join(arrayDelimiter, schema.Type == "Link"
+            ? jTokenList.Select(t => t["sys"]?["id"]?.ToString())
             : jTokenList.Select(o => o.ToString()));
     }
 
     public static string? ToMarkDown(this object? richText)
     {
-        if (richText == null) return null;
+        if (richText == null)
+            return null;
 
         var document = richText.ToString()?.DeserializeFromJsonString<Document>(JsonSettings); ;
 
-        if (document is null) return null;
+        if (document is null)
+            return null;
 
         var htmlRenderer = new HtmlRenderer();
 
@@ -119,7 +125,7 @@ internal static class ObjectExtensions
 
         if (value is not string stringValue)
             return null;
-        
+
         var obj = new JArray();
 
         string[] arr;

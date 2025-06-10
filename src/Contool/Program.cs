@@ -1,12 +1,17 @@
-﻿using Contool.Commands;
+﻿using Contentful.Core.Configuration;
 using Contool.Contentful.Services;
-using Contool.Services;
-using Contentful.Core.Configuration;
+using Contool.Features.EntryDelete;
+using Contool.Features.EntryDownload;
+using Contool.Features.EntryPublish;
+using Contool.Features.EntryUpload;
+using Contool.Features.TypeClone;
+using Contool.Features.TypeDelete;
+using Contool.Infrastructure.IO.Input;
+using Contool.Infrastructure.IO.Output;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console;
-using Microsoft.Extensions.Configuration;
 using System.Diagnostics;
-using System.Net.Http.Headers;
 
 var stopwatch = Stopwatch.StartNew();
 stopwatch.Start();
@@ -19,7 +24,7 @@ var serviceProvider = new ServiceCollection()
     .Configure<ContentfulOptions>(configuration.GetSection("ContentfulOptions"))
     .AddHttpClient()
     .AddSingleton<IContentfulManagementClientAdapterFactory, ContentfulManagementClientAdapterFactory>()
-    .AddSingleton<Func<IContentfulManagementClientAdapter, IContentfulManagementClientAdapter>>(sp => 
+    .AddSingleton<Func<IContentfulManagementClientAdapter, IContentfulManagementClientAdapter>>(sp =>
         adapter => new ContentfulManagementClientAdapterResiliencyDecorator(adapter))
     .AddSingleton<IContentfulServiceBuilder, ContentfulServiceBuilder>()
     .AddSingleton<IContentEntrySerializerFactory, ContentEntrySerializerFactory>()
@@ -96,6 +101,6 @@ var cloneCommand = new TypeCloneCommand
 
 var cloneCommandHandler = serviceProvider.GetRequiredService<TypeCloneCommandHandler>();
 
-await cloneCommandHandler.HandleAsync(cloneCommand);
+//await cloneCommandHandler.HandleAsync(cloneCommand);
 
 AnsiConsole.Markup($"[underline red]Hello[/] World! Total time: {stopwatch.ElapsedMilliseconds} ms");

@@ -1,5 +1,4 @@
-﻿using Contentful.Core;
-using Contentful.Core.Configuration;
+﻿using Contentful.Core.Configuration;
 using Microsoft.Extensions.Options;
 
 namespace Contool.Contentful.Services;

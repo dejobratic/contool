@@ -3,6 +3,7 @@
 internal class ContentFieldName
 {
     public string Value { get; }
+
     public string Locale { get; set; }
 
     public ContentFieldName(string fieldId, FieldType fieldType, string locale)

@@ -1,6 +1,6 @@
-﻿using Contool.Contentful.Extensions;
-using Contool.Extensions;
-using Contentful.Core.Models;
+﻿using Contentful.Core.Models;
+using Contool.Contentful.Extensions;
+using Contool.Infrastructure.Extensions;
 using Newtonsoft.Json.Linq;
 
 namespace Contool.Contentful.Models;
@@ -123,7 +123,7 @@ class LinkFieldType() : FieldType("Link")
 
     public override object? GetValue(object prop, Schema? _) => (prop as JObject)?["sys"]?["id"]?.ToString();
 
-    public override object? Deserialize(object? raw, Schema? schema) => raw?.ToLink(schema.LinkType);
+    public override object? Deserialize(object? raw, Schema? schema) => raw?.ToLink(schema?.LinkType);
 
     public override bool IsValidRawValue(object? value) => value is string || value is JObject;
 }

@@ -9,7 +9,7 @@ public static class ContentTypeExtensions
 
     public static ContentType Clone(this ContentType source)
     {
-        if(source is null)
+        if (source is null)
             throw new InvalidOperationException("Cannot clone a null ContentType.");
 
         return new ContentType
