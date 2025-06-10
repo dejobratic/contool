@@ -49,6 +49,13 @@ internal class ContentfulManagementClientAdapter(
             cancellationToken: cancellationToken);
     }
 
+    public async Task DeleteContentTypeAsync(string contentTypeId, CancellationToken cancellationToken)
+    {
+        await client.DeleteContentType(
+            contentTypeId: contentTypeId,
+            cancellationToken: cancellationToken);
+    }
+
     public async Task<IEnumerable<Entry<dynamic>>> GetEntriesCollectionAsync(string queryString, CancellationToken cancellationToken)
     {
         return await client.GetEntriesCollection<Entry<dynamic>>(
@@ -68,6 +75,14 @@ internal class ContentfulManagementClientAdapter(
     public async Task<Entry<dynamic>> PublishEntryAsync(string entryId, int version, CancellationToken cancellationToken)
     {
         return await client.PublishEntry(
+            entryId: entryId,
+            version: version,
+            cancellationToken: cancellationToken);
+    }
+
+    public async Task DeleteEntryAsync(string entryId, int version, CancellationToken cancellationToken)
+    {
+        await client.DeleteEntry(
             entryId: entryId,
             version: version,
             cancellationToken: cancellationToken);

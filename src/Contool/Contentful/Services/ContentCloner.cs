@@ -1,5 +1,6 @@
 ﻿using Contentful.Core.Models;
 using Contool.Contentful.Models;
+using Contool.Contentful.Utils;
 
 namespace Contool.Contentful.Services;
 
@@ -7,29 +8,17 @@ internal class ContentCloner : IContentCloner
 {
     public async Task CloneContentEntriesAsync(ContentEntryCloneRequest request, CancellationToken cancellationToken)
     {
-        var buffer = new List<Entry<dynamic>>(capacity: 50);
+        var batchProcessor = new AsyncEnumerableBatchProcessor<Entry<dynamic>>(
+            items: request.SourceContentfulService.GetEntriesAsync(request.ContentTypeId, cancellationToken: cancellationToken),
+            batchSize: 50,
+            batchActionAsync: async (entries, ct) =>
+            {
+                await request.TargetContentfulService.UpsertEntriesAsync(
+                    entries,
+                    publish: request.ShouldPublish,
+                    ct);
+            });
 
-        await foreach (var entry in request.SourceContentfulService.GetEntriesAsync(request.ContentTypeId, cancellationToken))
-        {
-            buffer.Add(entry);
-
-            if (buffer.Count != buffer.Capacity)
-                continue;
-
-            await request.TargetContentfulService.UpsertEntriesAsync(
-                buffer,
-                publish: request.ShouldPublish,
-                cancellationToken);
-
-            buffer.Clear();
-        }
-
-        if (buffer.Count > 0)
-        {
-            await request.TargetContentfulService.UpsertEntriesAsync(
-                buffer,
-                publish: request.ShouldPublish,
-                cancellationToken);
-        }
+        await batchProcessor.ProcessAsync(cancellationToken);
     }
 }

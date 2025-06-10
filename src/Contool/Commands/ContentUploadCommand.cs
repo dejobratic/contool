@@ -1,4 +1,5 @@
-﻿using Contool.Contentful.Models;
+﻿using Contool.Contentful.Extensions;
+using Contool.Contentful.Models;
 using Contool.Contentful.Services;
 using Contool.Models;
 using Contool.Services;
@@ -26,9 +27,7 @@ internal class ContentUploadCommandHandler(
         var input = await inputReader.ReadAsync(command.InputPath, cancellationToken);
 
         var contentfulService = contentfulServiceBuilder
-            .WithSpaceId(command.SpaceId)
-            .WithEnvironmentId(command.EnvironmentId)
-            .Build();
+            .Build(command.SpaceId, command.EnvironmentId);
 
         var deserializer = await deserializerFactory
             .CreateAsync(command.ContentTypeId, contentfulService, cancellationToken);

@@ -1,6 +1,7 @@
 ﻿using Contool.Contentful.Extensions;
 using Contool.Contentful.Services;
 using Contentful.Core.Models;
+using Contool.Contentful.Utils;
 
 namespace Contool.Commands;
 
@@ -14,23 +15,14 @@ internal class ContentPublishCommandHandler(
 {
     public async Task HandleAsync(ContentPublishCommand command, CancellationToken cancellationToken = default)
     {
-        var contentfulService = contentfulServiceBuilder
-            .WithSpaceId(command.SpaceId)
-            .WithEnvironmentId(command.EnvironmentId)
-            .Build();
+        var contentfulService = contentfulServiceBuilder.Build(command.SpaceId, command.EnvironmentId);
 
-        var unpublishedEntries = new List<Entry<dynamic>>();
+        var batchProcessor = new AsyncEnumerableBatchProcessor<Entry<dynamic>>(
+            items: contentfulService.GetEntriesAsync(contentTypeId: command.ContentTypeId, cancellationToken: cancellationToken),
+            batchSize: 50,
+            batchActionAsync: contentfulService.PublishEntriesAsync,
+            shouldInclude: entry => !(entry.IsArchived() || entry.IsPublished()));
 
-        await foreach (var entry in contentfulService.GetEntriesAsync(command.ContentTypeId, cancellationToken: cancellationToken))
-        {
-            if (entry.IsArchived() || entry.IsPublished())
-            {
-                continue;
-            }
-
-            unpublishedEntries.Add(entry);
-        }
-
-        await contentfulService.PublishEntriesAsync(unpublishedEntries, cancellationToken: cancellationToken);
+        await batchProcessor.ProcessAsync(cancellationToken);
     }
 }

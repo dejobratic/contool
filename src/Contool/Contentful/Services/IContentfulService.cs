@@ -1,5 +1,6 @@
 ﻿using Contentful.Core.Models;
 using Contentful.Core.Models.Management;
+using Contentful.Core.Search;
 
 namespace Contool.Contentful.Services;
 
@@ -13,9 +14,13 @@ internal interface IContentfulService
 
     Task<ContentType> CreateContentTypeAsync(ContentType contentType, CancellationToken cancellationToken = default);
 
-    IAsyncEnumerable<Entry<dynamic>> GetEntriesAsync(string contentTypeId, CancellationToken cancellationToken = default);
+    Task DeleteContentTypeAsync(string contentTypeId, CancellationToken cancellationToken = default);
+
+    IAsyncEnumerable<Entry<dynamic>> GetEntriesAsync(string? contentTypeId = null, QueryBuilder<Entry<dynamic>>? query = null, CancellationToken cancellationToken = default);
 
     Task UpsertEntriesAsync(IEnumerable<Entry<dynamic>> entries, bool publish = false, CancellationToken cancellationToken = default);
 
     Task PublishEntriesAsync(IEnumerable<Entry<dynamic>> entries, CancellationToken cancellationToken = default);
+
+    Task DeleteEntriesAsync(IEnumerable<Entry<dynamic>> entries, CancellationToken cancellationToken = default);
 }

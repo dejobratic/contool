@@ -28,6 +28,9 @@ internal class ContentfulManagementClientAdapterResiliencyDecorator(
     public async Task<ContentType> ActivateContentTypeAsync(string contentTypeId, int version, CancellationToken cancellationToken)
         => await _resiliencePolicy.ExecuteAsync(ct => innerAdapter.ActivateContentTypeAsync(contentTypeId, version, ct), cancellationToken);
 
+    public async Task DeleteContentTypeAsync(string contentTypeId, CancellationToken cancellationToken)
+        => await _resiliencePolicy.ExecuteAsync(ct => innerAdapter.DeleteContentTypeAsync(contentTypeId, ct), cancellationToken);
+
     public async Task<IEnumerable<Entry<dynamic>>> GetEntriesCollectionAsync(string queryString, CancellationToken cancellationToken)
         => await _resiliencePolicy.ExecuteAsync(ct => innerAdapter.GetEntriesCollectionAsync(queryString, ct), cancellationToken);
 
@@ -36,6 +39,9 @@ internal class ContentfulManagementClientAdapterResiliencyDecorator(
 
     public async Task<Entry<dynamic>> PublishEntryAsync(string entryId, int version, CancellationToken cancellationToken)
         => await _resiliencePolicy.ExecuteAsync(ct => innerAdapter.PublishEntryAsync(entryId, version, ct), cancellationToken);
+
+    public async Task DeleteEntryAsync(string entryId, int version, CancellationToken cancellationToken)
+        => await _resiliencePolicy.ExecuteAsync(ct => innerAdapter.DeleteEntryAsync(entryId, version, ct), cancellationToken);
 
     private static AsyncPolicyWrap CreateResiliencePolicy()
     {

@@ -43,16 +43,24 @@ internal class ContentfulService(IContentfulManagementClientAdapter client) : IC
         return created;
     }
 
+    public async Task DeleteContentTypeAsync(string contentTypeId, CancellationToken cancellationToken = default)
+    {
+        await client.DeleteContentTypeAsync(
+            contentTypeId: contentTypeId,
+            cancellationToken: cancellationToken);
+    }
+
     public async IAsyncEnumerable<Entry<dynamic>> GetEntriesAsync(
-        string contentTypeId,
+        string? contentTypeId = null,
+        QueryBuilder<Entry<dynamic>>? query = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         int skip = 0;
         int pageSize = 100;
         bool moreResults = true;
 
-        var query = new QueryBuilder<dynamic>()
-            .ContentTypeIs(contentTypeId.ToCamelCase());
+        query ??= new QueryBuilder<Entry<dynamic>>()
+            .ContentTypeIs(contentTypeId?.ToCamelCase());
 
         while (moreResults)
         {
@@ -87,13 +95,12 @@ internal class ContentfulService(IContentfulManagementClientAdapter client) : IC
 
     public async Task UpsertEntriesAsync(IEnumerable<Entry<dynamic>> entries, bool publish = false, CancellationToken cancellationToken = default)
     {
-        // Load existing entries into lookup for fast access
         var existingEntriesLookup = (await GetEntriesAsync(
             contentTypeId: entries.First().SystemProperties.ContentType.SystemProperties.Id,
             cancellationToken: cancellationToken).ToListAsync(cancellationToken))
             .ToDictionary(e => e.SystemProperties.Id);
 
-        foreach (var entry in entries)
+        var tasks = entries.Select(async entry =>
         {
             existingEntriesLookup.TryGetValue(entry.SystemProperties!.Id, out var existing);
 
@@ -109,17 +116,34 @@ internal class ContentfulService(IContentfulManagementClientAdapter client) : IC
                     version: upserted?.SystemProperties?.Version ?? 0,
                     cancellationToken: cancellationToken);
             }
-        }
+        });
+
+        await Task.WhenAll(tasks);
     }
 
     public async Task PublishEntriesAsync(IEnumerable<Entry<dynamic>> entries, CancellationToken cancellationToken = default)
     {
-        foreach (var entry in entries)
+        var tasks = entries.Select(async entry =>
         {
             await client.PublishEntryAsync(
                 entryId: entry.SystemProperties?.Id!,
                 version: entry.SystemProperties?.Version ?? 0,
                 cancellationToken: cancellationToken);
-        }
+        });
+
+        await Task.WhenAll(tasks);
+    }
+
+    public async Task DeleteEntriesAsync(IEnumerable<Entry<dynamic>> entries, CancellationToken cancellationToken = default)
+    {
+        var tasks = entries.Select(async entry =>
+        {
+            await client.DeleteEntryAsync(
+                entryId: entry.SystemProperties?.Id!,
+                version: entry.SystemProperties?.Version ?? 0,
+                cancellationToken: cancellationToken);
+        });
+
+        await Task.WhenAll(tasks);
     }
 }

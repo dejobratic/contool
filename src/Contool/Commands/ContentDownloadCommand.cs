@@ -1,4 +1,5 @@
-﻿using Contool.Contentful.Models;
+﻿using Contool.Contentful.Extensions;
+using Contool.Contentful.Models;
 using Contool.Contentful.Services;
 using Contool.Services;
 
@@ -22,9 +23,7 @@ internal class ContentDownloadCommandHandler(
     public async Task HandleAsync(ContentDownloadCommand command, CancellationToken cancellationToken = default)
     {
         var contentfulService = contentfulServiceBuilder
-            .WithSpaceId(command.SpaceId)
-            .WithEnvironmentId(command.EnvironmentId)
-            .Build();
+            .Build(command.SpaceId, command.EnvironmentId);
 
         var serializer = await serializerFactory
             .CreateAsync(command.ContentTypeId, contentfulService, cancellationToken);

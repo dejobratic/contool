@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console;
 using Microsoft.Extensions.Configuration;
 using System.Diagnostics;
+using System.Net.Http.Headers;
 
 var stopwatch = Stopwatch.StartNew();
 stopwatch.Start();
@@ -34,13 +35,15 @@ var serviceProvider = new ServiceCollection()
     //.AddSingleton<IInputReader, JsonInputReader>()
     .AddSingleton<ContentDownloadCommandHandler>()
     .AddSingleton<ContentUploadCommandHandler>()
-    .AddSingleton<ContentPublishCommand>()
+    .AddSingleton<ContentPublishCommandHandler>()
+    .AddSingleton<ContentDeleteCommandHandler>()
     .AddSingleton<TypeCloneCommandHandler>()
+    .AddSingleton<TypeDeleteCommandHandler>()
     .BuildServiceProvider();
 
 var downloadCommand = new ContentDownloadCommand
 {
-    ContentTypeId = "brand",
+    ContentTypeId = "templateTranslation",
     EnvironmentId = "master",
     OutputPath = @"C:\Users\dejanbratic\Desktop\contool-playground",
     OutputFormat = "csv",
@@ -50,22 +53,42 @@ var downloadCommandHanlder = serviceProvider.GetRequiredService<ContentDownloadC
 
 await downloadCommandHanlder.HandleAsync(downloadCommand);
 
-
 var uploadCommand = new ContentUploadCommand
 {
-    ContentTypeId = "brand",
+    ContentTypeId = "templateTranslation",
     EnvironmentId = "production",
-    InputPath = @"C:\Users\dejanbratic\Desktop\contool-playground\brand.csv",
+    InputPath = @"C:\Users\dejanbratic\Desktop\contool-playground\templateTranslation.csv",
     ShouldPublish = true,
 };
 
 var uploadCommandHandler = serviceProvider.GetRequiredService<ContentUploadCommandHandler>();
 
-await uploadCommandHandler.HandleAsync(uploadCommand);
+//await uploadCommandHandler.HandleAsync(uploadCommand);
 
+var publishCommand = new ContentPublishCommand
+{
+    ContentTypeId = "templateTranslation",
+    EnvironmentId = "production",
+};
+
+var publishCommandHandler = serviceProvider.GetRequiredService<ContentPublishCommandHandler>();
+
+//await publishCommandHandler.HandleAsync(publishCommand);
+
+var deleteCommand = new TypeDeleteCommand
+{
+    ContentTypeId = "templateTranslation",
+    EnvironmentId = "production",
+};
+
+var deleteCommandHandler = serviceProvider.GetRequiredService<TypeDeleteCommandHandler>();
+
+//await deleteCommandHandler.HandleAsync(deleteCommand);
+
+// what about cloning a referenced content type?
 var cloneCommand = new TypeCloneCommand
 {
-    ContentTypeId = "brand",
+    ContentTypeId = "templateTranslation",
     EnvironmentId = "master",
     TargetEnvironmentId = "production",
     ShouldPublish = true,
@@ -73,6 +96,6 @@ var cloneCommand = new TypeCloneCommand
 
 var cloneCommandHandler = serviceProvider.GetRequiredService<TypeCloneCommandHandler>();
 
-//await cloneCommandHandler.HandleAsync(cloneCommand);
+await cloneCommandHandler.HandleAsync(cloneCommand);
 
 AnsiConsole.Markup($"[underline red]Hello[/] World! Total time: {stopwatch.ElapsedMilliseconds} ms");
