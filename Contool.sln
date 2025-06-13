@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36109.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Contool", "src/Contool/Contool.csproj", "{299ED8B2-021D-4057-9E05-01F2909FB552}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Contool", "src\Contool\Contool.csproj", "{299ED8B2-021D-4057-9E05-01F2909FB552}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Contool.Core", "src\Contool.Core\Contool.Core.csproj", "{DBD7860A-66F7-4596-BA3C-EE64935BCC2D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{299ED8B2-021D-4057-9E05-01F2909FB552}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{299ED8B2-021D-4057-9E05-01F2909FB552}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{299ED8B2-021D-4057-9E05-01F2909FB552}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DBD7860A-66F7-4596-BA3C-EE64935BCC2D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DBD7860A-66F7-4596-BA3C-EE64935BCC2D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DBD7860A-66F7-4596-BA3C-EE64935BCC2D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DBD7860A-66F7-4596-BA3C-EE64935BCC2D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

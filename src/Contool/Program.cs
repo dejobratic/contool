@@ -1,19 +1,12 @@
-﻿using Contentful.Core.Configuration;
-
-using Contool.Contentful.Options;
-using Contool.Contentful.Services;
-using Contool.Features.EntryDelete;
-using Contool.Features.EntryDownload;
-using Contool.Features.EntryPublish;
-using Contool.Features.EntryUpload;
-using Contool.Features.TypeClone;
-using Contool.Features.TypeDelete;
-using Contool.Infrastructure.IO.Input;
-using Contool.Infrastructure.IO.Output;
-
+﻿using Contool.Core;
+using Contool.Core.Features.EntryDelete;
+using Contool.Core.Features.EntryDownload;
+using Contool.Core.Features.EntryPublish;
+using Contool.Core.Features.EntryUpload;
+using Contool.Core.Features.TypeClone;
+using Contool.Core.Features.TypeDelete;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 
 using Spectre.Console;
 using System.Diagnostics;
@@ -26,32 +19,7 @@ var configuration = new ConfigurationBuilder()
     .Build();
 
 var serviceProvider = new ServiceCollection()
-    .Configure<ContentfulOptions>(configuration.GetSection("ContentfulOptions"))
-    .Configure<ResiliencyOptions>(configuration.GetSection("ResiliencyOptions"))
-    .AddHttpClient()
-    .AddSingleton<IContentfulManagementClientAdapterFactory, ContentfulManagementClientAdapterFactory>()
-    .AddSingleton<Func<IContentfulManagementClientAdapter, IContentfulManagementClientAdapter>>(sp =>
-    {
-        var resiliencyOptions = sp.GetRequiredService<IOptions<ResiliencyOptions>>();
-        return adapter => new ContentfulManagementClientAdapterResiliencyDecorator(resiliencyOptions, adapter);
-    })
-    .AddSingleton<IContentfulServiceBuilder, ContentfulServiceBuilder>()
-    .AddSingleton<IContentEntrySerializerFactory, ContentEntrySerializerFactory>()
-    .AddSingleton<IContentDownloader, ContentDownloader>()
-    .AddSingleton<IOutputWriterFactory, OutputWriterFactory>()
-    .AddSingleton<IOutputWriter, CsvOutputWriter>()
-    .AddSingleton<IOutputWriter, JsonOutputWriter>()
-    .AddSingleton<IContentEntryDeserializerFactory, ContentEntryDeserializerFactory>()
-    .AddSingleton<IContentUploader, ContentUploader>()
-    .AddSingleton<IInputReaderFactory, InputReaderFactory>()
-    .AddSingleton<IInputReader, CsvInputReader>()
-    //.AddSingleton<IInputReader, JsonInputReader>()
-    .AddSingleton<ContentDownloadCommandHandler>()
-    .AddSingleton<ContentUploadCommandHandler>()
-    .AddSingleton<ContentPublishCommandHandler>()
-    .AddSingleton<ContentDeleteCommandHandler>()
-    .AddSingleton<TypeCloneCommandHandler>()
-    .AddSingleton<TypeDeleteCommandHandler>()
+    .AddContoolDependencies(configuration)
     .BuildServiceProvider();
 
 var downloadCommand = new ContentDownloadCommand
@@ -136,7 +104,7 @@ var cloneCommandHandler = serviceProvider.GetRequiredService<TypeCloneCommandHan
 
 try
 {
-    await cloneCommandHandler.HandleAsync(cloneCommand);
+    //await cloneCommandHandler.HandleAsync(cloneCommand);
 }
 catch (InvalidOperationException ex)
 {
