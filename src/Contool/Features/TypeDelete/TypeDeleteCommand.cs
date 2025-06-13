@@ -17,19 +17,32 @@ internal class TypeDeleteCommandHandler(
 {
     public async Task HandleAsync(TypeDeleteCommand command, CancellationToken cancellationToken = default)
     {
-        var contentfulService = contentfulServiceBuilder.Build(command.SpaceId, command.EnvironmentId);
+        var contentfulService = contentfulServiceBuilder.Build(
+            command.SpaceId, command.EnvironmentId);
 
-        await ThrowIfDeleteNotForcedWithExistingEntriesAsync(command, contentfulService, cancellationToken);
+        await ThrowIfContentTypeDoesNotExistAsync(
+            command.ContentTypeId, contentfulService, cancellationToken);
 
-        await DeleteEntriesAsync(command, contentfulService, cancellationToken);
+        await ThrowIfDeleteNotForcedWithExistingEntriesAsync(
+            command.ContentTypeId, command.Force, contentfulService, cancellationToken);
 
-        await contentfulService.DeleteContentTypeAsync(command.ContentTypeId, cancellationToken);
+        await DeleteEntriesAsync(
+            command, contentfulService, cancellationToken);
+
+        await contentfulService.DeleteContentTypeAsync(
+            command.ContentTypeId, cancellationToken);
     }
 
-    private static async Task ThrowIfDeleteNotForcedWithExistingEntriesAsync(TypeDeleteCommand command, IContentfulService contentfulService, CancellationToken cancellationToken)
+    private static async Task ThrowIfContentTypeDoesNotExistAsync(string contentTypeId, IContentfulService contentfulService, CancellationToken cancellationToken)
     {
-        if (!command.Force && await HasContentEntriesAsync(command.ContentTypeId, contentfulService, cancellationToken))
-            throw new InvalidOperationException($"Content type '{command.ContentTypeId}' cannot be deleted because it contains entries. Use the force option to delete it anyway.");
+        _ = await contentfulService.GetContentTypeAsync(contentTypeId, cancellationToken)
+            ?? throw new InvalidOperationException($"Content type '{contentTypeId}' does not exist.");
+    }
+
+    private static async Task ThrowIfDeleteNotForcedWithExistingEntriesAsync(string contentTypeId, bool force, IContentfulService contentfulService, CancellationToken cancellationToken)
+    {
+        if (!force && await HasContentEntriesAsync(contentTypeId, contentfulService, cancellationToken))
+            throw new InvalidOperationException($"Content type '{contentTypeId}' cannot be deleted because it contains entries. Use the force option to delete it anyway.");
     }
 
     private static async Task<bool> HasContentEntriesAsync(string contentTypeId, IContentfulService contentfulService, CancellationToken cancellationToken)

@@ -15,6 +15,8 @@ internal interface IContentfulManagementClientAdapter
 
     Task<ContentType> ActivateContentTypeAsync(string contentTypeId, int version, CancellationToken cancellationToken);
 
+    Task DeactivateContentTypeAsync(string contentTypeId, CancellationToken cancellationToken);
+
     Task DeleteContentTypeAsync(string contentTypeId, CancellationToken cancellationToken);
 
     Task<IEnumerable<Entry<dynamic>>> GetEntriesCollectionAsync(string queryString, CancellationToken cancellationToken);
@@ -22,6 +24,12 @@ internal interface IContentfulManagementClientAdapter
     Task<Entry<dynamic>> CreateOrUpdateEntryAsync(Entry<dynamic> entry, int version, CancellationToken cancellationToken);
 
     Task<Entry<dynamic>> PublishEntryAsync(string entryId, int version, CancellationToken cancellationToken);
+
+    Task<Entry<dynamic>> UnpublishEntryAsync(string entryId, int version, CancellationToken cancellationToken);
+
+    Task<Entry<dynamic>> ArchiveEntryAsync(string entryId, int version, CancellationToken cancellationToken);
+
+    Task<Entry<dynamic>> UnarchiveEntryAsync(string entryId, int version, CancellationToken cancellationToken);
 
     Task DeleteEntryAsync(string entryId, int version, CancellationToken cancellationToken);
 }

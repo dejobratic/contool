@@ -2,6 +2,7 @@
 using Contentful.Core.Errors;
 using Contentful.Core.Models;
 using Contentful.Core.Models.Management;
+using Contool.Contentful.Extensions;
 
 namespace Contool.Contentful.Services;
 
@@ -16,16 +17,9 @@ internal class ContentfulManagementClientAdapter(
 
     public async Task<ContentType?> GetContentTypeAsync(string contentTypeId, CancellationToken cancellationToken)
     {
-        try
-        {
-            return await client.GetContentType(
-                contentTypeId: contentTypeId,
-                cancellationToken: cancellationToken);
-        }
-        catch (ContentfulException)
-        {
-            return null;
-        }
+        return await client.GetContentType(
+            contentTypeId: contentTypeId,
+            cancellationToken: cancellationToken);
     }
 
     public async Task<IEnumerable<ContentType>> GetContentTypesAsync(CancellationToken cancellationToken)
@@ -46,6 +40,13 @@ internal class ContentfulManagementClientAdapter(
         return await client.ActivateContentType(
             contentTypeId: contentTypeId,
             version: version,
+            cancellationToken: cancellationToken);
+    }
+
+    public async Task DeactivateContentTypeAsync(string contentTypeId, CancellationToken cancellationToken)
+    {
+        await client.DeactivateContentType(
+            contentTypeId: contentTypeId,
             cancellationToken: cancellationToken);
     }
 
@@ -75,6 +76,30 @@ internal class ContentfulManagementClientAdapter(
     public async Task<Entry<dynamic>> PublishEntryAsync(string entryId, int version, CancellationToken cancellationToken)
     {
         return await client.PublishEntry(
+            entryId: entryId,
+            version: version,
+            cancellationToken: cancellationToken);
+    }
+
+    public async Task<Entry<dynamic>> UnpublishEntryAsync(string entryId, int version, CancellationToken cancellationToken)
+    {
+        return await client.UnpublishEntry(
+            entryId: entryId,
+            version: version,
+            cancellationToken: cancellationToken);
+    }
+
+    public async Task<Entry<dynamic>> ArchiveEntryAsync(string entryId, int version, CancellationToken cancellationToken)
+    {
+        return await client.ArchiveEntry(
+            entryId: entryId,
+            version: version,
+            cancellationToken: cancellationToken);
+    }
+
+    public async Task<Entry<dynamic>> UnarchiveEntryAsync(string entryId, int version, CancellationToken cancellationToken)
+    {
+        return await client.UnarchiveEntry(
             entryId: entryId,
             version: version,
             cancellationToken: cancellationToken);

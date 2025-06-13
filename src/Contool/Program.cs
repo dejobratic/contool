@@ -1,4 +1,6 @@
 ﻿using Contentful.Core.Configuration;
+
+using Contool.Contentful.Options;
 using Contool.Contentful.Services;
 using Contool.Features.EntryDelete;
 using Contool.Features.EntryDownload;
@@ -8,8 +10,11 @@ using Contool.Features.TypeClone;
 using Contool.Features.TypeDelete;
 using Contool.Infrastructure.IO.Input;
 using Contool.Infrastructure.IO.Output;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+
 using Spectre.Console;
 using System.Diagnostics;
 
@@ -22,10 +27,14 @@ var configuration = new ConfigurationBuilder()
 
 var serviceProvider = new ServiceCollection()
     .Configure<ContentfulOptions>(configuration.GetSection("ContentfulOptions"))
+    .Configure<ResiliencyOptions>(configuration.GetSection("ResiliencyOptions"))
     .AddHttpClient()
     .AddSingleton<IContentfulManagementClientAdapterFactory, ContentfulManagementClientAdapterFactory>()
     .AddSingleton<Func<IContentfulManagementClientAdapter, IContentfulManagementClientAdapter>>(sp =>
-        adapter => new ContentfulManagementClientAdapterResiliencyDecorator(adapter))
+    {
+        var resiliencyOptions = sp.GetRequiredService<IOptions<ResiliencyOptions>>();
+        return adapter => new ContentfulManagementClientAdapterResiliencyDecorator(resiliencyOptions, adapter);
+    })
     .AddSingleton<IContentfulServiceBuilder, ContentfulServiceBuilder>()
     .AddSingleton<IContentEntrySerializerFactory, ContentEntrySerializerFactory>()
     .AddSingleton<IContentDownloader, ContentDownloader>()
@@ -36,7 +45,6 @@ var serviceProvider = new ServiceCollection()
     .AddSingleton<IContentUploader, ContentUploader>()
     .AddSingleton<IInputReaderFactory, InputReaderFactory>()
     .AddSingleton<IInputReader, CsvInputReader>()
-    .AddSingleton<IContentCloner, ContentCloner>()
     //.AddSingleton<IInputReader, JsonInputReader>()
     .AddSingleton<ContentDownloadCommandHandler>()
     .AddSingleton<ContentUploadCommandHandler>()
@@ -48,21 +56,21 @@ var serviceProvider = new ServiceCollection()
 
 var downloadCommand = new ContentDownloadCommand
 {
-    ContentTypeId = "templateTranslation",
-    EnvironmentId = "master",
+    ContentTypeId = "brand",
+    EnvironmentId = "production",
     OutputPath = @"C:\Users\dejanbratic\Desktop\contool-playground",
     OutputFormat = "csv",
 };
 
 var downloadCommandHanlder = serviceProvider.GetRequiredService<ContentDownloadCommandHandler>();
 
-await downloadCommandHanlder.HandleAsync(downloadCommand);
+//await downloadCommandHanlder.HandleAsync(downloadCommand);
 
 var uploadCommand = new ContentUploadCommand
 {
-    ContentTypeId = "templateTranslation",
+    ContentTypeId = "brand",
     EnvironmentId = "production",
-    InputPath = @"C:\Users\dejanbratic\Desktop\contool-playground\templateTranslation.csv",
+    InputPath = @"C:\Users\dejanbratic\Desktop\contool-playground\brand_1000.csv",
     ShouldPublish = true,
 };
 
@@ -80,17 +88,42 @@ var publishCommandHandler = serviceProvider.GetRequiredService<ContentPublishCom
 
 //await publishCommandHandler.HandleAsync(publishCommand);
 
-var deleteCommand = new TypeDeleteCommand
+var typeDeleteCommand = new TypeDeleteCommand
 {
-    ContentTypeId = "templateTranslation",
+    ContentTypeId = "brand",
+    EnvironmentId = "production",
+    Force = true,
+};
+
+var typeDeleteCommandHandler = serviceProvider.GetRequiredService<TypeDeleteCommandHandler>();
+
+try
+{
+
+    //await typeDeleteCommandHandler.HandleAsync(deleteCommand);
+}
+catch (InvalidOperationException ex)
+{
+    AnsiConsole.MarkupLine($"[red]Type delete error:[/] {ex.Message}");
+}
+
+var entryDeleteCommand = new ContentDeleteCommand
+{
+    ContentTypeId = "brand",
     EnvironmentId = "production",
 };
 
-var deleteCommandHandler = serviceProvider.GetRequiredService<TypeDeleteCommandHandler>();
+var entryDeleteCommandHandler = serviceProvider.GetRequiredService<ContentDeleteCommandHandler>();
 
-//await deleteCommandHandler.HandleAsync(deleteCommand);
+try
+{
+    await entryDeleteCommandHandler.HandleAsync(entryDeleteCommand);
+}
+catch (InvalidOperationException ex)
+{
+    AnsiConsole.MarkupLine($"[red]Entry delete error:[/] {ex.Message}");
+}
 
-// what about cloning a referenced content type?
 var cloneCommand = new TypeCloneCommand
 {
     ContentTypeId = "templateTranslation",
@@ -101,6 +134,13 @@ var cloneCommand = new TypeCloneCommand
 
 var cloneCommandHandler = serviceProvider.GetRequiredService<TypeCloneCommandHandler>();
 
-//await cloneCommandHandler.HandleAsync(cloneCommand);
+try
+{
+    await cloneCommandHandler.HandleAsync(cloneCommand);
+}
+catch (InvalidOperationException ex)
+{
+    AnsiConsole.MarkupLine($"[red]Type clone error:[/] {ex.Message}");
+}
 
 AnsiConsole.Markup($"[underline red]Hello[/] World! Total time: {stopwatch.ElapsedMilliseconds} ms");

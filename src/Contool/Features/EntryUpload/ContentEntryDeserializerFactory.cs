@@ -17,9 +17,7 @@ internal class ContentEntryDeserializerFactory : IContentEntryDeserializerFactor
 
     private static async Task<ContentType> GetContentTypeByIdAsync(string contentTypeId, IContentfulService contentfulService, CancellationToken cancellationToken)
     {
-        var contentTypes = await contentfulService.GetContentTypesAsync(cancellationToken: cancellationToken);
-
-        return contentTypes.FirstOrDefault(ct => ct.Name.ToCamelCase() == contentTypeId.ToCamelCase())
+        return await contentfulService.GetContentTypeAsync(contentTypeId, cancellationToken)
             ?? throw new ArgumentException($"Content type '{contentTypeId}' is not valid.");
     }
 

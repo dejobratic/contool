@@ -1,6 +1,7 @@
 ﻿using Contentful.Core.Models;
 using Contool.Contentful.Extensions;
 using Contool.Contentful.Services;
+using Contool.Infrastructure.Utils;
 
 namespace Contool.Features.TypeClone;
 
@@ -14,8 +15,7 @@ internal class TypeCloneCommand : CommandBase
 }
 
 internal class TypeCloneCommandHandler(
-    IContentfulServiceBuilder contentfulServiceBuilder,
-    IContentCloner contentCloner)
+    IContentfulServiceBuilder contentfulServiceBuilder)
 {
     public async Task HandleAsync(TypeCloneCommand command, CancellationToken cancellationToken = default)
     {
@@ -31,8 +31,8 @@ internal class TypeCloneCommandHandler(
         await ThrowIfContentTypeDefinitionsDifferBetweenEnvironmentsAsync(
             command, sourceContentfulService, targetContentfulService, cancellationToken);
 
-        await contentCloner.CloneContentEntriesAsync(
-            CreateCloneEntriesRequest(command, sourceContentfulService, targetContentfulService), cancellationToken);
+        await CloneEntriesAsync(
+            command, sourceContentfulService, targetContentfulService, cancellationToken);
     }
 
     private static async Task ThrowIfLocalesDifferBetweenEnvironmentsAsync(IContentfulService sourceContentfulService, IContentfulService targetContentfulService, CancellationToken cancellationToken)
@@ -78,15 +78,21 @@ internal class TypeCloneCommandHandler(
         return await contentfulService.CreateContentTypeAsync(contentType.Clone(), cancellationToken);
     }
 
-    private static ContentEntryCloneRequest CreateCloneEntriesRequest(TypeCloneCommand command, IContentfulService sourceContentfulService, IContentfulService targetContentfulService)
+    private static async Task CloneEntriesAsync(TypeCloneCommand command, IContentfulService sourceContentfulService, IContentfulService targetContentfulService, CancellationToken cancellationToken)
     {
-        return new ContentEntryCloneRequest
-        {
-            ContentTypeId = command.ContentTypeId,
-            SourceContentfulService = sourceContentfulService,
-            TargetContentfulService = targetContentfulService,
-            ShouldPublish = command.ShouldPublish,
-        };
+        var batchProcessor = new AsyncEnumerableBatchProcessor<Entry<dynamic>>(
+            items: sourceContentfulService.GetEntriesAsync(command.ContentTypeId, cancellationToken: cancellationToken),
+            batchSize: 50,
+            batchActionAsync: async (entries, ct) =>
+            {
+                await targetContentfulService.CreateOrUpdateEntriesAsync(
+                    entries,
+                    publish: command.ShouldPublish,
+                    ct);
+            },
+            shouldInclude: entry => !entry.IsArchived());
+
+        await batchProcessor.ProcessAsync(cancellationToken);
     }
 }
 

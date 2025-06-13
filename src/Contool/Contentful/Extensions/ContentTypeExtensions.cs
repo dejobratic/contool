@@ -1,4 +1,5 @@
 ﻿using Contentful.Core.Models;
+using Contentful.Core.Models.Management;
 using Contool.Contentful.Models;
 
 namespace Contool.Contentful.Extensions;
@@ -30,7 +31,10 @@ public static class ContentTypeExtensions
                 Required = f.Required,
                 LinkType = f.LinkType,
                 Items = f.Items,
-                Validations = f.Validations,
+                Validations = f.Validations?
+                    .Select(validator => validator.CloneSafely())
+                    .Where(v => v != null)
+                    .ToList(),
                 Disabled = f.Disabled,
                 Omitted = f.Omitted,
                 Localized = f.Localized,

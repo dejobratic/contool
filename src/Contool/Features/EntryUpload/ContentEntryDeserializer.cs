@@ -21,9 +21,9 @@ internal class ContentEntryDeserializer(ContentType contentType, ContentLocales 
 
         foreach (var heading in headings)
         {
-            if (SystemField.Names.Contains(heading.Value))
+            if (SysField.Names.Contains(heading.Value))
             {
-                SystemField.Deserialize(entry.SystemProperties, heading.Value, data[heading.Value]);
+                SysField.Deserialize(entry.SystemProperties, heading.Value, data[heading.Value]);
             }
             else if (_fields.TryGetValue(heading.Value, out var field))
             {

@@ -1,6 +1,9 @@
-﻿using Contentful.Core.Models;
+﻿using Contentful.Core.Errors;
+using Contentful.Core.Models;
 using Contentful.Core.Models.Management;
 using Contentful.Core.Search;
+using Contool.Contentful.Extensions;
+using System;
 using System.Runtime.CompilerServices;
 
 namespace Contool.Contentful.Services;
@@ -14,7 +17,16 @@ internal class ContentfulService(IContentfulManagementClientAdapter client) : IC
 
     public async Task<ContentType?> GetContentTypeAsync(string contentTypeId, CancellationToken cancellationToken)
     {
-        return await client.GetContentTypeAsync(contentTypeId, cancellationToken: cancellationToken);
+        try
+        {
+            return await client.GetContentTypeAsync(
+                contentTypeId: contentTypeId,
+                cancellationToken: cancellationToken);
+        }
+        catch (ContentfulException)
+        {
+            return null;
+        }
     }
 
     public async Task<IEnumerable<ContentType>> GetContentTypesAsync(CancellationToken cancellationToken = default)
@@ -45,6 +57,10 @@ internal class ContentfulService(IContentfulManagementClientAdapter client) : IC
 
     public async Task DeleteContentTypeAsync(string contentTypeId, CancellationToken cancellationToken = default)
     {
+        await client.DeactivateContentTypeAsync(
+            contentTypeId: contentTypeId,
+            cancellationToken: cancellationToken);
+
         await client.DeleteContentTypeAsync(
             contentTypeId: contentTypeId,
             cancellationToken: cancellationToken);
@@ -62,15 +78,12 @@ internal class ContentfulService(IContentfulManagementClientAdapter client) : IC
         query ??= new QueryBuilder<Entry<dynamic>>()
             .ContentTypeIs(contentTypeId?.ToCamelCase());
 
+        var queryString = query.Build();
+
         while (moreResults)
         {
-            var queryString = query
-                .Limit(pageSize)
-                .Skip(skip)
-                .Build();
-
             var entries = await client
-                .GetEntriesCollectionAsync(queryString, cancellationToken: cancellationToken);
+                .GetEntriesCollectionAsync($"{queryString}&skip={skip}&limit={pageSize}", cancellationToken: cancellationToken);
 
             if (entries == null || !entries.Any())
             {
@@ -93,12 +106,60 @@ internal class ContentfulService(IContentfulManagementClientAdapter client) : IC
         }
     }
 
-    public async Task UpsertEntriesAsync(IEnumerable<Entry<dynamic>> entries, bool publish = false, CancellationToken cancellationToken = default)
+    public async Task CreateOrUpdateEntriesAsync(IEnumerable<Entry<dynamic>> entries, bool publish = false, CancellationToken cancellationToken = default)
     {
-        var existingEntriesLookup = (await GetEntriesAsync(
-            contentTypeId: entries.First().SystemProperties.ContentType.SystemProperties.Id,
-            cancellationToken: cancellationToken).ToListAsync(cancellationToken))
-            .ToDictionary(e => e.SystemProperties.Id);
+        async Task<Dictionary<string, Entry<dynamic>>> GetExistingEntriesLookup()
+        {
+            var queryString = QueryBuilder<Entry<dynamic>>.New
+                .FieldIncludes("sys.id", entries.Select(e => e.SystemProperties.Id))
+                .Build();
+
+            return (await client.GetEntriesCollectionAsync(
+                queryString: queryString,
+                cancellationToken: cancellationToken))
+                .ToDictionary(e => e.SystemProperties.Id);
+        }
+
+        async Task<Dictionary<string, HashSet<string>>> GetUnpublishedOrMissingReferencedEntriesIdsLookup()
+        {
+            var referencedEntryIdsPerEntry = entries.ToDictionary(
+                entry => entry.SystemProperties.Id,
+                entry => entry.GetReferencedEntryIds().ToHashSet());
+
+            var allReferencedEntryIds = referencedEntryIdsPerEntry
+                .SelectMany(kvp => kvp.Value)
+                .Distinct();
+
+            var queryString = QueryBuilder<Entry<dynamic>>.New
+                .FieldIncludes("sys.id", allReferencedEntryIds)
+                .Build();
+
+            var publishedReferencedEntryIds = (await client.GetEntriesCollectionAsync(
+                queryString: queryString,
+                cancellationToken: cancellationToken))
+                .Where(e => e.IsPublished())
+                .Select(e => e.SystemProperties.Id)
+                .ToHashSet();
+
+            var unresolvedReferencedEntryIds = allReferencedEntryIds
+                .Except(publishedReferencedEntryIds)
+                .ToHashSet();
+
+            return referencedEntryIdsPerEntry.ToDictionary(
+                kvp => kvp.Key,
+                kvp => kvp.Value.Intersect(unresolvedReferencedEntryIds).ToHashSet());
+        }
+
+        bool AllReferencedEntriesArePublished(Entry<dynamic> entry, Dictionary<string, HashSet<string>> unpublishedReferencedEntriesIds)
+            => unpublishedReferencedEntriesIds.TryGetValue(entry.SystemProperties!.Id, out var unresolvedRefs)
+               && unresolvedRefs.Count == 0;
+
+        var existingEntriesLookupTask = GetExistingEntriesLookup();
+        var unpublishedReferencedEntriesIdsLookupTask = GetUnpublishedOrMissingReferencedEntriesIdsLookup();
+        await Task.WhenAll(existingEntriesLookupTask, unpublishedReferencedEntriesIdsLookupTask);
+
+        var existingEntriesLookup = await existingEntriesLookupTask;
+        var unpublishedReferencedEntriesIdsLookup = await unpublishedReferencedEntriesIdsLookupTask;
 
         var tasks = entries.Select(async entry =>
         {
@@ -109,7 +170,7 @@ internal class ContentfulService(IContentfulManagementClientAdapter client) : IC
                 version: existing?.SystemProperties?.Version ?? 0,
                 cancellationToken: cancellationToken);
 
-            if (publish)
+            if (publish && AllReferencedEntriesArePublished(entry, unpublishedReferencedEntriesIdsLookup))
             {
                 await client.PublishEntryAsync(
                     entryId: upserted.SystemProperties?.Id!,
@@ -120,6 +181,7 @@ internal class ContentfulService(IContentfulManagementClientAdapter client) : IC
 
         await Task.WhenAll(tasks);
     }
+
 
     public async Task PublishEntriesAsync(IEnumerable<Entry<dynamic>> entries, CancellationToken cancellationToken = default)
     {
@@ -136,11 +198,44 @@ internal class ContentfulService(IContentfulManagementClientAdapter client) : IC
 
     public async Task DeleteEntriesAsync(IEnumerable<Entry<dynamic>> entries, CancellationToken cancellationToken = default)
     {
+        async Task<Dictionary<string, Entry<dynamic>>> GetExistingEntriesLookup()
+        {
+            var query = QueryBuilder<Entry<dynamic>>.New
+                .FieldIncludes("sys.id", entries.Select(e => e.SystemProperties.Id));
+
+            return (await GetEntriesAsync(
+                query: query,
+                cancellationToken: cancellationToken).ToListAsync(cancellationToken))
+                .ToDictionary(e => e.SystemProperties.Id);
+        }
+
+        var existingEntriesLookup = await GetExistingEntriesLookup();
+
         var tasks = entries.Select(async entry =>
         {
+            existingEntriesLookup.TryGetValue(entry.SystemProperties!.Id, out var existing);
+
+            var entryId = existing?.SystemProperties.Id ?? entry.SystemProperties.Id;
+            var version = existing?.SystemProperties.Version ?? entry.SystemProperties.Version ?? 0;
+
+            if (existing?.IsPublished() == true)
+            {
+                await client.UnpublishEntryAsync(
+                    entryId: entryId,
+                    version: version,
+                    cancellationToken: cancellationToken);
+            }
+            else if (existing?.IsArchived() == true)
+            {
+                await client.UnarchiveEntryAsync(
+                    entryId: entryId,
+                    version: version,
+                    cancellationToken: cancellationToken);
+            }
+
             await client.DeleteEntryAsync(
-                entryId: entry.SystemProperties?.Id!,
-                version: entry.SystemProperties?.Version ?? 0,
+                entryId: entryId,
+                version: version,
                 cancellationToken: cancellationToken);
         });
 
