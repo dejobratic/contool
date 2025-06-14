@@ -1,114 +1,46 @@
-﻿using Contool.Core;
-using Contool.Core.Features.EntryDelete;
-using Contool.Core.Features.EntryDownload;
-using Contool.Core.Features.EntryPublish;
-using Contool.Core.Features.EntryUpload;
-using Contool.Core.Features.TypeClone;
-using Contool.Core.Features.TypeDelete;
+﻿using Contool;
+using Contool.Cli;
+using Contool.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-
-using Spectre.Console;
+using Spectre.Console.Cli;
 using System.Diagnostics;
 
+using TypeRegistrar = Contool.Utils.TypeRegistrar;
+
 var stopwatch = Stopwatch.StartNew();
-stopwatch.Start();
 
-var configuration = new ConfigurationBuilder()
-    .AddUserSecrets<Program>()
-    .Build();
+var configuration = BuildConfiguration();
 
-var serviceProvider = new ServiceCollection()
-    .AddContoolDependencies(configuration)
-    .BuildServiceProvider();
+var services = BuildServiceCollection(configuration);
 
-var downloadCommand = new ContentDownloadCommand
+var registrar = new TypeRegistrar(services);
+
+var app = new CommandApp(registrar);
+
+app.Configure(config =>
 {
-    ContentTypeId = "brand",
-    EnvironmentId = "production",
-    OutputPath = @"C:\Users\dejanbratic\Desktop\contool-playground",
-    OutputFormat = "csv",
-};
+    config.SetApplicationName("contool");
 
-var downloadCommandHanlder = serviceProvider.GetRequiredService<ContentDownloadCommandHandler>();
+    config.AddBranch("content", branchConfig =>
+    {
+        branchConfig.AddCommand<EntriesDownloadCommand>("download")
+            .WithDescription("Download entries for a given content type.");
+    });
+});
 
-//await downloadCommandHanlder.HandleAsync(downloadCommand);
+return await app.RunAsync(args);
 
-var uploadCommand = new ContentUploadCommand
+static IServiceCollection BuildServiceCollection(IConfiguration configuration)
 {
-    ContentTypeId = "brand",
-    EnvironmentId = "production",
-    InputPath = @"C:\Users\dejanbratic\Desktop\contool-playground\brand_1000.csv",
-    ShouldPublish = true,
-};
-
-var uploadCommandHandler = serviceProvider.GetRequiredService<ContentUploadCommandHandler>();
-
-//await uploadCommandHandler.HandleAsync(uploadCommand);
-
-var publishCommand = new ContentPublishCommand
-{
-    ContentTypeId = "templateTranslation",
-    EnvironmentId = "production",
-};
-
-var publishCommandHandler = serviceProvider.GetRequiredService<ContentPublishCommandHandler>();
-
-//await publishCommandHandler.HandleAsync(publishCommand);
-
-var typeDeleteCommand = new TypeDeleteCommand
-{
-    ContentTypeId = "brand",
-    EnvironmentId = "production",
-    Force = true,
-};
-
-var typeDeleteCommandHandler = serviceProvider.GetRequiredService<TypeDeleteCommandHandler>();
-
-try
-{
-
-    //await typeDeleteCommandHandler.HandleAsync(deleteCommand);
-}
-catch (InvalidOperationException ex)
-{
-    AnsiConsole.MarkupLine($"[red]Type delete error:[/] {ex.Message}");
+    return new ServiceCollection()
+        .AddContoolDependencies(configuration)
+        .AddCliDependencies();
 }
 
-var entryDeleteCommand = new ContentDeleteCommand
+static IConfigurationRoot BuildConfiguration()
 {
-    ContentTypeId = "brand",
-    EnvironmentId = "production",
-};
-
-var entryDeleteCommandHandler = serviceProvider.GetRequiredService<ContentDeleteCommandHandler>();
-
-try
-{
-    await entryDeleteCommandHandler.HandleAsync(entryDeleteCommand);
+    return new ConfigurationBuilder()
+        .AddUserSecrets<Program>()
+        .Build();
 }
-catch (InvalidOperationException ex)
-{
-    AnsiConsole.MarkupLine($"[red]Entry delete error:[/] {ex.Message}");
-}
-
-var cloneCommand = new TypeCloneCommand
-{
-    ContentTypeId = "templateTranslation",
-    EnvironmentId = "master",
-    TargetEnvironmentId = "production",
-    ShouldPublish = true,
-};
-
-var cloneCommandHandler = serviceProvider.GetRequiredService<TypeCloneCommandHandler>();
-
-try
-{
-    //await cloneCommandHandler.HandleAsync(cloneCommand);
-}
-catch (InvalidOperationException ex)
-{
-    AnsiConsole.MarkupLine($"[red]Type clone error:[/] {ex.Message}");
-}
-
-AnsiConsole.Markup($"[underline red]Hello[/] World! Total time: {stopwatch.ElapsedMilliseconds} ms");

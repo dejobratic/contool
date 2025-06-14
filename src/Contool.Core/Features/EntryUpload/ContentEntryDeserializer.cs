@@ -12,22 +12,29 @@ public class ContentEntryDeserializer(ContentType contentType, ContentLocales lo
         .SelectMany(f => f.FieldNames.Select(name => (name, field: f)))
         .ToDictionary(t => t.name, t => t.field);
 
-    public Entry<dynamic> Deserialize(ContentFieldName[] headings, dynamic row)
+    public Entry<dynamic> Deserialize(dynamic row)
     {
         var entry = CreateEntry();
 
         var data = row as IDictionary<string, object?>
             ?? throw new ArgumentException("Row must be a dictionary.");
 
-        foreach (var heading in headings)
+        foreach (var heading in data.Keys)
         {
-            if (SysField.Names.Contains(heading.Value))
+            if (SysField.Names.Contains(heading))
             {
-                SysField.Deserialize(entry.SystemProperties, heading.Value, data[heading.Value]);
+                SysField.Deserialize(entry.SystemProperties, heading, data[heading]);
             }
-            else if (_fields.TryGetValue(heading.Value, out var field))
+            else if (_fields.TryGetValue(heading, out var field))
             {
-                field.Deserialize(entry.Fields, heading.Locale, data[heading.Value]);
+                // TODO: refactor this
+                var locale = heading.ToString()
+                    .Split('.')
+                    .LastOrDefault()
+                    ?.Replace("[]", "")
+                    ?? locales.DefaultLocale;
+
+                field.Deserialize(entry.Fields, locale, data[heading]);
             }
         }
 

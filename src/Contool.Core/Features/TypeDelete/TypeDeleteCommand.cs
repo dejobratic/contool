@@ -1,7 +1,5 @@
-﻿using Contentful.Core.Models;
-using Contool.Core.Contentful.Extensions;
+﻿using Contool.Core.Contentful.Extensions;
 using Contool.Core.Contentful.Services;
-using Contool.Core.Infrastructure.Utils;
 
 namespace Contool.Core.Features.TypeDelete;
 
@@ -13,7 +11,7 @@ public class TypeDeleteCommand : CommandBase
 }
 
 public class TypeDeleteCommandHandler(
-    IContentfulServiceBuilder contentfulServiceBuilder)
+    IContentfulServiceBuilder contentfulServiceBuilder) : ICommandHandler<TypeDeleteCommand>
 {
     public async Task HandleAsync(TypeDeleteCommand command, CancellationToken cancellationToken = default)
     {
@@ -60,11 +58,10 @@ public class TypeDeleteCommandHandler(
 
     private static async Task DeleteEntriesAsync(TypeDeleteCommand command, IContentfulService contentfulService, CancellationToken cancellationToken)
     {
-        var batchProcessor = new AsyncEnumerableBatchProcessor<Entry<dynamic>>(
-            items: contentfulService.GetEntriesAsync(contentTypeId: command.ContentTypeId, cancellationToken: cancellationToken),
-            batchSize: 50,
-            batchActionAsync: contentfulService.DeleteEntriesAsync);
+        var entries = contentfulService.GetEntriesAsync(
+            contentTypeId: command.ContentTypeId, cancellationToken: cancellationToken);
 
-        await batchProcessor.ProcessAsync(cancellationToken);
+        await contentfulService.DeleteEntriesAsync(
+            entries, cancellationToken);
     }
 }

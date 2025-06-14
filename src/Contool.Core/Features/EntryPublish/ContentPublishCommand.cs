@@ -2,6 +2,7 @@
 using Contool.Core.Contentful.Extensions;
 using Contool.Core.Contentful.Services;
 using Contool.Core.Infrastructure.Utils;
+using System.Runtime.CompilerServices;
 
 namespace Contool.Core.Features.EntryPublish;
 
@@ -11,18 +12,39 @@ public class ContentPublishCommand : CommandBase
 }
 
 public class ContentPublishCommandHandler(
-    IContentfulServiceBuilder contentfulServiceBuilder)
+    IContentfulServiceBuilder contentfulServiceBuilder,
+    IProgressReporter progressReporter) : ICommandHandler<ContentPublishCommand>
 {
     public async Task HandleAsync(ContentPublishCommand command, CancellationToken cancellationToken = default)
     {
-        var contentfulService = contentfulServiceBuilder.Build(command.SpaceId, command.EnvironmentId);
+        var contentfulService = contentfulServiceBuilder.Build(
+            command.SpaceId, command.EnvironmentId);
 
-        var batchProcessor = new AsyncEnumerableBatchProcessor<Entry<dynamic>>(
-            items: contentfulService.GetEntriesAsync(contentTypeId: command.ContentTypeId, cancellationToken: cancellationToken),
-            batchSize: 50,
-            batchActionAsync: contentfulService.PublishEntriesAsync,
-            shouldInclude: entry => !entry.IsArchived() && !entry.IsPublished());
+        var entriesForPublishing = GetEntriesForPublishing(
+            command.ContentTypeId, contentfulService, cancellationToken);
 
-        await batchProcessor.ProcessAsync(cancellationToken);
+        await contentfulService.PublishEntriesAsync(entriesForPublishing, cancellationToken);
+    }
+
+    private AsyncEnumerableWithTotal<Entry<dynamic>> GetEntriesForPublishing(
+        string contentTypeId,
+        IContentfulService contentfulService,
+        CancellationToken cancellationToken)
+    {
+        var entries = contentfulService.GetEntriesAsync(
+            contentTypeId: contentTypeId, cancellationToken: cancellationToken);
+
+        return new AsyncEnumerableWithTotal<Entry<dynamic>>(
+            GetEntriesForPublishingAsync(entries),
+            getTotal: () => entries.Total, // TODO: this is not accurate
+            progressReporter); 
+    }
+
+    private static async IAsyncEnumerable<Entry<dynamic>> GetEntriesForPublishingAsync(
+        IAsyncEnumerable<Entry<dynamic>> entries)
+    {
+        await foreach (var entry in entries)
+            if (!entry.IsArchived() && !entry.IsPublished())
+                yield return entry;
     }
 }

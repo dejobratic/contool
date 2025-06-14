@@ -5,5 +5,6 @@ namespace Contool.Core.Infrastructure.IO.Output;
 public interface IOutputWriter
 {
     DataSource DataSource { get; }
-    Task SaveAsync(OutputContent output, CancellationToken cancellationToken);
+
+    Task SaveAsync(string path, IAsyncEnumerable<dynamic> content, CancellationToken cancellationToken);
 }

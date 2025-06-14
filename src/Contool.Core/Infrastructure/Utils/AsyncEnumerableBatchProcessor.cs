@@ -1,13 +1,13 @@
 ﻿namespace Contool.Core.Infrastructure.Utils;
 
 public class AsyncEnumerableBatchProcessor<T>(
-    IAsyncEnumerable<T> items,
+    IAsyncEnumerable<T> source,
     int batchSize,
     Func<IReadOnlyList<T>, CancellationToken, Task> batchActionAsync,
     Func<T, bool>? shouldInclude = null)
 {
-    private readonly IAsyncEnumerable<T> _items = items
-        ?? throw new ArgumentNullException(nameof(items));
+    private readonly IAsyncEnumerable<T> _source = source
+        ?? throw new ArgumentNullException(nameof(source));
 
     private readonly int _batchSize = batchSize > 0 && batchSize <= 100
         ? batchSize
@@ -22,7 +22,7 @@ public class AsyncEnumerableBatchProcessor<T>(
     {
         var buffer = new List<T>(_batchSize);
 
-        await foreach (var item in _items.WithCancellation(cancellationToken))
+        await foreach (var item in _source.WithCancellation(cancellationToken))
         {
             if (_shouldInclude is not null && !_shouldInclude(item))
                 continue;
@@ -33,11 +33,14 @@ public class AsyncEnumerableBatchProcessor<T>(
                 continue;
 
             await _batchActionAsync(buffer, cancellationToken);
+
             buffer.Clear();
         }
 
         if (buffer.Count > 0)
+        {
             await _batchActionAsync(buffer, cancellationToken);
+            buffer.Clear();
+        }
     }
 }
-

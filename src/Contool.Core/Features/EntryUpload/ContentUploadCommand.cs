@@ -2,6 +2,7 @@
 using Contool.Core.Contentful.Services;
 using Contool.Core.Infrastructure.IO.Input;
 using Contool.Core.Infrastructure.IO.Models;
+using Contool.Core.Infrastructure.Utils;
 
 namespace Contool.Core.Features.EntryUpload;
 
@@ -18,12 +19,12 @@ public class ContentUploadCommandHandler(
     IInputReaderFactory inputReaderFactory,
     IContentfulServiceBuilder contentfulServiceBuilder,
     IContentEntryDeserializerFactory deserializerFactory,
-    IContentUploader contentUploader)
+    IContentUploader contentUploader) : ICommandHandler<ContentUploadCommand>
 {
     public async Task HandleAsync(ContentUploadCommand command, CancellationToken cancellationToken = default)
     {
         var inputReader = inputReaderFactory.Create(GetFileSource(command));
-        var input = await inputReader.ReadAsync(command.InputPath, cancellationToken);
+        var input = inputReader.ReadAsync(command.InputPath, cancellationToken);
 
         var contentfulService = contentfulServiceBuilder
             .Build(command.SpaceId, command.EnvironmentId);
@@ -44,7 +45,7 @@ public class ContentUploadCommandHandler(
 
     private static ContentUploadRequest CreateContentUploadRequest(
         ContentUploadCommand command,
-        Content input,
+        IAsyncEnumerableWithTotal<dynamic> input,
         IContentEntryDeserializer deserializer,
         IContentfulService contentfulService)
     {

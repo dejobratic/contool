@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Contool.Core.Infrastructure.Extensions;
 
 namespace Contool.Core.Contentful.Extensions;
 
@@ -21,6 +21,6 @@ public static class LinkExtensions
             }
         };
 
-        return JObject.FromObject(obj);
+        return obj.SerializeToJsonObject();
     }
 }

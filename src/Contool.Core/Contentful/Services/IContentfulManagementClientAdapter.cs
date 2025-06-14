@@ -19,7 +19,7 @@ public interface IContentfulManagementClientAdapter
 
     Task DeleteContentTypeAsync(string contentTypeId, CancellationToken cancellationToken);
 
-    Task<IEnumerable<Entry<dynamic>>> GetEntriesCollectionAsync(string queryString, CancellationToken cancellationToken);
+    Task<ContentfulCollection<Entry<dynamic>>> GetEntriesCollectionAsync(string queryString, CancellationToken cancellationToken);
 
     Task<Entry<dynamic>> CreateOrUpdateEntryAsync(Entry<dynamic> entry, int version, CancellationToken cancellationToken);
 

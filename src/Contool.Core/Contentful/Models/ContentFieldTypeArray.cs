@@ -60,7 +60,7 @@ internal class ContentFieldTypeArray() : ContentFieldType("Array")
 
         foreach (var arrayItem in arr)
         {
-            if (schema?.LinkType == "Link")
+            if (schema?.LinkType == "Link" || schema?.LinkType == "Entry")
             {
                 var item = arrayItem.ToLink(schema.LinkType);
                 if (item is not null)

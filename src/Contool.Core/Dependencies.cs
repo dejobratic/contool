@@ -1,6 +1,7 @@
 ﻿using Contentful.Core.Configuration;
 using Contool.Core.Contentful.Options;
 using Contool.Core.Contentful.Services;
+using Contool.Core.Features;
 using Contool.Core.Features.EntryDelete;
 using Contool.Core.Features.EntryDownload;
 using Contool.Core.Features.EntryPublish;
@@ -39,12 +40,12 @@ public static class Dependencies
             .AddSingleton<IContentUploader, ContentUploader>()
             .AddSingleton<IInputReaderFactory, InputReaderFactory>()
             .AddSingleton<IInputReader, CsvInputReader>()
-            //.AddSingleton<IInputReader, JsonInputReader>()
-            .AddSingleton<ContentDownloadCommandHandler>()
-            .AddSingleton<ContentUploadCommandHandler>()
-            .AddSingleton<ContentPublishCommandHandler>()
-            .AddSingleton<ContentDeleteCommandHandler>()
-            .AddSingleton<TypeCloneCommandHandler>()
-            .AddSingleton<TypeDeleteCommandHandler>();
+            .AddSingleton<IInputReader, JsonInputReader>()
+            .AddSingleton<ICommandHandler<ContentDownloadCommand>, ContentDownloadCommandHandler>()
+            .AddSingleton<ICommandHandler<ContentUploadCommand>, ContentUploadCommandHandler>()
+            .AddSingleton<ICommandHandler<ContentPublishCommand>, ContentPublishCommandHandler>()
+            .AddSingleton<ICommandHandler<ContentDeleteCommand>, ContentDeleteCommandHandler>()
+            .AddSingleton<ICommandHandler<TypeCloneCommand>, TypeCloneCommandHandler>()
+            .AddSingleton<ICommandHandler<TypeDeleteCommand>, TypeDeleteCommandHandler>();
     }
 }

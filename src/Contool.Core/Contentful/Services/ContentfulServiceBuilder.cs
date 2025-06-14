@@ -1,7 +1,10 @@
-﻿namespace Contool.Core.Contentful.Services;
+﻿using Contool.Core.Infrastructure.Utils;
+
+namespace Contool.Core.Contentful.Services;
 
 public class ContentfulServiceBuilder(
-    IContentfulManagementClientAdapterFactory adapterFactory) : IContentfulServiceBuilder
+    IContentfulManagementClientAdapterFactory adapterFactory,
+    IProgressReporter progressReporter) : IContentfulServiceBuilder
 {
     private readonly IContentfulManagementClientAdapterFactory _adapterFactory = adapterFactory;
 
@@ -31,6 +34,6 @@ public class ContentfulServiceBuilder(
     {
         var adapter = _adapterFactory.Create(_spaceId!, _environmentId!, _usePreviewApi);
 
-        return new ContentfulService(adapter);
+        return new ContentfulService(adapter, progressReporter);
     }
 }

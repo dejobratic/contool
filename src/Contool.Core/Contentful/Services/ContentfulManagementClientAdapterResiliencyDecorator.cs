@@ -36,7 +36,7 @@ public class ContentfulManagementClientAdapterResiliencyDecorator(
     public async Task DeleteContentTypeAsync(string contentTypeId, CancellationToken cancellationToken)
         => await ExecuteAsync(ct => innerAdapter.DeleteContentTypeAsync(contentTypeId, ct), cancellationToken);
 
-    public async Task<IEnumerable<Entry<dynamic>>> GetEntriesCollectionAsync(string queryString, CancellationToken cancellationToken)
+    public async Task<ContentfulCollection<Entry<dynamic>>> GetEntriesCollectionAsync(string queryString, CancellationToken cancellationToken)
         => await ExecuteAsync(ct => innerAdapter.GetEntriesCollectionAsync(queryString, ct), cancellationToken);
 
     public async Task<Entry<dynamic>> CreateOrUpdateEntryAsync(Entry<dynamic> entry, int version, CancellationToken cancellationToken)

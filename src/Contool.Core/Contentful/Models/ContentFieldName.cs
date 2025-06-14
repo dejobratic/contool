@@ -15,7 +15,7 @@ public class ContentFieldName
     public ContentFieldName(string fieldName)
     {
         Value = fieldName;
-        Locale = fieldName.Split('.')[1];
+        Locale = fieldName.Split('.')[1].Replace("[]", "");
     }
 
     public override string ToString() => Value;

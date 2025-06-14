@@ -41,7 +41,7 @@ internal class ContentFieldTypeRichText() : ContentFieldType("RichText")
             }]
         };
 
-        return JObject.FromObject(doc);
+        return doc.SerializeToJsonObject();
     }
 
     public static string? ToMarkDown(object? richText)

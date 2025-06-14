@@ -3,12 +3,17 @@ using Contentful.Core.Models;
 using Contentful.Core.Models.Management;
 using Contentful.Core.Search;
 using Contool.Core.Contentful.Extensions;
-using System.Runtime.CompilerServices;
+using Contool.Core.Contentful.Utils;
+using Contool.Core.Infrastructure.Utils;
 
 namespace Contool.Core.Contentful.Services;
 
-public class ContentfulService(IContentfulManagementClientAdapter client) : IContentfulService
+public class ContentfulService(
+    IContentfulManagementClientAdapter client,
+    IProgressReporter progressReporter) : IContentfulService
 {
+    private const int DefaultBatchSize = 50;
+
     public async Task<IEnumerable<Locale>> GetLocalesAsync(CancellationToken cancellationToken)
     {
         return await client.GetLocalesCollectionAsync(cancellationToken);
@@ -65,49 +70,25 @@ public class ContentfulService(IContentfulManagementClientAdapter client) : ICon
             cancellationToken: cancellationToken);
     }
 
-    public async IAsyncEnumerable<Entry<dynamic>> GetEntriesAsync(
+    public IAsyncEnumerableWithTotal<Entry<dynamic>> GetEntriesAsync(
         string? contentTypeId = null,
         QueryBuilder<Entry<dynamic>>? query = null,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default)
     {
-        int skip = 0;
-        int pageSize = 100;
-        bool moreResults = true;
-
         query ??= new QueryBuilder<Entry<dynamic>>()
             .ContentTypeIs(contentTypeId?.ToCamelCase());
 
         var queryString = query.Build();
 
-        while (moreResults)
-        {
-            var entries = await client
-                .GetEntriesCollectionAsync($"{queryString}&skip={skip}&limit={pageSize}", cancellationToken: cancellationToken);
+        async Task<ContentfulCollection<Entry<dynamic>>> GetEntriesAsync(int skip, int limit, CancellationToken ct)
+            => await client.GetEntriesCollectionAsync($"{queryString}&skip={skip}&limit={limit}", cancellationToken: ct);
 
-            if (entries == null || !entries.Any())
-            {
-                yield break;
-            }
-
-            foreach (var entry in entries)
-            {
-                yield return entry;
-            }
-
-            if (entries.Count() < pageSize)
-            {
-                moreResults = false;
-            }
-            else
-            {
-                skip += pageSize;
-            }
-        }
+        return new ContentfulAsyncEnumerableWithTotal<Entry<dynamic>>(GetEntriesAsync, pageSize: DefaultBatchSize);
     }
 
-    public async Task CreateOrUpdateEntriesAsync(IEnumerable<Entry<dynamic>> entries, bool publish = false, CancellationToken cancellationToken = default)
+    public async Task CreateOrUpdateEntriesAsync(IAsyncEnumerableWithTotal<Entry<dynamic>> entries, bool publish = false, CancellationToken cancellationToken = default)
     {
-        async Task<Dictionary<string, Entry<dynamic>>> GetExistingEntriesLookup()
+        async Task<Dictionary<string, Entry<dynamic>>> GetExistingEntriesLookup(IEnumerable<Entry<dynamic>> entries)
         {
             var queryString = QueryBuilder<Entry<dynamic>>.New
                 .FieldIncludes("sys.id", entries.Select(e => e.SystemProperties.Id))
@@ -119,7 +100,7 @@ public class ContentfulService(IContentfulManagementClientAdapter client) : ICon
                 .ToDictionary(e => e.SystemProperties.Id);
         }
 
-        async Task<Dictionary<string, HashSet<string>>> GetUnpublishedOrMissingReferencedEntriesIdsLookup()
+        async Task<Dictionary<string, HashSet<string>>> GetUnpublishedOrMissingReferencedEntriesIdsLookup(IEnumerable<Entry<dynamic>> entries)
         {
             var referencedEntryIdsPerEntry = entries.ToDictionary(
                 entry => entry.SystemProperties.Id,
@@ -153,91 +134,135 @@ public class ContentfulService(IContentfulManagementClientAdapter client) : ICon
             => unpublishedReferencedEntriesIds.TryGetValue(entry.SystemProperties!.Id, out var unresolvedRefs)
                && unresolvedRefs.Count == 0;
 
-        var existingEntriesLookupTask = GetExistingEntriesLookup();
-        var unpublishedReferencedEntriesIdsLookupTask = GetUnpublishedOrMissingReferencedEntriesIdsLookup();
-        await Task.WhenAll(existingEntriesLookupTask, unpublishedReferencedEntriesIdsLookupTask);
+        var current = 0;
 
-        var existingEntriesLookup = await existingEntriesLookupTask;
-        var unpublishedReferencedEntriesIdsLookup = await unpublishedReferencedEntriesIdsLookupTask;
-
-        var tasks = entries.Select(async entry =>
-        {
-            existingEntriesLookup.TryGetValue(entry.SystemProperties!.Id, out var existing);
-
-            var upserted = await client.CreateOrUpdateEntryAsync(
-                entry,
-                version: existing?.SystemProperties?.Version ?? 0,
-                cancellationToken: cancellationToken);
-
-            if (publish && AllReferencedEntriesArePublished(entry, unpublishedReferencedEntriesIdsLookup))
+        var batchProcessor = new AsyncEnumerableBatchProcessor<Entry<dynamic>>(
+            source: entries,
+            batchSize: DefaultBatchSize,
+            batchActionAsync: async (batch, ct) =>
             {
-                await client.PublishEntryAsync(
-                    entryId: upserted.SystemProperties?.Id!,
-                    version: upserted?.SystemProperties?.Version ?? 0,
-                    cancellationToken: cancellationToken);
-            }
-        });
+                var existingEntriesLookupTask = GetExistingEntriesLookup(batch);
+                var unpublishedReferencedEntriesIdsLookupTask = GetUnpublishedOrMissingReferencedEntriesIdsLookup(batch);
+                await Task.WhenAll(existingEntriesLookupTask, unpublishedReferencedEntriesIdsLookupTask);
 
-        await Task.WhenAll(tasks);
+                var existingEntriesLookup = await existingEntriesLookupTask;
+                var unpublishedReferencedEntriesIdsLookup = await unpublishedReferencedEntriesIdsLookupTask;
+
+                var tasks = batch.Select(async entry =>
+                {
+                    existingEntriesLookup.TryGetValue(entry.SystemProperties!.Id, out var existing);
+
+                    var upserted = await client.CreateOrUpdateEntryAsync(
+                        entry,
+                        version: existing?.SystemProperties?.Version ?? 0,
+                        cancellationToken: cancellationToken);
+
+                    if (publish && AllReferencedEntriesArePublished(entry, unpublishedReferencedEntriesIdsLookup))
+                    {
+                        await client.PublishEntryAsync(
+                            entryId: upserted.SystemProperties?.Id!,
+                            version: upserted?.SystemProperties?.Version ?? 0,
+                            cancellationToken: cancellationToken);
+                    }
+
+                    progressReporter.Report(Interlocked.Increment(ref current), entries.Total);
+                });
+
+                await Task.WhenAll(tasks);
+            });
+
+        await batchProcessor.ProcessAsync(cancellationToken);
     }
 
 
-    public async Task PublishEntriesAsync(IEnumerable<Entry<dynamic>> entries, CancellationToken cancellationToken = default)
+    public async Task PublishEntriesAsync(IAsyncEnumerableWithTotal<Entry<dynamic>> entries, CancellationToken cancellationToken = default)
     {
-        var tasks = entries.Select(async entry =>
-        {
-            await client.PublishEntryAsync(
-                entryId: entry.SystemProperties?.Id!,
-                version: entry.SystemProperties?.Version ?? 0,
-                cancellationToken: cancellationToken);
-        });
+        var current = 0;
 
-        await Task.WhenAll(tasks);
+        var batchProcessor = new AsyncEnumerableBatchProcessor<Entry<dynamic>>(
+            source: entries,
+            batchSize: DefaultBatchSize,
+            batchActionAsync: async (batch, ct) =>
+            {
+                var tasks = batch.Select(async entry =>
+                {
+                    await client.PublishEntryAsync(
+                        entryId: entry.SystemProperties?.Id!,
+                        version: entry.SystemProperties?.Version ?? 0,
+                        cancellationToken: cancellationToken);
+
+                    progressReporter.Report(Interlocked.Increment(ref current), entries.Total);
+                });
+
+                await Task.WhenAll(tasks);
+            });
+
+        await batchProcessor.ProcessAsync(cancellationToken);
     }
 
-    public async Task DeleteEntriesAsync(IEnumerable<Entry<dynamic>> entries, CancellationToken cancellationToken = default)
+    public async Task DeleteEntriesAsync(IAsyncEnumerableWithTotal<Entry<dynamic>> entries, CancellationToken cancellationToken = default)
     {
-        async Task<Dictionary<string, Entry<dynamic>>> GetExistingEntriesLookup()
+        async Task<Dictionary<string, Entry<dynamic>>> GetExistingEntriesLookup(IEnumerable<Entry<dynamic>> entries)
         {
-            var query = QueryBuilder<Entry<dynamic>>.New
-                .FieldIncludes("sys.id", entries.Select(e => e.SystemProperties.Id));
+            var queryString = QueryBuilder<Entry<dynamic>>.New
+                .FieldIncludes("sys.id", entries.Select(e => e.SystemProperties.Id))
+                .Build();
 
-            return (await GetEntriesAsync(
-                query: query,
-                cancellationToken: cancellationToken).ToListAsync(cancellationToken))
+            return (await client.GetEntriesCollectionAsync(
+                queryString: queryString,
+                cancellationToken: cancellationToken))
                 .ToDictionary(e => e.SystemProperties.Id);
         }
 
-        var existingEntriesLookup = await GetExistingEntriesLookup();
+        var current = 0;
 
-        var tasks = entries.Select(async entry =>
-        {
-            existingEntriesLookup.TryGetValue(entry.SystemProperties!.Id, out var existing);
-
-            var entryId = existing?.SystemProperties.Id ?? entry.SystemProperties.Id;
-            var version = existing?.SystemProperties.Version ?? entry.SystemProperties.Version ?? 0;
-
-            if (existing?.IsPublished() == true)
+        var batchProcessor = new AsyncEnumerableBatchProcessor<Entry<dynamic>>(
+            source: entries,
+            batchSize: DefaultBatchSize,
+            batchActionAsync: async (batch, ct) =>
             {
-                await client.UnpublishEntryAsync(
-                    entryId: entryId,
-                    version: version,
-                    cancellationToken: cancellationToken);
-            }
-            else if (existing?.IsArchived() == true)
-            {
-                await client.UnarchiveEntryAsync(
-                    entryId: entryId,
-                    version: version,
-                    cancellationToken: cancellationToken);
-            }
+                var existingEntriesLookup = await GetExistingEntriesLookup(batch);
 
-            await client.DeleteEntryAsync(
-                entryId: entryId,
-                version: version,
-                cancellationToken: cancellationToken);
-        });
+                var tasks = batch.Select(async entry =>
+                {
+                    existingEntriesLookup.TryGetValue(entry.SystemProperties!.Id, out var existing);
 
-        await Task.WhenAll(tasks);
+                    var entryId = existing?.SystemProperties.Id ?? entry.SystemProperties.Id;
+                    var version = existing?.SystemProperties.Version ?? entry.SystemProperties.Version ?? 0;
+
+                    try
+                    {
+                        if (true || existing?.IsPublished() == true)
+                        {
+                            await client.UnpublishEntryAsync(
+                                entryId: entryId,
+                                version: version,
+                                cancellationToken: cancellationToken);
+                        }
+                        else if (existing?.IsArchived() == true)
+                        {
+                            await client.UnarchiveEntryAsync(
+                                entryId: entryId,
+                                version: version,
+                                cancellationToken: cancellationToken);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // swallow
+                    }
+
+                    await client.DeleteEntryAsync(
+                        entryId: entryId,
+                        version: version,
+                        cancellationToken: cancellationToken);
+
+                    progressReporter.Report(Interlocked.Increment(ref current), entries.Total);
+                });
+
+                await Task.WhenAll(tasks);
+            });
+
+        await batchProcessor.ProcessAsync(cancellationToken);
     }
 }

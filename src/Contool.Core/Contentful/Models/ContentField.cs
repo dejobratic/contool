@@ -33,6 +33,9 @@ public class ContentField(Field field, ContentLocales locales)
 
         var token = Type.Deserialize(rawValue, Schema);
 
+        if (token is null)
+            return;
+
         var container = fields[Id] as JObject ?? [];
         container[localeCode] = token is JToken jt ? jt : JToken.FromObject(token!);
         fields[Id] = container;

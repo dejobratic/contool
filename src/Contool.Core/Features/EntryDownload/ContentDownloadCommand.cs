@@ -17,12 +17,10 @@ public class ContentDownloadCommandHandler(
     IContentEntrySerializerFactory serializerFactory,
     IContentfulServiceBuilder contentfulServiceBuilder,
     IContentDownloader contentDownloader,
-    IOutputWriterFactory outputWriterFactory)
+    IOutputWriterFactory outputWriterFactory) : ICommandHandler<ContentDownloadCommand>
 {
     public async Task HandleAsync(ContentDownloadCommand command, CancellationToken cancellationToken = default)
     {
-        // moving content type validation to the command handler
-
         var contentfulService = contentfulServiceBuilder
             .Build(command.SpaceId, command.EnvironmentId);
 
@@ -32,8 +30,11 @@ public class ContentDownloadCommandHandler(
         var output = await contentDownloader
             .DownloadAsync(CreateContentDownloadRequest(command, serializer, contentfulService), cancellationToken);
 
-        var outputWriter = outputWriterFactory.Create(output.DataSource);
-        await outputWriter.SaveAsync(output, cancellationToken);
+        var outputWriter = outputWriterFactory
+            .Create(output.DataSource);
+
+        await outputWriter
+            .SaveAsync(output.FullPath, output.Content, cancellationToken);
     }
 
     private static ContentDownloadRequest CreateContentDownloadRequest(

@@ -1,28 +1,40 @@
-﻿using Contool.Core.Infrastructure.IO.Models;
+﻿using Contentful.Core.Models;
+using Contool.Core.Infrastructure.IO.Models;
+using Contool.Core.Infrastructure.Utils;
 
 namespace Contool.Core.Features.EntryDownload;
 
-public class ContentDownloader : IContentDownloader
+public class ContentDownloader(IProgressReporter progressReporter) : IContentDownloader
 {
     public async Task<OutputContent> DownloadAsync(ContentDownloadRequest request, CancellationToken cancellationToken)
     {
-        var output = CreateOutput(request);
-        output.SetHeadings(request.Serializer.FieldNames);
+        await Task.CompletedTask; // TODO: remove ??
 
-        await foreach (var entry in request.ContentfulService.GetEntriesAsync(request.ContentTypeId, cancellationToken: cancellationToken))
-        {
-            var serialized = request.Serializer.Serialize(entry);
-            output.AddRow(serialized);
-        }
-
-        return output;
-    }
-
-    private static OutputContent CreateOutput(ContentDownloadRequest request)
-    {
         return new OutputContent(
             path: request.OutputPath,
             name: request.ContentTypeId,
-            type: request.OutputFormat);
+            type: request.OutputFormat,
+            content: GetEntriesToDownload(request, cancellationToken));
+    }
+
+    private AsyncEnumerableWithTotal<dynamic> GetEntriesToDownload(
+        ContentDownloadRequest request,
+        CancellationToken cancellationToken)
+    {
+        var entries = request.ContentfulService.GetEntriesAsync(
+            request.ContentTypeId, cancellationToken: cancellationToken);
+
+        return new AsyncEnumerableWithTotal<dynamic>(
+            source: GetEntriesToSerialize(entries, request.Serializer),
+            getTotal: () => entries.Total,
+            progressReporter);
+    }
+
+    public static async IAsyncEnumerable<dynamic> GetEntriesToSerialize(
+        IAsyncEnumerable<Entry<dynamic>> entries,
+        IContentEntrySerializer serializer)
+    {
+        await foreach (var entry in entries)
+            yield return serializer.Serialize(entry);
     }
 }

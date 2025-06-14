@@ -55,7 +55,7 @@ public class ContentfulManagementClientAdapter(
             cancellationToken: cancellationToken);
     }
 
-    public async Task<IEnumerable<Entry<dynamic>>> GetEntriesCollectionAsync(string queryString, CancellationToken cancellationToken)
+    public async Task<ContentfulCollection<Entry<dynamic>>> GetEntriesCollectionAsync(string queryString, CancellationToken cancellationToken)
     {
         return await client.GetEntriesCollection<Entry<dynamic>>(
             queryString: queryString,

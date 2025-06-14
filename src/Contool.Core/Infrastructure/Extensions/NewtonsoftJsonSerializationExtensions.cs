@@ -1,5 +1,6 @@
 ﻿using Contentful.Core.Configuration;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 
 namespace Contool.Core.Infrastructure.Extensions;
@@ -20,4 +21,11 @@ public static class NewtonsoftJsonSerializationExtensions
 
     public static T? DeserializeFromJsonString<T>(this string jsonString, JsonSerializerSettings? settings = null)
         => JsonConvert.DeserializeObject<T>(jsonString, settings ?? DefaultSettings);
+
+    public static JObject? SerializeToJsonObject(this object obj, JsonSerializerSettings? settings = null)
+    {
+        return obj is null
+            ? null
+            : JObject.FromObject(obj, JsonSerializer.Create(settings ?? DefaultSettings));
+    }
 }

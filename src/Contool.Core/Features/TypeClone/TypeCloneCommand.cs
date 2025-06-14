@@ -15,7 +15,7 @@ public class TypeCloneCommand : CommandBase
 }
 
 public class TypeCloneCommandHandler(
-    IContentfulServiceBuilder contentfulServiceBuilder)
+    IContentfulServiceBuilder contentfulServiceBuilder) : ICommandHandler<TypeCloneCommand>
 {
     public async Task HandleAsync(TypeCloneCommand command, CancellationToken cancellationToken = default)
     {
@@ -80,19 +80,28 @@ public class TypeCloneCommandHandler(
 
     private static async Task CloneEntriesAsync(TypeCloneCommand command, IContentfulService sourceContentfulService, IContentfulService targetContentfulService, CancellationToken cancellationToken)
     {
-        var batchProcessor = new AsyncEnumerableBatchProcessor<Entry<dynamic>>(
-            items: sourceContentfulService.GetEntriesAsync(command.ContentTypeId, cancellationToken: cancellationToken),
-            batchSize: 50,
-            batchActionAsync: async (entries, ct) =>
-            {
-                await targetContentfulService.CreateOrUpdateEntriesAsync(
-                    entries,
-                    publish: command.ShouldPublish,
-                    ct);
-            },
-            shouldInclude: entry => !entry.IsArchived());
+        var entries = sourceContentfulService.GetEntriesAsync(
+            command.ContentTypeId, cancellationToken: cancellationToken);
 
-        await batchProcessor.ProcessAsync(cancellationToken);
+        var entriesForCloning = GetEntriesForCloning(entries);
+
+        await targetContentfulService.CreateOrUpdateEntriesAsync(entries, command.ShouldPublish, cancellationToken);
+    }
+
+    private static AsyncEnumerableWithTotal<Entry<dynamic>> GetEntriesForCloning(
+        IAsyncEnumerableWithTotal<Entry<dynamic>> entries)
+    {
+        return new AsyncEnumerableWithTotal<Entry<dynamic>>(
+            FilterPublishedEntries(entries),
+            getTotal: () => entries.Total);
+    }
+
+    private static async IAsyncEnumerable<Entry<dynamic>> FilterPublishedEntries(
+        IAsyncEnumerable<Entry<dynamic>> entries)
+    {
+        await foreach (var entry in entries)
+            if (entry.IsPublished())
+                yield return entry;
     }
 }
 

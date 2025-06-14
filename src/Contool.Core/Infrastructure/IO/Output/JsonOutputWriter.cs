@@ -12,32 +12,33 @@ public class JsonOutputWriter : IOutputWriter
 
     public DataSource DataSource => DataSource.Json;
 
-    public async Task SaveAsync(OutputContent output, CancellationToken cancellationToken)
+    public async Task SaveAsync(string path, IAsyncEnumerable<dynamic> content, CancellationToken cancellationToken)
     {
-        if (output.Headings.Length == 0)
-            throw new InvalidOperationException("No headings found in output.");
+        await using var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
+        using var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true });
 
-        var outputPath = Path.Combine(output.FullPath);
+        writer.WriteStartArray();
 
-        // Normalize rows into a list of dictionaries with values ordered by output.Headings
-        var normalizedRows = new List<Dictionary<string, object?>>();
-
-        foreach (var row in output.Rows)
+        await foreach (var item in content.WithCancellation(cancellationToken))
         {
-            if (row is not IDictionary<string, object?> record)
-                throw new InvalidOperationException("Expected dictionary for data row.");
+            cancellationToken.ThrowIfCancellationRequested();
 
-            var normalized = new Dictionary<string, object?>();
-            foreach (var header in output.Headings)
+            if (item is not IDictionary<string, object?> record)
+                throw new InvalidOperationException("Expected each row to be IDictionary<string, object?>");
+
+            writer.WriteStartObject();
+
+            foreach (var kvp in record)
             {
-                record.TryGetValue(header.Value, out var value);
-                normalized[header.Value] = value;
+                writer.WritePropertyName(kvp.Key);
+                // Leverage JsonSerializer to handle nulls and complex values
+                JsonSerializer.Serialize(writer, kvp.Value, JsonOptions);
             }
 
-            normalizedRows.Add(normalized);
+            writer.WriteEndObject();
         }
 
-        await using var stream = new FileStream(outputPath, FileMode.Create, FileAccess.Write, FileShare.None);
-        await JsonSerializer.SerializeAsync(stream, normalizedRows, JsonOptions, cancellationToken);
+        writer.WriteEndArray();
+        await writer.FlushAsync(cancellationToken);
     }
 }
