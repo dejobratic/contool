@@ -23,10 +23,10 @@ public sealed class InfoCommand(
     {
         var (space, environment, user, locales, contentTypes) = await LoadInfoAsync();
 
-        AnsiConsole.Write(BuildTopTable(space, environment, user));
+        AnsiConsole.Write(BuildSpaceInfoTable(space, environment, user));
 
-        var contentTypesTable = BuildContentTypesTable(contentTypes);
-        var localesTable = BuildLocalesTable(locales);
+        var contentTypesTable = BuildContentTypesInfoTable(contentTypes);
+        var localesTable = BuildLocalesInfoTable(locales);
 
         var mainTable = new Table()
             .RoundedBorder()
@@ -50,53 +50,56 @@ public sealed class InfoCommand(
 
         await Task.WhenAll(spaceTask, environmentTask, userTask, localesTask, contentTypesTask);
 
-        return (
-            await spaceTask,
+        return 
+            (await spaceTask,
             await environmentTask,
             await userTask,
             await localesTask,
-            (await contentTypesTask).OrderBy(t => t.Name)
-        );
+            (await contentTypesTask).OrderBy(t => t.Name));
     }
 
-    private static Table BuildTopTable(Space space, Environment environment, User user)
+    private static Table BuildSpaceInfoTable(Space space, Environment environment, User user)
     {
         return new Table()
             .RoundedBorder()
             .BorderColor(Styles.Dim.Foreground)
-            .AddColumns("Space", "Id", "Environment", "User Id", "User Name")
+            .AddColumn(new TableColumn(new Text("Space Id", Styles.SubHeading)))
+            .AddColumn(new TableColumn(new Text("Space Name", Styles.SubHeading)))
+            .AddColumn(new TableColumn(new Text("Environment", Styles.SubHeading)))
+            .AddColumn(new TableColumn(new Text("User Id", Styles.SubHeading)))
+            .AddColumn(new TableColumn(new Text("User Name", Styles.SubHeading)))
             .AddRow(
-                new Markup(space.Name, Styles.Alert),
-                new Markup(space.GetId(), Styles.Normal),
-                new Markup(environment.SystemProperties.Id, Styles.Normal),
+                new Markup(space.GetId(), Styles.AlertAccent),
+                new Markup(space.Name, Styles.Normal),
+                new Markup(environment.SystemProperties.Id, Styles.AlertAccent),
                 new Markup(user.GetId(), Styles.Normal),
                 new Markup(user.Email, Styles.Normal)
             );
     }
 
-    private static Table BuildContentTypesTable(IEnumerable<ContentTypeExtended> contentTypes)
+    private static Table BuildContentTypesInfoTable(IEnumerable<ContentTypeExtended> contentTypes)
     {
         var table = new Table()
             .RoundedBorder()
             .BorderColor(Styles.Dim.Foreground)
             .AddColumn("Type Name")
-            .AddColumn("Content Id")
-            .AddColumn("Field #", column => column.RightAligned())
+            .AddColumn("Type Id")
+            //.AddColumn("Field #", column => column.RightAligned())
             .AddColumn("Record #", column => column.RightAligned());
 
-        foreach (var ct in contentTypes)
+        foreach (var type in contentTypes)
         {
             table.AddRow(
-                new Markup(ct.Name.Trim().Snip(27), Styles.Normal),
-                new Markup(ct.GetId(), Styles.AlertAccent),
-                new Markup(ct.Fields.Count.ToString(), Styles.Normal),
-                new Markup(ct.TotalEntries.ToString(), Styles.Normal));
+                new Markup(type.Name.Trim().Snip(28), Styles.Normal),
+                new Markup(type.GetId(), Styles.AlertAccent),
+                //new Markup(ct.Fields.Count.ToString(), Styles.Normal),
+                new Markup(type.TotalEntries.ToString(), Styles.Normal));
         }
 
         return table;
     }
 
-    private static Table BuildLocalesTable(IEnumerable<Locale> locales)
+    private static Table BuildLocalesInfoTable(IEnumerable<Locale> locales)
     {
         var table = new Table()
             .RoundedBorder()
