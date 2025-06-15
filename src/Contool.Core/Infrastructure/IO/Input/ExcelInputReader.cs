@@ -52,11 +52,11 @@ public class ExcelInputReader : IInputReader
                 if (cellValue != null)
                 {
                     hasData = true;
-                    record[headerName] = ConvertCellValue(cellValue);
+                    record[headerName] = ConvertCellValue(cellValue)!;
                 }
                 else
                 {
-                    record[headerName] = null;
+                    record[headerName] = null!;
                 }
             }
 
@@ -70,7 +70,7 @@ public class ExcelInputReader : IInputReader
         }
     }
 
-    private int GetTotalRowCount(string path)
+    private static int GetTotalRowCount(string path)
     {
         using var package = new ExcelPackage(new FileInfo(path));
         var worksheet = package.Workbook.Worksheets[0];

@@ -1,10 +1,13 @@
 ﻿using Contentful.Core.Errors;
 using Contentful.Core.Models;
+using Contentful.Core.Models.Management;
 using Contool.Core.Infrastructure.Contentful.Options;
 using Microsoft.Extensions.Options;
 using Polly;
 using Polly.Retry;
+
 using Locale = Contentful.Core.Models.Management.Locale;
+using Policy = Polly.Policy;
 
 namespace Contool.Core.Infrastructure.Contentful.Services;
 
@@ -14,6 +17,15 @@ public class ContentfulManagementClientAdapterResiliencyDecorator(
 {
     private readonly AsyncRetryPolicy _retryPolicy = CreateRetryPolicy(resiliencyOptions.Value.RetryPolicy);
     private readonly SemaphoreSlim _concurrencySemaphore = new(resiliencyOptions.Value.ConcurrencyLimiter.ConcurrencyLimit);
+
+    public async Task<Space> GetSpaceAsync(string spaceId, CancellationToken cancellationToken)
+        => await ExecuteAsync(ct => innerAdapter.GetSpaceAsync(spaceId, ct), cancellationToken);
+
+    public async Task<ContentfulEnvironment> GetEnvironmentAsync(string environmentId, CancellationToken cancellationToken)
+        => await ExecuteAsync(ct => innerAdapter.GetEnvironmentAsync(environmentId, ct), cancellationToken);
+
+    public async Task<User> GetCurrentUser(CancellationToken cancellationToken)
+        => await ExecuteAsync(ct => innerAdapter.GetCurrentUser(ct), cancellationToken);
 
     public async Task<IEnumerable<Locale>> GetLocalesCollectionAsync(CancellationToken cancellationToken)
         => await ExecuteAsync(ct => innerAdapter.GetLocalesCollectionAsync(ct), cancellationToken);

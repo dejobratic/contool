@@ -7,6 +7,26 @@ namespace Contool.Core.Infrastructure.Contentful.Services;
 public class ContentfulManagementClientAdapter(
     IContentfulManagementClient client) : IContentfulManagementClientAdapter
 {
+    public async Task<Space> GetSpaceAsync(string spaceId, CancellationToken cancellationToken)
+    {
+        return await client.GetSpace(
+            spaceId,
+            cancellationToken);
+    }
+
+    public async Task<ContentfulEnvironment> GetEnvironmentAsync(string environmentId, CancellationToken cancellationToken)
+    {
+        return await client.GetEnvironment(
+            environmentId,
+            cancellationToken: cancellationToken);
+    }
+
+    public async Task<User> GetCurrentUser(CancellationToken cancellationToken)
+    {
+        return await client.GetCurrentUser(
+            cancellationToken);
+    }
+
     public async Task<IEnumerable<Locale>> GetLocalesCollectionAsync(CancellationToken cancellationToken)
     {
         return await client.GetLocalesCollection(

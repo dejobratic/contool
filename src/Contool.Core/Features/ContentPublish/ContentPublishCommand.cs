@@ -11,8 +11,7 @@ public class ContentPublishCommand : CommandBase
 }
 
 public class ContentPublishCommandHandler(
-    IContentfulServiceBuilder contentfulServiceBuilder,
-    IProgressReporter progressReporter) : ICommandHandler<ContentPublishCommand>
+    IContentfulServiceBuilder contentfulServiceBuilder) : ICommandHandler<ContentPublishCommand>
 {
     public async Task HandleAsync(ContentPublishCommand command, CancellationToken cancellationToken = default)
     {
@@ -26,7 +25,7 @@ public class ContentPublishCommandHandler(
             entriesForPublishing, cancellationToken);
     }
 
-    private AsyncEnumerableWithTotal<Entry<dynamic>> GetEntriesForPublishing(
+    private static AsyncEnumerableWithTotal<Entry<dynamic>> GetEntriesForPublishing(
         string contentTypeId,
         IContentfulService contentfulService,
         CancellationToken cancellationToken)
@@ -36,8 +35,7 @@ public class ContentPublishCommandHandler(
 
         return new AsyncEnumerableWithTotal<Entry<dynamic>>(
             GetEntriesForPublishingAsync(entries),
-            getTotal: () => entries.Total, // TODO: this is not accurate
-            progressReporter);
+            getTotal: () => entries.Total); // TODO: this is not accurate
     }
 
     private static async IAsyncEnumerable<Entry<dynamic>> GetEntriesForPublishingAsync(

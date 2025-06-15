@@ -1,9 +1,10 @@
-﻿using Contool.Core.Features;
+﻿using Contool.Cli.Commands;
+using Contool.Core.Features;
 using Spectre.Console.Cli;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
-namespace Contool.Cli.Features.ContentDelete;
+namespace Contool.Cli.Commands.Content;
 
 public class ContentDeleteCommand(
     ICommandHandler<Core.Features.ContentDelete.ContentDeleteCommand> handler) : AsyncCommand<ContentDeleteCommand.Settings>

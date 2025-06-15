@@ -5,6 +5,12 @@ namespace Contool.Core.Infrastructure.Contentful.Services;
 
 public interface IContentfulManagementClientAdapter
 {
+    Task<Space> GetSpaceAsync(string spaceId, CancellationToken cancellationToken);
+
+    Task<ContentfulEnvironment> GetEnvironmentAsync(string environmentId, CancellationToken cancellationToken);
+
+    Task<User> GetCurrentUser(CancellationToken cancellationToken);
+
     Task<IEnumerable<Locale>> GetLocalesCollectionAsync(CancellationToken cancellationToken);
 
     Task<ContentType?> GetContentTypeAsync(string contentTypeId, CancellationToken cancellationToken);

@@ -94,8 +94,8 @@ public class ContentfulService(
             batchSize: DefaultBatchSize,
             batchActionAsync: async (batch, ct) =>
             {
-                var existingEntriesLookupTask = GetExistingEntriesLookupByIdAsync(batch.Select(e => e.SystemProperties.Id), ct);
-                var unpublishedReferencedEntriesIdsLookupTask = GetUnpublishedOrMissingReferencedEntriesIdsLookup(batch, ct);
+                var existingEntriesLookupTask = client.GetExistingEntriesLookupByIdAsync(batch.Select(e => e.SystemProperties.Id), ct);
+                var unpublishedReferencedEntriesIdsLookupTask = client.GetUnpublishedOrMissingReferencedEntriesIdsLookup(batch, ct);
                 await Task.WhenAll(existingEntriesLookupTask, unpublishedReferencedEntriesIdsLookupTask);
 
                 var existingEntriesLookup = await existingEntriesLookupTask;
@@ -112,7 +112,7 @@ public class ContentfulService(
 
                     // all referenced entries are published
                     var canPublish = unpublishedReferencedEntriesIdsLookup.TryGetValue(entry.SystemProperties!.Id, out var unresolvedRefs)
-                            && unresolvedRefs.Count == 0;
+                        && unresolvedRefs.Count == 0;
 
                     if (publish && canPublish)
                     {
@@ -166,7 +166,7 @@ public class ContentfulService(
             batchSize: DefaultBatchSize,
             batchActionAsync: async (batch, ct) =>
             {
-                var existingEntriesLookup = await GetExistingEntriesLookupByIdAsync(batch.Select(e => e.SystemProperties.Id), ct);
+                var existingEntriesLookup = await client.GetExistingEntriesLookupByIdAsync(batch.Select(e => e.SystemProperties.Id), ct);
 
                 var tasks = batch.Select(async entry =>
                 {
@@ -209,53 +209,5 @@ public class ContentfulService(
             });
 
         await batchProcessor.ProcessAsync(cancellationToken);
-    }
-
-    // TODO: should it be moved into a separate helper serice/class/extension?
-    private async Task<Dictionary<string, Entry<dynamic>>> GetExistingEntriesLookupByIdAsync(
-        IEnumerable<string> entryIds,
-        CancellationToken cancellationToken)
-    {
-        var queryString = QueryBuilder<Entry<dynamic>>.New
-            .FieldIncludes("sys.id", entryIds)
-            .Build();
-
-        return (await client.GetEntriesCollectionAsync(
-            queryString: queryString,
-            cancellationToken: cancellationToken))
-            .ToDictionary(e => e.SystemProperties.Id);
-    }
-
-    // TODO: should it be moved into a separate helper serice/class/extension?
-    private async Task<Dictionary<string, HashSet<string>>> GetUnpublishedOrMissingReferencedEntriesIdsLookup(
-        IEnumerable<Entry<dynamic>> entries,
-        CancellationToken cancellationToken)
-    {
-        var referencedEntryIdsPerEntry = entries.ToDictionary(
-            entry => entry.SystemProperties.Id,
-            entry => entry.GetReferencedEntryIds().ToHashSet());
-
-        var allReferencedEntryIds = referencedEntryIdsPerEntry
-            .SelectMany(kvp => kvp.Value)
-            .Distinct();
-
-        var queryString = QueryBuilder<Entry<dynamic>>.New
-            .FieldIncludes("sys.id", allReferencedEntryIds)
-            .Build();
-
-        var publishedReferencedEntryIds = (await client.GetEntriesCollectionAsync(
-            queryString: queryString,
-            cancellationToken: cancellationToken))
-            .Where(e => e.IsPublished())
-            .Select(e => e.SystemProperties.Id)
-            .ToHashSet();
-
-        var unresolvedReferencedEntryIds = allReferencedEntryIds
-            .Except(publishedReferencedEntryIds)
-            .ToHashSet();
-
-        return referencedEntryIdsPerEntry.ToDictionary(
-            kvp => kvp.Key,
-            kvp => kvp.Value.Intersect(unresolvedReferencedEntryIds).ToHashSet());
     }
 }

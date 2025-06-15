@@ -1,7 +1,7 @@
 ﻿using Spectre.Console.Cli;
 using System.ComponentModel;
 
-namespace Contool.Cli.Features;
+namespace Contool.Cli.Commands;
 
 public class SettingsBase : CommandSettings
 {

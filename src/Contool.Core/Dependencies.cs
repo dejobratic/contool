@@ -37,6 +37,7 @@ public static class Dependencies
                 var resiliencyOptions = sp.GetRequiredService<IOptions<ResiliencyOptions>>();
                 return adapter => new ContentfulManagementClientAdapterResiliencyDecorator(resiliencyOptions, adapter);
             })
+            .AddSingleton<IContentfulLoginService, ContentfulLoginService>()
             .AddSingleton<IContentfulServiceBuilder, ContentfulServiceBuilder>()
             .AddSingleton<IContentEntrySerializerFactory, ContentEntrySerializerFactory>()
             .AddSingleton<IContentDownloader, ContentDownloader>()

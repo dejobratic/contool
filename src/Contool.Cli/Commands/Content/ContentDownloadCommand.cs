@@ -1,9 +1,10 @@
-﻿using Contool.Core.Features;
+﻿using Contool.Cli.Commands;
+using Contool.Core.Features;
 using Spectre.Console.Cli;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
-namespace Contool.Cli.Features.ContentDownload;
+namespace Contool.Cli.Commands.Content;
 
 public class ContentDownloadCommand(
     ICommandHandler<Core.Features.ContentDownload.ContentDownloadCommand> handler) : AsyncCommand<ContentDownloadCommand.Settings>

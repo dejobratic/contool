@@ -1,9 +1,8 @@
 ﻿using Contool.Cli;
-using Contool.Cli.Features.ContentDelete;
-using Contool.Cli.Features.ContentDownload;
-using Contool.Cli.Features.ContentUpload;
-using Contool.Cli.Features.TypeClone;
-using Contool.Cli.Features.TypeDelete;
+using Contool.Cli.Commands.Content;
+using Contool.Cli.Commands.Info;
+using Contool.Cli.Commands.Type;
+using Contool.Cli.Infrastructure;
 using Contool.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,18 +26,24 @@ var app = new CommandApp(registrar);
 
 app.Configure(config =>
 {
-    config.SetApplicationName("contool");
+    config.SetApplicationName(AppInfo.Name);
+
+    config.AddCommand<InfoCommand>("info")
+        .WithDescription("Show information about the current space and environment.");
 
     config.AddBranch("content", branchConfig =>
     {
-        branchConfig.AddCommand<ContentDownloadCommand>("download")
+        branchConfig.AddCommand<ContentDownloadCommand>("download") // TODO: consider renaming to "export"
             .WithDescription("Download entries for a given content type.");
-
-        branchConfig.AddCommand<ContentUploadCommand>("upload")
+        
+        branchConfig.AddCommand<ContentUploadCommand>("upload") // TODO: consider renaming to "import"
             .WithDescription("Upload entries for a given content type.");
 
         branchConfig.AddCommand<ContentDeleteCommand>("delete")
             .WithDescription("Delete entries for a given content type.");
+
+        branchConfig.AddCommand<ContentPublishCommand>("publish")
+            .WithDescription("Publish entries for a given content type.");
     });
 
     config.AddBranch("type", branchConfig =>

@@ -1,9 +1,10 @@
-﻿using Contool.Core.Features;
+﻿using Contool.Cli.Commands;
+using Contool.Core.Features;
 using Spectre.Console.Cli;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
-namespace Contool.Cli.Features.TypeDelete;
+namespace Contool.Cli.Commands.Type;
 
 public class TypeDeleteCommand(
     ICommandHandler<Core.Features.TypeDelete.TypeDeleteCommand> handler) : AsyncCommand<TypeDeleteCommand.Settings>
