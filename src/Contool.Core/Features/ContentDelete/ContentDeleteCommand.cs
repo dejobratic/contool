@@ -16,9 +16,9 @@ public class ContentDeleteCommandHandler(
         var contentfulService = contentfulServiceBuilder.Build(
             command.SpaceId, command.EnvironmentId);
 
-        var entriesForDeleteing = contentfulService.GetEntriesAsync(
+        var entriesForDeleting = contentfulService.GetEntriesAsync(
             contentTypeId: command.ContentTypeId, cancellationToken: cancellationToken);
 
-        await contentfulService.DeleteEntriesAsync(entriesForDeleteing, cancellationToken);
+        await contentfulService.DeleteEntriesAsync(entriesForDeleting, cancellationToken);
     }
 }

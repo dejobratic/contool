@@ -4,8 +4,9 @@ public abstract class DataSource(string name)
 {
     public static readonly DataSource Csv = new FileDataSource("CSV", ".csv");
     public static readonly DataSource Json = new FileDataSource("JSON", ".json");
+    public static readonly DataSource Excel = new FileDataSource("EXCEL", ".xlsx");
     //public static readonly DataSource Database = new DatabaseDataSource("Database");
-    private static readonly DataSource[] All = [Csv, Json];
+    private static readonly DataSource[] All = [Csv, Json, Excel];
 
     protected string Name { get; } = name;
 

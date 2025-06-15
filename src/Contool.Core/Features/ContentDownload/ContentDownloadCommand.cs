@@ -21,24 +21,29 @@ public class ContentDownloadCommandHandler(
 {
     public async Task HandleAsync(ContentDownloadCommand command, CancellationToken cancellationToken = default)
     {
-        var contentfulService = contentfulServiceBuilder
-            .Build(command.SpaceId, command.EnvironmentId);
+        var contentfulService = contentfulServiceBuilder.Build(
+            command.SpaceId, command.EnvironmentId);
 
-        var serializer = await serializerFactory
-            .CreateAsync(command.ContentTypeId, contentfulService, cancellationToken);
+        var serializer = await serializerFactory.CreateAsync(
+            command.ContentTypeId, contentfulService, cancellationToken);
 
-        var output = await contentDownloader
-            .DownloadAsync(CreateContentDownloadRequest(command, serializer, contentfulService), cancellationToken);
+        var contentDownloadRequest = CreateContentDownloadRequest(
+            command, serializer, contentfulService);
 
-        var outputWriter = outputWriterFactory
-            .Create(output.DataSource);
+        var output = await contentDownloader.DownloadAsync(
+            contentDownloadRequest, cancellationToken);
 
-        await outputWriter
-            .SaveAsync(output.FullPath, output.Content, cancellationToken);
+        var outputWriter = outputWriterFactory.Create(
+            output.DataSource);
+
+        await outputWriter.SaveAsync(
+            output.FullPath, output.Content, cancellationToken);
     }
 
     private static ContentDownloadRequest CreateContentDownloadRequest(
-        ContentDownloadCommand command, IContentEntrySerializer serializer, IContentfulService contentfulService)
+        ContentDownloadCommand command,
+        IContentEntrySerializer serializer,
+        IContentfulService contentfulService)
     {
         return new ContentDownloadRequest
         {

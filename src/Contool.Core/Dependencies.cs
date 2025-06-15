@@ -42,11 +42,13 @@ public static class Dependencies
             .AddSingleton<IContentDownloader, ContentDownloader>()
             .AddSingleton<IOutputWriterFactory, OutputWriterFactory>()
             .AddSingleton<IOutputWriter, CsvOutputWriter>()
+            .AddSingleton<IOutputWriter, ExcelOutputWriter>()
             .AddSingleton<IOutputWriter, JsonOutputWriter>()
             .AddSingleton<IContentEntryDeserializerFactory, ContentEntryDeserializerFactory>()
             .AddSingleton<IContentUploader, ContentUploader>()
             .AddSingleton<IInputReaderFactory, InputReaderFactory>()
             .AddSingleton<IInputReader, CsvInputReader>()
+            .AddSingleton<IInputReader, ExcelInputReader>()
             .AddSingleton<IInputReader, JsonInputReader>();
     }
 

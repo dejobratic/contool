@@ -1,0 +1,126 @@
+﻿using Contool.Core.Infrastructure.IO.Models;
+using Contool.Core.Infrastructure.Utils;
+using OfficeOpenXml;
+using System.Dynamic;
+using System.Runtime.CompilerServices;
+
+namespace Contool.Core.Infrastructure.IO.Input;
+
+public class ExcelInputReader : IInputReader
+{
+    public DataSource DataSource => DataSource.Excel;
+
+    public IAsyncEnumerableWithTotal<dynamic> ReadAsync(string path, CancellationToken cancellationToken)
+    {
+        return new AsyncEnumerableWithTotal<dynamic>(
+            ReadExcelAsync(path, cancellationToken),
+            () => GetTotalRowCount(path));
+    }
+
+    private static async IAsyncEnumerable<dynamic> ReadExcelAsync(string path, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        ExcelPackage.License.SetNonCommercialPersonal("My Name");
+        using var package = new ExcelPackage(new FileInfo(path));
+        var worksheet = package.Workbook.Worksheets[0]; // Use first worksheet
+
+        if (worksheet.Dimension == null)
+            yield break;
+
+        // Read header row
+        var headerRow = 1;
+        var headers = new List<string>();
+
+        for (int col = 1; col <= worksheet.Dimension.End.Column; col++)
+        {
+            var headerValue = worksheet.Cells[headerRow, col].Value?.ToString() ?? $"Column{col}";
+            headers.Add(headerValue);
+        }
+
+        // Read data rows
+        for (int row = headerRow + 1; row <= worksheet.Dimension.End.Row; row++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var record = new ExpandoObject() as IDictionary<string, object>;
+            bool hasData = false;
+
+            for (int col = 1; col <= headers.Count; col++)
+            {
+                var cellValue = worksheet.Cells[row, col].Value;
+                var headerName = headers[col - 1];
+
+                if (cellValue != null)
+                {
+                    hasData = true;
+                    record[headerName] = ConvertCellValue(cellValue);
+                }
+                else
+                {
+                    record[headerName] = null;
+                }
+            }
+
+            // Only yield rows that have at least some data
+            if (hasData)
+                yield return record;
+
+            // Yield control periodically for async operation
+            if (row % 100 == 0)
+                await Task.Yield();
+        }
+    }
+
+    private int GetTotalRowCount(string path)
+    {
+        using var package = new ExcelPackage(new FileInfo(path));
+        var worksheet = package.Workbook.Worksheets[0];
+
+        if (worksheet.Dimension == null)
+            return 0;
+
+        // Count non-empty rows (excluding header)
+        int totalRows = 0;
+        for (int row = 2; row <= worksheet.Dimension.End.Row; row++)
+        {
+            bool hasData = false;
+            for (int col = 1; col <= worksheet.Dimension.End.Column; col++)
+            {
+                if (worksheet.Cells[row, col].Value != null)
+                {
+                    hasData = true;
+                    break;
+                }
+            }
+            if (hasData)
+                totalRows++;
+        }
+
+        return totalRows;
+    }
+
+    private static object? ConvertCellValue(object cellValue)
+    {
+        return cellValue switch
+        {
+            // Handle Excel date values
+            double doubleValue when IsExcelDate(doubleValue) => DateTime.FromOADate(doubleValue),
+            // Handle other numeric values
+            double d => d,
+            decimal dec => dec,
+            int i => i,
+            long l => l,
+            bool b => b,
+            string s => s,
+            // Default to string representation
+            _ => cellValue.ToString()
+        };
+    }
+
+    private static bool IsExcelDate(double value)
+    {
+        // Basic heuristic to detect if a double value might be an Excel date
+        // Excel dates are typically between 1 (1900-01-01) and 2958465 (9999-12-31)
+        // This is a simplified check - in practice you might want more sophisticated logic
+        return value >= 1 && value <= 2958465 && value == Math.Floor(value);
+    }
+}

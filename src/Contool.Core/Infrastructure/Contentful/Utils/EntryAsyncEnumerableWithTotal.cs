@@ -3,9 +3,10 @@ using Contool.Core.Infrastructure.Utils;
 
 namespace Contool.Core.Infrastructure.Contentful.Utils;
 
-public class ContentfulAsyncEnumerableWithTotal<T>(
-    Func<int, int, CancellationToken, Task<ContentfulCollection<T>>> getEntriesAsync,
-    int pageSize) : IAsyncEnumerableWithTotal<T>
+// cannot implement dynamic interface with IAsyncEnumerableWithTotal<Entry<dynamic>>
+public class EntryAsyncEnumerableWithTotal<T>(
+    Func<string, CancellationToken, Task<ContentfulCollection<T>>> getEntriesAsync,
+    EntryQueryBuilder query) : IAsyncEnumerableWithTotal<T>
 {
     public int Total { get; private set; }
 
@@ -16,7 +17,11 @@ public class ContentfulAsyncEnumerableWithTotal<T>(
 
         while (true)
         {
-            var page = await getEntriesAsync(skip, pageSize, cancellationToken);
+            var queryString = query
+                .Skip(skip)
+                .Build();
+
+            var page = await getEntriesAsync(queryString, cancellationToken);
 
             if (page?.Items.Any() != true)
                 break;

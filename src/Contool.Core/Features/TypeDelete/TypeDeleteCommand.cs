@@ -31,32 +31,48 @@ public class TypeDeleteCommandHandler(
             command.ContentTypeId, cancellationToken);
     }
 
-    private static async Task ThrowIfContentTypeDoesNotExistAsync(string contentTypeId, IContentfulService contentfulService, CancellationToken cancellationToken)
+    private static async Task ThrowIfContentTypeDoesNotExistAsync(
+        string contentTypeId,
+        IContentfulService contentfulService,
+        CancellationToken cancellationToken)
     {
         _ = await contentfulService.GetContentTypeAsync(contentTypeId, cancellationToken)
             ?? throw new ArgumentException($"Content type with ID '{contentTypeId}' does not exist.");
     }
 
-    private static async Task ThrowIfDeleteNotForcedWithExistingEntriesAsync(string contentTypeId, bool force, IContentfulService contentfulService, CancellationToken cancellationToken)
+    private static async Task ThrowIfDeleteNotForcedWithExistingEntriesAsync(
+        string contentTypeId,
+        bool force,
+        IContentfulService contentfulService,
+        CancellationToken cancellationToken)
     {
         if (!force && await HasContentEntriesAsync(contentTypeId, contentfulService, cancellationToken))
             throw new InvalidOperationException($"Content type with ID '{contentTypeId}' cannot be deleted because it contains entries. Use the force option to delete it anyway.");
     }
 
-    private static async Task<bool> HasContentEntriesAsync(string contentTypeId, IContentfulService contentfulService, CancellationToken cancellationToken)
+    private static async Task<bool> HasContentEntriesAsync(
+        string contentTypeId,
+        IContentfulService contentfulService,
+        CancellationToken cancellationToken)
     {
-        var hasContent = false;
+        var hasEntries = false;
 
-        await foreach (var entry in contentfulService.GetEntriesAsync(contentTypeId: contentTypeId, cancellationToken: cancellationToken))
+        var entries = contentfulService.GetEntriesAsync(
+            contentTypeId: contentTypeId, pageSize: 1, cancellationToken: cancellationToken);
+
+        await foreach (var entry in entries)
         {
-            hasContent = true;
+            hasEntries = true;
             break;
         }
 
-        return hasContent;
+        return hasEntries;
     }
 
-    private static async Task DeleteEntriesAsync(TypeDeleteCommand command, IContentfulService contentfulService, CancellationToken cancellationToken)
+    private static async Task DeleteEntriesAsync(
+        TypeDeleteCommand command,
+        IContentfulService contentfulService,
+        CancellationToken cancellationToken)
     {
         var entries = contentfulService.GetEntriesAsync(
             contentTypeId: command.ContentTypeId, cancellationToken: cancellationToken);

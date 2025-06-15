@@ -23,18 +23,23 @@ public class ContentUploadCommandHandler(
 {
     public async Task HandleAsync(ContentUploadCommand command, CancellationToken cancellationToken = default)
     {
-        var inputReader = inputReaderFactory.Create(GetFileSource(command));
-        var input = inputReader.ReadAsync(command.InputPath, cancellationToken);
+        var inputReader = inputReaderFactory.Create(
+            GetFileSource(command));
+        
+        var input = inputReader.ReadAsync(
+            command.InputPath, cancellationToken);
 
-        var contentfulService = contentfulServiceBuilder
-            .Build(command.SpaceId, command.EnvironmentId);
+        var contentfulService = contentfulServiceBuilder.Build(
+            command.SpaceId, command.EnvironmentId);
 
-        var deserializer = await deserializerFactory
-            .CreateAsync(command.ContentTypeId, contentfulService, cancellationToken);
+        var deserializer = await deserializerFactory.CreateAsync(
+            command.ContentTypeId, contentfulService, cancellationToken);
+
+        var contentUploadRequest = CreateContentUploadRequest(
+            command, input, deserializer, contentfulService);
 
         await contentUploader.UploadAsync(
-            CreateContentUploadRequest(command, input, deserializer, contentfulService),
-            cancellationToken);
+            contentUploadRequest, cancellationToken);
     }
 
     private static DataSource GetFileSource(ContentUploadCommand command)

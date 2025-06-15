@@ -35,19 +35,26 @@ public class TypeCloneCommandHandler(
             command, sourceContentfulService, targetContentfulService, cancellationToken);
     }
 
-    private static async Task ThrowIfLocalesDifferBetweenEnvironmentsAsync(IContentfulService sourceContentfulService, IContentfulService targetContentfulService, CancellationToken cancellationToken)
+    private static async Task ThrowIfLocalesDifferBetweenEnvironmentsAsync(
+        IContentfulService sourceContentfulService,
+        IContentfulService targetContentfulService,
+        CancellationToken cancellationToken)
     {
-        var sourceLocales = await sourceContentfulService.GetLocalesAsync(cancellationToken);
+        var sourceLocales = await sourceContentfulService.GetLocalesAsync(
+            cancellationToken);
 
-        var targetLocales = await targetContentfulService.GetLocalesAsync(cancellationToken);
+        var targetLocales = await targetContentfulService.GetLocalesAsync(
+            cancellationToken);
 
         if (!sourceLocales.IsEquivalentTo(targetLocales))
-        {
             throw new InvalidOperationException($"Locales in source and target environments are not equivalent.");
-        }
     }
 
-    private static async Task ThrowIfContentTypeDefinitionsDifferBetweenEnvironmentsAsync(TypeCloneCommand command, IContentfulService sourceContentfulService, IContentfulService targetContentfulService, CancellationToken cancellationToken)
+    private static async Task ThrowIfContentTypeDefinitionsDifferBetweenEnvironmentsAsync(
+        TypeCloneCommand command,
+        IContentfulService sourceContentfulService,
+        IContentfulService targetContentfulService,
+        CancellationToken cancellationToken)
     {
         var sourceContentType = await GetContentTypeAsync(
             command.ContentTypeId, sourceContentfulService, required: true, cancellationToken);
@@ -59,12 +66,14 @@ public class TypeCloneCommandHandler(
             sourceContentType!, targetContentfulService, cancellationToken);
 
         if (!sourceContentType!.IsEquivalentTo(targetContentType))
-        {
             throw new InvalidOperationException($"Content types '{command.ContentTypeId}' in source and target environments are not equivalent.");
-        }
     }
 
-    private static async Task<ContentType?> GetContentTypeAsync(string contentTypeId, IContentfulService contentfulService, bool required = false, CancellationToken cancellationToken = default)
+    private static async Task<ContentType?> GetContentTypeAsync(
+        string contentTypeId,
+        IContentfulService contentfulService,
+        bool required = false,
+        CancellationToken cancellationToken = default)
     {
         var contentType = await contentfulService.GetContentTypeAsync(contentTypeId, cancellationToken);
 
@@ -73,24 +82,36 @@ public class TypeCloneCommandHandler(
             : contentType;
     }
 
-    private static async Task<ContentType> CloneContentTypeAsync(ContentType contentType, IContentfulService contentfulService, CancellationToken cancellationToken)
-    {
-        return await contentfulService.CreateContentTypeAsync(contentType.Clone(), cancellationToken);
+    private static async Task<ContentType> CloneContentTypeAsync(
+        ContentType contentType,
+        IContentfulService contentfulService,
+        CancellationToken cancellationToken)
+    { 
+        return await contentfulService.CreateContentTypeAsync(
+            contentType.Clone(), cancellationToken);
     }
 
-    private static async Task CloneEntriesAsync(TypeCloneCommand command, IContentfulService sourceContentfulService, IContentfulService targetContentfulService, CancellationToken cancellationToken)
+    private static async Task CloneEntriesAsync(
+        TypeCloneCommand command,
+        IContentfulService sourceContentfulService,
+        IContentfulService targetContentfulService,
+        CancellationToken cancellationToken)
     {
-        var entries = sourceContentfulService.GetEntriesAsync(
-            command.ContentTypeId, cancellationToken: cancellationToken);
+        var entriesForCloning = GetEntriesForCloning(
+            command.ContentTypeId, sourceContentfulService, cancellationToken);
 
-        var entriesForCloning = GetEntriesForCloning(entries);
-
-        await targetContentfulService.CreateOrUpdateEntriesAsync(entries, command.ShouldPublish, cancellationToken);
+        await targetContentfulService.CreateOrUpdateEntriesAsync(
+            entriesForCloning, command.ShouldPublish, cancellationToken);
     }
 
     private static AsyncEnumerableWithTotal<Entry<dynamic>> GetEntriesForCloning(
-        IAsyncEnumerableWithTotal<Entry<dynamic>> entries)
+        string contentTypeId,
+        IContentfulService contentfulService,
+        CancellationToken cancellationToken)
     {
+        var entries = contentfulService.GetEntriesAsync(
+            contentTypeId, cancellationToken: cancellationToken);
+
         return new AsyncEnumerableWithTotal<Entry<dynamic>>(
             FilterPublishedEntries(entries),
             getTotal: () => entries.Total);

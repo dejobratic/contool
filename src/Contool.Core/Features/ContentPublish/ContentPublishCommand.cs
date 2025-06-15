@@ -22,7 +22,8 @@ public class ContentPublishCommandHandler(
         var entriesForPublishing = GetEntriesForPublishing(
             command.ContentTypeId, contentfulService, cancellationToken);
 
-        await contentfulService.PublishEntriesAsync(entriesForPublishing, cancellationToken);
+        await contentfulService.PublishEntriesAsync(
+            entriesForPublishing, cancellationToken);
     }
 
     private AsyncEnumerableWithTotal<Entry<dynamic>> GetEntriesForPublishing(
