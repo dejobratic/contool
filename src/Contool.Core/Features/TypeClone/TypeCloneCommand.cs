@@ -1,6 +1,6 @@
 ﻿using Contentful.Core.Models;
-using Contool.Core.Contentful.Extensions;
-using Contool.Core.Contentful.Services;
+using Contool.Core.Infrastructure.Contentful.Extensions;
+using Contool.Core.Infrastructure.Contentful.Services;
 using Contool.Core.Infrastructure.Utils;
 
 namespace Contool.Core.Features.TypeClone;

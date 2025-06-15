@@ -1,5 +1,5 @@
-﻿using Contool.Core.Contentful.Extensions;
-using Contool.Core.Contentful.Services;
+﻿using Contool.Core.Infrastructure.Contentful.Extensions;
+using Contool.Core.Infrastructure.Contentful.Services;
 
 namespace Contool.Core.Features.TypeDelete;
 

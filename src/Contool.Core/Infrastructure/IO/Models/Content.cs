@@ -1,4 +1,4 @@
-﻿using Contool.Core.Contentful.Models;
+﻿using Contool.Core.Infrastructure.Contentful.Models;
 
 namespace Contool.Core.Infrastructure.IO.Models;
 
