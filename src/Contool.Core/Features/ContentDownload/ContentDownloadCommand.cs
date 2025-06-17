@@ -1,6 +1,11 @@
-﻿using Contool.Core.Infrastructure.Contentful.Extensions;
+﻿using Contentful.Core.Models;
+using Contool.Core.Infrastructure.Contentful.Extensions;
 using Contool.Core.Infrastructure.Contentful.Services;
+using Contool.Core.Infrastructure.Extensions;
+using Contool.Core.Infrastructure.IO.Models;
 using Contool.Core.Infrastructure.IO.Output;
+using Contool.Core.Infrastructure.Utils;
+using Microsoft.Extensions.Logging;
 
 namespace Contool.Core.Features.ContentDownload;
 
@@ -16,8 +21,9 @@ public class ContentDownloadCommand : CommandBase
 public class ContentDownloadCommandHandler(
     IContentEntrySerializerFactory serializerFactory,
     IContentfulServiceBuilder contentfulServiceBuilder,
-    IContentDownloader contentDownloader,
-    IOutputWriterFactory outputWriterFactory) : ICommandHandler<ContentDownloadCommand>
+    IOutputWriterFactory outputWriterFactory,
+    IProgressReporter progressReporter,
+    ILogger<ContentDownloadCommandHandler> logger) : ICommandHandler<ContentDownloadCommand>
 {
     public async Task HandleAsync(ContentDownloadCommand command, CancellationToken cancellationToken = default)
     {
@@ -27,32 +33,58 @@ public class ContentDownloadCommandHandler(
         var serializer = await serializerFactory.CreateAsync(
             command.ContentTypeId, contentfulService, cancellationToken);
 
-        var contentDownloadRequest = CreateContentDownloadRequest(
-            command, serializer, contentfulService);
-
-        var output = await contentDownloader.DownloadAsync(
-            contentDownloadRequest, cancellationToken);
+        var output = await DownloadAsync(
+            command, contentfulService, serializer, cancellationToken);
 
         var outputWriter = outputWriterFactory.Create(
             output.DataSource);
 
         await outputWriter.SaveAsync(
             output.FullPath, output.Content, cancellationToken);
+
+        logger.LogInformation(
+            "{Total} {ContentTypeId} entries downloaded to {OutputPath}.", output.Content.Total, command.ContentTypeId, output.FullPath);
     }
 
-    private static ContentDownloadRequest CreateContentDownloadRequest(
+    public async Task<OutputContent> DownloadAsync(
         ContentDownloadCommand command,
+        IContentfulService contentfulService,
         IContentEntrySerializer serializer,
-        IContentfulService contentfulService)
+        CancellationToken cancellationToken)
     {
-        return new ContentDownloadRequest
-        {
-            ContentTypeId = command.ContentTypeId,
-            OutputPath = command.OutputPath,
-            OutputFormat = command.OutputFormat,
-            ContentfulService = contentfulService,
-            Serializer = serializer
-        };
+        await Task.CompletedTask; // TODO: remove ??
+
+        var entriesToDownload = GetEntriesToDownload(
+            command.ContentTypeId, contentfulService, serializer, cancellationToken);
+
+        return new OutputContent( // TODO: remove this model, as the content downloader service is deleted
+            path: command.OutputPath,
+            name: command.ContentTypeId,
+            type: command.OutputFormat,
+            content: entriesToDownload);
+    }
+
+    private AsyncEnumerableWithTotal<dynamic> GetEntriesToDownload(
+        string contentTypeId,
+        IContentfulService contentfulService,
+        IContentEntrySerializer serializer,
+        CancellationToken cancellationToken)
+    {
+        var entries = contentfulService.GetEntriesAsync(
+            contentTypeId, cancellationToken: cancellationToken);
+
+        return new AsyncEnumerableWithTotal<dynamic>(
+            source: GetEntriesToSerialize(entries, serializer),
+            getTotal: () => entries.Total,
+            progressReporter.WithOperationName("Downloading")); // TODO: move this out of command handler
+    }
+
+    public static async IAsyncEnumerable<dynamic> GetEntriesToSerialize(
+        IAsyncEnumerable<Entry<dynamic>> entries,
+        IContentEntrySerializer serializer)
+    {
+        await foreach (var entry in entries)
+            yield return serializer.Serialize(entry);
     }
 }
 

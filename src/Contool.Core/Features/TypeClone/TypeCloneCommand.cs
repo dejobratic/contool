@@ -2,6 +2,7 @@
 using Contool.Core.Infrastructure.Contentful.Extensions;
 using Contool.Core.Infrastructure.Contentful.Services;
 using Contool.Core.Infrastructure.Utils;
+using Microsoft.Extensions.Logging;
 
 namespace Contool.Core.Features.TypeClone;
 
@@ -15,7 +16,8 @@ public class TypeCloneCommand : CommandBase
 }
 
 public class TypeCloneCommandHandler(
-    IContentfulServiceBuilder contentfulServiceBuilder) : ICommandHandler<TypeCloneCommand>
+    IContentfulServiceBuilder contentfulServiceBuilder,
+    ILogger<TypeCloneCommandHandler> logger) : ICommandHandler<TypeCloneCommand>
 {
     public async Task HandleAsync(TypeCloneCommand command, CancellationToken cancellationToken = default)
     {
@@ -50,7 +52,7 @@ public class TypeCloneCommandHandler(
             throw new InvalidOperationException($"Locales in source and target environments are not equivalent.");
     }
 
-    private static async Task ThrowIfContentTypeDefinitionsDifferBetweenEnvironmentsAsync(
+    private async Task ThrowIfContentTypeDefinitionsDifferBetweenEnvironmentsAsync(
         TypeCloneCommand command,
         IContentfulService sourceContentfulService,
         IContentfulService targetContentfulService,
@@ -82,16 +84,21 @@ public class TypeCloneCommandHandler(
             : contentType;
     }
 
-    private static async Task<ContentType> CloneContentTypeAsync(
+    private async Task<ContentType> CloneContentTypeAsync(
         ContentType contentType,
         IContentfulService contentfulService,
         CancellationToken cancellationToken)
-    { 
-        return await contentfulService.CreateContentTypeAsync(
+    {
+        var cloned = await contentfulService.CreateContentTypeAsync(
             contentType.Clone(), cancellationToken);
+
+        logger.LogInformation(
+            "Content type '{ContentTypeId}' cloned successfully to target environment.", contentType.GetId());
+
+        return cloned;
     }
 
-    private static async Task CloneEntriesAsync(
+    private async Task CloneEntriesAsync(
         TypeCloneCommand command,
         IContentfulService sourceContentfulService,
         IContentfulService targetContentfulService,
@@ -102,6 +109,9 @@ public class TypeCloneCommandHandler(
 
         await targetContentfulService.CreateOrUpdateEntriesAsync(
             entriesForCloning, command.ShouldPublish, cancellationToken);
+
+        logger.LogInformation(
+            "{Total} {ContentTypeId} entries cloned.", entriesForCloning.Total, command.ContentTypeId);
     }
 
     private static AsyncEnumerableWithTotal<Entry<dynamic>> GetEntriesForCloning(

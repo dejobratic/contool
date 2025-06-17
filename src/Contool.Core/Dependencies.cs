@@ -28,8 +28,10 @@ public static class Dependencies
     private static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         return services
-            .Configure<ContentfulOptions>(configuration.GetSection("ContentfulOptions"))
             .Configure<ResiliencyOptions>(configuration.GetSection("ResiliencyOptions"))
+
+            // Contentful
+            .Configure<ContentfulOptions>(configuration.GetSection("ContentfulOptions"))
             .AddHttpClient()
             .AddSingleton<IContentfulManagementClientAdapterFactory, ContentfulManagementClientAdapterFactory>()
             .AddSingleton<Func<IContentfulManagementClientAdapter, IContentfulManagementClientAdapter>>(sp =>
@@ -39,14 +41,16 @@ public static class Dependencies
             })
             .AddSingleton<IContentfulLoginService, ContentfulLoginService>()
             .AddSingleton<IContentfulServiceBuilder, ContentfulServiceBuilder>()
+
+            // Serialization/Deserialization
             .AddSingleton<IContentEntrySerializerFactory, ContentEntrySerializerFactory>()
-            .AddSingleton<IContentDownloader, ContentDownloader>()
+            .AddSingleton<IContentEntryDeserializerFactory, ContentEntryDeserializerFactory>()
+
+            // IO
             .AddSingleton<IOutputWriterFactory, OutputWriterFactory>()
             .AddSingleton<IOutputWriter, CsvOutputWriter>()
             .AddSingleton<IOutputWriter, ExcelOutputWriter>()
             .AddSingleton<IOutputWriter, JsonOutputWriter>()
-            .AddSingleton<IContentEntryDeserializerFactory, ContentEntryDeserializerFactory>()
-            .AddSingleton<IContentUploader, ContentUploader>()
             .AddSingleton<IInputReaderFactory, InputReaderFactory>()
             .AddSingleton<IInputReader, CsvInputReader>()
             .AddSingleton<IInputReader, ExcelInputReader>()

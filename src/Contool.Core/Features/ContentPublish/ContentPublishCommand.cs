@@ -2,6 +2,7 @@
 using Contool.Core.Infrastructure.Contentful.Extensions;
 using Contool.Core.Infrastructure.Contentful.Services;
 using Contool.Core.Infrastructure.Utils;
+using Microsoft.Extensions.Logging;
 
 namespace Contool.Core.Features.ContentPublish;
 
@@ -11,7 +12,8 @@ public class ContentPublishCommand : CommandBase
 }
 
 public class ContentPublishCommandHandler(
-    IContentfulServiceBuilder contentfulServiceBuilder) : ICommandHandler<ContentPublishCommand>
+    IContentfulServiceBuilder contentfulServiceBuilder,
+    ILogger<ContentPublishCommandHandler> logger) : ICommandHandler<ContentPublishCommand>
 {
     public async Task HandleAsync(ContentPublishCommand command, CancellationToken cancellationToken = default)
     {
@@ -23,6 +25,9 @@ public class ContentPublishCommandHandler(
 
         await contentfulService.PublishEntriesAsync(
             entriesForPublishing, cancellationToken);
+
+        logger.LogInformation(
+            "{Total} {ContentTypeId} entries published.", entriesForPublishing.Total, command.ContentTypeId);
     }
 
     private static AsyncEnumerableWithTotal<Entry<dynamic>> GetEntriesForPublishing(

@@ -1,7 +1,7 @@
-﻿using OfficeOpenXml;
+﻿using Contool.Core.Infrastructure.IO.Models;
+using OfficeOpenXml;
 using System.Collections;
 using System.Dynamic;
-using Contool.Core.Infrastructure.IO.Models;
 
 namespace Contool.Core.Infrastructure.IO.Output;
 

@@ -1,5 +1,6 @@
 ﻿using Contool.Core.Infrastructure.Contentful.Extensions;
 using Contool.Core.Infrastructure.Contentful.Services;
+using Microsoft.Extensions.Logging;
 
 namespace Contool.Core.Features.ContentDelete;
 
@@ -9,7 +10,8 @@ public class ContentDeleteCommand : WriteCommandBase
 }
 
 public class ContentDeleteCommandHandler(
-    IContentfulServiceBuilder contentfulServiceBuilder) : ICommandHandler<ContentDeleteCommand>
+    IContentfulServiceBuilder contentfulServiceBuilder,
+    ILogger<ContentDeleteCommandHandler> logger) : ICommandHandler<ContentDeleteCommand>
 {
     public async Task HandleAsync(ContentDeleteCommand command, CancellationToken cancellationToken = default)
     {
@@ -19,6 +21,10 @@ public class ContentDeleteCommandHandler(
         var entriesForDeleting = contentfulService.GetEntriesAsync(
             contentTypeId: command.ContentTypeId, cancellationToken: cancellationToken);
 
-        await contentfulService.DeleteEntriesAsync(entriesForDeleting, cancellationToken);
+        await contentfulService.DeleteEntriesAsync(
+            entriesForDeleting, cancellationToken);
+
+        logger.LogInformation(
+            "{Total} {ContentTypeId} entries deleted.", entriesForDeleting.Total, command.ContentTypeId);
     }
 }

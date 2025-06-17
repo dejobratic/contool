@@ -24,7 +24,6 @@ public class AsyncEnumerableWithTotal<T>(
             yield return item;
         }
 
-        if (current != Total)
-            progressReporter?.Report(Total, Total);
+        progressReporter?.Complete();
     }
 }
