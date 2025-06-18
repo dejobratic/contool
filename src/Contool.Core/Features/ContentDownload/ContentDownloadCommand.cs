@@ -1,11 +1,9 @@
 ﻿using Contentful.Core.Models;
 using Contool.Core.Infrastructure.Contentful.Extensions;
 using Contool.Core.Infrastructure.Contentful.Services;
-using Contool.Core.Infrastructure.Extensions;
 using Contool.Core.Infrastructure.IO.Models;
-using Contool.Core.Infrastructure.IO.Output;
+using Contool.Core.Infrastructure.IO.Services;
 using Contool.Core.Infrastructure.Utils;
-using Microsoft.Extensions.Logging;
 
 namespace Contool.Core.Features.ContentDownload;
 
@@ -22,8 +20,7 @@ public class ContentDownloadCommandHandler(
     IContentEntrySerializerFactory serializerFactory,
     IContentfulServiceBuilder contentfulServiceBuilder,
     IOutputWriterFactory outputWriterFactory,
-    IProgressReporter progressReporter,
-    ILogger<ContentDownloadCommandHandler> logger) : ICommandHandler<ContentDownloadCommand>
+    IContentDownloader contentDownloader) : ICommandHandler<ContentDownloadCommand>
 {
     public async Task HandleAsync(ContentDownloadCommand command, CancellationToken cancellationToken = default)
     {
@@ -33,38 +30,33 @@ public class ContentDownloadCommandHandler(
         var serializer = await serializerFactory.CreateAsync(
             command.ContentTypeId, contentfulService, cancellationToken);
 
-        var output = await DownloadAsync(
+        var output = GetEntriesForDownload(
             command, contentfulService, serializer, cancellationToken);
 
         var outputWriter = outputWriterFactory.Create(
             output.DataSource);
 
-        await outputWriter.SaveAsync(
-            output.FullPath, output.Content, cancellationToken);
-
-        logger.LogInformation(
-            "{Total} {ContentTypeId} entries downloaded to {OutputPath}.", output.Content.Total, command.ContentTypeId, output.FullPath);
+        await contentDownloader.DownloadAsync(
+            command.ContentTypeId, output, outputWriter, cancellationToken);
     }
 
-    public async Task<OutputContent> DownloadAsync(
+    public static OutputContent GetEntriesForDownload(
         ContentDownloadCommand command,
         IContentfulService contentfulService,
         IContentEntrySerializer serializer,
         CancellationToken cancellationToken)
     {
-        await Task.CompletedTask; // TODO: remove ??
-
         var entriesToDownload = GetEntriesToDownload(
             command.ContentTypeId, contentfulService, serializer, cancellationToken);
 
-        return new OutputContent( // TODO: remove this model, as the content downloader service is deleted
+        return new OutputContent(
             path: command.OutputPath,
             name: command.ContentTypeId,
             type: command.OutputFormat,
             content: entriesToDownload);
     }
 
-    private AsyncEnumerableWithTotal<dynamic> GetEntriesToDownload(
+    private static AsyncEnumerableWithTotal<dynamic> GetEntriesToDownload(
         string contentTypeId,
         IContentfulService contentfulService,
         IContentEntrySerializer serializer,
@@ -75,8 +67,7 @@ public class ContentDownloadCommandHandler(
 
         return new AsyncEnumerableWithTotal<dynamic>(
             source: GetEntriesToSerialize(entries, serializer),
-            getTotal: () => entries.Total,
-            progressReporter.WithOperationName("Downloading")); // TODO: move this out of command handler
+            getTotal: () => entries.Total);
     }
 
     public static async IAsyncEnumerable<dynamic> GetEntriesToSerialize(

@@ -1,7 +1,7 @@
 ﻿using Contool.Core.Infrastructure.IO.Models;
 using System.Text.Json;
 
-namespace Contool.Core.Infrastructure.IO.Output;
+namespace Contool.Core.Infrastructure.IO.Services;
 
 public class JsonOutputWriter : IOutputWriter
 {

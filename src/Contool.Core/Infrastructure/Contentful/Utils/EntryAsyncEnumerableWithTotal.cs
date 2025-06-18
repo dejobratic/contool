@@ -5,12 +5,12 @@ namespace Contool.Core.Infrastructure.Contentful.Utils;
 
 // cannot implement dynamic interface with IAsyncEnumerableWithTotal<Entry<dynamic>>
 public class EntryAsyncEnumerableWithTotal<T>(
-    Func<string, CancellationToken, Task<ContentfulCollection<T>>> getEntriesAsync,
-    EntryQueryBuilder query) : IAsyncEnumerableWithTotal<T>
+    Func<string, CancellationToken, Task<ContentfulCollection<Entry<T>>>> getEntriesAsync,
+    EntryQueryBuilder query) : IAsyncEnumerableWithTotal<Entry<T>>
 {
     public int Total { get; private set; }
 
-    public async IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+    public async IAsyncEnumerator<Entry<T>> GetAsyncEnumerator(CancellationToken cancellationToken = default)
     {
         var skip = 0;
         var isFirst = true;

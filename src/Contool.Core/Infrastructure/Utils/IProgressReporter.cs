@@ -2,9 +2,9 @@
 
 public interface IProgressReporter
 {
-    void Start(string operationName);
+    void Start(string operationName, Func<int> getTotal);
 
-    void Report(int current, int total);
+    void Increment();
 
     void Complete();
 }

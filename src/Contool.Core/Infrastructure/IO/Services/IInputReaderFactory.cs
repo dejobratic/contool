@@ -1,6 +1,6 @@
 ﻿using Contool.Core.Infrastructure.IO.Models;
 
-namespace Contool.Core.Infrastructure.IO.Input;
+namespace Contool.Core.Infrastructure.IO.Services;
 
 public interface IInputReaderFactory
 {

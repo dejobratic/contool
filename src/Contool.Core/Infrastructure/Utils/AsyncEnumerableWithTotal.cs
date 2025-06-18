@@ -11,7 +11,6 @@ public class AsyncEnumerableWithTotal<T>(
 
     public async IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
     {
-        var current = 0;
         await foreach (var item in source.WithCancellation(cancellationToken))
         {
             if (!isTotalSet)
@@ -20,7 +19,7 @@ public class AsyncEnumerableWithTotal<T>(
                 isTotalSet = true;
             }
 
-            progressReporter?.Report(++current, Total);
+            progressReporter?.Increment();
             yield return item;
         }
 

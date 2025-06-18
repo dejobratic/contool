@@ -1,6 +1,7 @@
 ﻿using Contentful.Core.Configuration;
 using Contentful.Core.Models;
 using Contentful.Core.Models.Management;
+using Contool.Core.Infrastructure.Contentful.Extensions;
 using Contool.Core.Infrastructure.Contentful.Models;
 using Contool.Core.Infrastructure.Contentful.Utils;
 using Microsoft.Extensions.Options;
@@ -47,7 +48,7 @@ public class ContentfulLoginService : IContentfulLoginService
             .ToDictionary(type => type, type =>
             {
                 var queryString = new EntryQueryBuilder()
-                    .WithContentTypeId(type.SystemProperties.Id)
+                    .WithContentTypeId(type.GetId())
                     .Limit(0)
                     .Skip(0)
                     .Build();

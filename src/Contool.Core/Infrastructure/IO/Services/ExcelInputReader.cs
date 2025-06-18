@@ -4,7 +4,7 @@ using OfficeOpenXml;
 using System.Dynamic;
 using System.Runtime.CompilerServices;
 
-namespace Contool.Core.Infrastructure.IO.Input;
+namespace Contool.Core.Infrastructure.IO.Services;
 
 public class ExcelInputReader : IInputReader
 {

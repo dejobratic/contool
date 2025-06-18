@@ -1,8 +1,6 @@
 ﻿using Contentful.Core.Models;
 using Contool.Core.Infrastructure.Contentful.Extensions;
 using Contool.Core.Infrastructure.Contentful.Services;
-using Contool.Core.Infrastructure.Utils;
-using Microsoft.Extensions.Logging;
 
 namespace Contool.Core.Features.TypeClone;
 
@@ -17,7 +15,7 @@ public class TypeCloneCommand : CommandBase
 
 public class TypeCloneCommandHandler(
     IContentfulServiceBuilder contentfulServiceBuilder,
-    ILogger<TypeCloneCommandHandler> logger) : ICommandHandler<TypeCloneCommand>
+    IContentCloner contentCloner) : ICommandHandler<TypeCloneCommand>
 {
     public async Task HandleAsync(TypeCloneCommand command, CancellationToken cancellationToken = default)
     {
@@ -33,8 +31,8 @@ public class TypeCloneCommandHandler(
         await ThrowIfContentTypeDefinitionsDifferBetweenEnvironmentsAsync(
             command, sourceContentfulService, targetContentfulService, cancellationToken);
 
-        await CloneEntriesAsync(
-            command, sourceContentfulService, targetContentfulService, cancellationToken);
+        await contentCloner.CloneAsync(
+            command.ContentTypeId, sourceContentfulService, targetContentfulService, command.ShouldPublish, cancellationToken);
     }
 
     private static async Task ThrowIfLocalesDifferBetweenEnvironmentsAsync(
@@ -52,7 +50,7 @@ public class TypeCloneCommandHandler(
             throw new InvalidOperationException($"Locales in source and target environments are not equivalent.");
     }
 
-    private async Task ThrowIfContentTypeDefinitionsDifferBetweenEnvironmentsAsync(
+    private static async Task ThrowIfContentTypeDefinitionsDifferBetweenEnvironmentsAsync(
         TypeCloneCommand command,
         IContentfulService sourceContentfulService,
         IContentfulService targetContentfulService,
@@ -80,59 +78,17 @@ public class TypeCloneCommandHandler(
         var contentType = await contentfulService.GetContentTypeAsync(contentTypeId, cancellationToken);
 
         return contentType is null && required
-            ? throw new InvalidOperationException($"Content type '{contentTypeId}' does not exist.")
+            ? throw new InvalidOperationException($"Content type with ID '{contentTypeId}' does not exist.")
             : contentType;
     }
 
-    private async Task<ContentType> CloneContentTypeAsync(
+    private static async Task<ContentType> CloneContentTypeAsync(
         ContentType contentType,
         IContentfulService contentfulService,
         CancellationToken cancellationToken)
     {
-        var cloned = await contentfulService.CreateContentTypeAsync(
+        return await contentfulService.CreateContentTypeAsync(
             contentType.Clone(), cancellationToken);
-
-        logger.LogInformation(
-            "Content type '{ContentTypeId}' cloned successfully to target environment.", contentType.GetId());
-
-        return cloned;
-    }
-
-    private async Task CloneEntriesAsync(
-        TypeCloneCommand command,
-        IContentfulService sourceContentfulService,
-        IContentfulService targetContentfulService,
-        CancellationToken cancellationToken)
-    {
-        var entriesForCloning = GetEntriesForCloning(
-            command.ContentTypeId, sourceContentfulService, cancellationToken);
-
-        await targetContentfulService.CreateOrUpdateEntriesAsync(
-            entriesForCloning, command.ShouldPublish, cancellationToken);
-
-        logger.LogInformation(
-            "{Total} {ContentTypeId} entries cloned.", entriesForCloning.Total, command.ContentTypeId);
-    }
-
-    private static AsyncEnumerableWithTotal<Entry<dynamic>> GetEntriesForCloning(
-        string contentTypeId,
-        IContentfulService contentfulService,
-        CancellationToken cancellationToken)
-    {
-        var entries = contentfulService.GetEntriesAsync(
-            contentTypeId, cancellationToken: cancellationToken);
-
-        return new AsyncEnumerableWithTotal<Entry<dynamic>>(
-            FilterPublishedEntries(entries),
-            getTotal: () => entries.Total);
-    }
-
-    private static async IAsyncEnumerable<Entry<dynamic>> FilterPublishedEntries(
-        IAsyncEnumerable<Entry<dynamic>> entries)
-    {
-        await foreach (var entry in entries)
-            if (entry.IsPublished())
-                yield return entry;
     }
 }
 

@@ -1,10 +1,9 @@
 ﻿using Contentful.Core.Models;
 using Contool.Core.Infrastructure.Contentful.Extensions;
 using Contool.Core.Infrastructure.Contentful.Services;
-using Contool.Core.Infrastructure.IO.Input;
 using Contool.Core.Infrastructure.IO.Models;
+using Contool.Core.Infrastructure.IO.Services;
 using Contool.Core.Infrastructure.Utils;
-using Microsoft.Extensions.Logging;
 using System.Runtime.CompilerServices;
 
 namespace Contool.Core.Features.ContentUpload;
@@ -22,7 +21,7 @@ public class ContentUploadCommandHandler(
     IInputReaderFactory inputReaderFactory,
     IContentfulServiceBuilder contentfulServiceBuilder,
     IContentEntryDeserializerFactory deserializerFactory,
-    ILogger<ContentUploadCommandHandler> logger) : ICommandHandler<ContentUploadCommand>
+    IContentUploader contentUploader) : ICommandHandler<ContentUploadCommand>
 {
     public async Task HandleAsync(ContentUploadCommand command, CancellationToken cancellationToken = default)
     {
@@ -39,10 +38,7 @@ public class ContentUploadCommandHandler(
             command.ContentTypeId, contentfulService, cancellationToken);
 
         await UploadEntriesAsync(
-            input, contentfulService, deserializer, command.ShouldPublish, cancellationToken);
-
-        logger.LogInformation(
-            "{Total} {ContentTypeId} entries uploaded.", input.Total, command.ContentTypeId);
+            command, input, contentfulService, deserializer, cancellationToken);
     }
 
     private static DataSource GetFileSource(
@@ -52,18 +48,18 @@ public class ContentUploadCommandHandler(
         return DataSource.From(fileExtension);
     }
 
-    public static async Task UploadEntriesAsync(
+    public async Task UploadEntriesAsync(
+        ContentUploadCommand command,
         IAsyncEnumerableWithTotal<dynamic> content,
         IContentfulService contentfulService,
         IContentEntryDeserializer deserializer,
-        bool publish,
         CancellationToken cancellationToken)
     {
         var entriesForUploading = GetEntriesForUploading(
             content, deserializer, cancellationToken);
 
-        await contentfulService.CreateOrUpdateEntriesAsync(
-            entriesForUploading, publish, cancellationToken);
+        await contentUploader.UploadAsync(
+            command.ContentTypeId, entriesForUploading, contentfulService, command.ShouldPublish, cancellationToken);
     }
 
     private static AsyncEnumerableWithTotal<Entry<dynamic>> GetEntriesForUploading(

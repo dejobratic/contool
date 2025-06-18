@@ -4,7 +4,7 @@ using CsvHelper;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 
-namespace Contool.Core.Infrastructure.IO.Input;
+namespace Contool.Core.Infrastructure.IO.Services;
 
 public class CsvInputReader : IInputReader
 {

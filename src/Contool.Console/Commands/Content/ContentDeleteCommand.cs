@@ -6,11 +6,12 @@ using System.ComponentModel.DataAnnotations;
 namespace Contool.Console.Commands.Content;
 
 public class ContentDeleteCommand(
-    ICommandHandler<Core.Features.ContentDelete.ContentDeleteCommand> handler) : AsyncCommand<ContentDeleteCommand.Settings>
+    ICommandHandler<Core.Features.ContentDelete.ContentDeleteCommand> handler)
+    : CommandBase<ContentDeleteCommand.Settings>
 {
     public class Settings : SettingsBase
     {
-        [CommandOption("-c|--content-type <CONTENT_TYPE_ID>")]
+        [CommandOption("-c|--content-type-id <ID>")]
         [Description("Content type ID.")]
         [Required]
         public string ContentTypeId { get; init; } = default!;
@@ -20,14 +21,14 @@ public class ContentDeleteCommand(
         public bool Apply { get; init; }
     }
 
-    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
+    protected override async Task<int> ExecuteInternalAsync(CommandContext context, Settings settings)
     {
         var command = new Core.Features.ContentDelete.ContentDeleteCommand
         {
             SpaceId = settings.SpaceId,
             EnvironmentId = settings.EnvironmentId,
             ContentTypeId = settings.ContentTypeId,
-            Apply = settings.Apply
+            ApplyChanges = settings.Apply
         };
 
         await handler.HandleAsync(command);

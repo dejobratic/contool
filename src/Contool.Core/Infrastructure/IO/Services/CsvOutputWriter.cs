@@ -2,7 +2,7 @@
 using CsvHelper;
 using System.Globalization;
 
-namespace Contool.Core.Infrastructure.IO.Output;
+namespace Contool.Core.Infrastructure.IO.Services;
 
 public class CsvOutputWriter : IOutputWriter
 {

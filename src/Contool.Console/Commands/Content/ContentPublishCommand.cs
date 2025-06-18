@@ -7,17 +7,17 @@ namespace Contool.Console.Commands.Content;
 
 public class ContentPublishCommand(
     ICommandHandler<Core.Features.ContentPublish.ContentPublishCommand> handler)
-    : AsyncCommand<ContentPublishCommand.Settings>
+    : CommandBase<ContentPublishCommand.Settings>
 {
     public class Settings : SettingsBase
     {
-        [CommandOption("-c|--content-type <CONTENT_TYPE_ID>")]
+        [CommandOption("-c|--content-type-id <ID>")]
         [Description("The ID of the content type to publish.")]
         [Required]
         public string ContentTypeId { get; init; } = default!;
     }
 
-    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
+    protected override async Task<int> ExecuteInternalAsync(CommandContext context, Settings settings)
     {
         var command = new Core.Features.ContentPublish.ContentPublishCommand
         {

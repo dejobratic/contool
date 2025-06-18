@@ -5,51 +5,70 @@ namespace Contool.Console.Infrastructure.UI;
 
 public class ProgressReporter : IProgressReporter, IDisposable
 {
-    private const double MaxValue = 1.0; // Represents 100% completion in the progress bar
+    private const double MaxProgress = 1.0;
 
-    private ProgressTask? _progressTask;
-    private Task? _runnerTask;
+    private ProgressTask? _task;
+    private Task? _renderLoopTask;
     private CancellationTokenSource? _cts;
 
-    public void Start(string operationName)
+    private int _currentCount = 0;
+    private int? _targetTotal;
+    private Func<int>? _getTotal;
+
+    public void Start(string operationName, Func<int> getTotal)
     {
         _cts = new CancellationTokenSource();
+        _getTotal = getTotal;
 
-        _runnerTask = Task.Run(() =>
+        _renderLoopTask = Task.Run(() =>
         {
-            ProgressBar
-                .GetInstance()
-                .Start(ctx =>
-                {
-                    _progressTask = ctx.AddTask(operationName, maxValue: MaxValue);
-                    while (!_cts.IsCancellationRequested && !_progressTask.IsFinished)
-                    {
-                        Thread.Sleep(100); // keep rendering
-                    }
-                });
+            ProgressBar.GetInstance().Start(ctx =>
+            {
+                _task = ctx.AddTask(operationName, maxValue: MaxProgress);
+                RunRenderLoop(_cts.Token);
+            });
         });
     }
 
-    public void Report(int current, int total)
+    public void Increment()
     {
-        if (_progressTask is null)
+        if (_task is null || _getTotal is null)
             return;
 
-        _progressTask.Value = (double)current / total;
+        _targetTotal ??= _getTotal();
+
+        var updatedCount = Interlocked.Increment(ref _currentCount);
+        var progress = (double)updatedCount / _targetTotal.Value;
+
+        _task.Value = Math.Min(progress, MaxProgress);
     }
 
     public void Complete()
     {
-        if (_progressTask is not null)
-            _progressTask.Value = MaxValue;
+        if (_task is not null)
+            _task.Value = MaxProgress;
+
+        ResetInternalState();
 
         _cts?.Cancel();
-        _runnerTask?.Wait();
+        _renderLoopTask?.Wait();
     }
 
     public void Dispose()
     {
         _cts?.Dispose();
         GC.SuppressFinalize(this);
+    }
+
+    private void RunRenderLoop(CancellationToken token)
+    {
+        while (!token.IsCancellationRequested && !_task?.IsFinished == true)
+            Thread.Sleep(100); // keep rendering
+    }
+
+    private void ResetInternalState()
+    {
+        _currentCount = 0;
+        _targetTotal = null;
     }
 }

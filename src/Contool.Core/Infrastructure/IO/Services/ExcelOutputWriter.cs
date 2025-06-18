@@ -3,7 +3,7 @@ using OfficeOpenXml;
 using System.Collections;
 using System.Dynamic;
 
-namespace Contool.Core.Infrastructure.IO.Output;
+namespace Contool.Core.Infrastructure.IO.Services;
 
 public class ExcelOutputWriter : IOutputWriter
 {

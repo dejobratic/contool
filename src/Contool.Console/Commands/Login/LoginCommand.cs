@@ -1,28 +1,32 @@
 ﻿using Contentful.Core.Configuration;
+using Contool.Console.Infrastructure.Utils;
 using Spectre.Console;
 using Spectre.Console.Cli;
 using System.ComponentModel;
 
 namespace Contool.Console.Commands.Login;
 
-public class LoginCommand : AsyncCommand<LoginCommand.Settings>
+public class LoginCommand : CommandBase<LoginCommand.Settings>
 {
     public class Settings : SettingsBase
     {
+        [Secret]
         [CommandOption("--management-token <TOKEN>")]
-        [Description("Your Contentful Management API (CMA) token. See [italic LightSkyBlue3]https://www.contentful.com/developers/docs/references/authentication/[/]")]
+        [Description("Your Contentful Management API (CMA) token. See [italic LightGoldenrod2]https://www.contentful.com/developers/docs/references/authentication/[/]")]
         public string? ContentManagementToken { get; set; }
 
+        [Secret]
         [CommandOption("--delivery-token <TOKEN>")]
-        [Description("Your Contentful Content Delivery API (CDA) token. See [italic LightSkyBlue3]https://www.contentful.com/developers/docs/references/authentication/[/]")]
+        [Description("Your Contentful Content Delivery API (CDA) token. See [italic LightGoldenrod2]https://www.contentful.com/developers/docs/references/authentication/[/]")]
         public string? ContentDeliveryToken { get; set; }
 
+        [Secret]
         [CommandOption("--preview-token <TOKEN>")]
-        [Description("Your Contentful Content Preview API token. See [italic LightSkyBlue3]https://www.contentful.com/developers/docs/references/authentication/[/]")]
+        [Description("Your Contentful Content Preview API token. See [italic LightGoldenrod2]https://www.contentful.com/developers/docs/references/authentication/[/]")]
         public string? ContentPreviewToken { get; set; }
     }
 
-    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
+    protected override async Task<int> ExecuteInternalAsync(CommandContext context, Settings settings)
     {
         await Task.CompletedTask;
 

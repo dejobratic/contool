@@ -2,7 +2,7 @@
 
 namespace Contool.Core.Infrastructure.Contentful.Extensions;
 
-public static class IContentfulServiceBuilderExtensions
+public static class ContentfulServiceBuilderExtensions
 {
     public static IContentfulService Build(
         this IContentfulServiceBuilder contentfulServiceBuilder,

@@ -1,8 +1,5 @@
-﻿using Contentful.Core.Models;
-using Contool.Core.Infrastructure.Contentful.Extensions;
+﻿using Contool.Core.Infrastructure.Contentful.Extensions;
 using Contool.Core.Infrastructure.Contentful.Services;
-using Contool.Core.Infrastructure.Utils;
-using Microsoft.Extensions.Logging;
 
 namespace Contool.Core.Features.ContentPublish;
 
@@ -13,41 +10,14 @@ public class ContentPublishCommand : CommandBase
 
 public class ContentPublishCommandHandler(
     IContentfulServiceBuilder contentfulServiceBuilder,
-    ILogger<ContentPublishCommandHandler> logger) : ICommandHandler<ContentPublishCommand>
+    IContentPublisher contentPublisher) : ICommandHandler<ContentPublishCommand>
 {
     public async Task HandleAsync(ContentPublishCommand command, CancellationToken cancellationToken = default)
     {
         var contentfulService = contentfulServiceBuilder.Build(
             command.SpaceId, command.EnvironmentId);
 
-        var entriesForPublishing = GetEntriesForPublishing(
+        await contentPublisher.PublishAsync(
             command.ContentTypeId, contentfulService, cancellationToken);
-
-        await contentfulService.PublishEntriesAsync(
-            entriesForPublishing, cancellationToken);
-
-        logger.LogInformation(
-            "{Total} {ContentTypeId} entries published.", entriesForPublishing.Total, command.ContentTypeId);
-    }
-
-    private static AsyncEnumerableWithTotal<Entry<dynamic>> GetEntriesForPublishing(
-        string contentTypeId,
-        IContentfulService contentfulService,
-        CancellationToken cancellationToken)
-    {
-        var entries = contentfulService.GetEntriesAsync(
-            contentTypeId: contentTypeId, cancellationToken: cancellationToken);
-
-        return new AsyncEnumerableWithTotal<Entry<dynamic>>(
-            GetEntriesForPublishingAsync(entries),
-            getTotal: () => entries.Total); // TODO: this is not accurate
-    }
-
-    private static async IAsyncEnumerable<Entry<dynamic>> GetEntriesForPublishingAsync(
-        IAsyncEnumerable<Entry<dynamic>> entries)
-    {
-        await foreach (var entry in entries)
-            if (!entry.IsArchived() && !entry.IsPublished())
-                yield return entry;
     }
 }

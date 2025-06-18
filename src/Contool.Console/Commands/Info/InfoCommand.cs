@@ -15,11 +15,12 @@ using Text = Spectre.Console.Text;
 namespace Contool.Console.Commands.Info;
 
 public sealed class InfoCommand(
-    IContentfulLoginService contentfulService) : AsyncCommand<InfoCommand.Settings>
+    IContentfulLoginService contentfulService)
+    : CommandBase<InfoCommand.Settings>
 {
     public class Settings : SettingsBase { }
 
-    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
+    protected override async Task<int> ExecuteInternalAsync(CommandContext context, Settings settings)
     {
         var (space, environment, user, locales, contentTypes) = await LoadInfoAsync();
 
@@ -31,8 +32,8 @@ public sealed class InfoCommand(
         var mainTable = new Table()
             .RoundedBorder()
             .BorderColor(Styles.Dim.Foreground)
-            .AddColumn(new TableColumn(new Text("Content Types", Styles.SubHeading)))
-            .AddColumn(new TableColumn(new Text("Locales", Styles.SubHeading)))
+            .AddColumn(new TableColumn(new Text("Content Types", Styles.AlertAccent)))
+            .AddColumn(new TableColumn(new Text("Locales", Styles.AlertAccent)))
             .AddRow(contentTypesTable, localesTable);
 
         AnsiConsole.Write(mainTable);
@@ -63,15 +64,15 @@ public sealed class InfoCommand(
         return new Table()
             .RoundedBorder()
             .BorderColor(Styles.Dim.Foreground)
-            .AddColumn(new TableColumn(new Text("Space Id", Styles.SubHeading)))
-            .AddColumn(new TableColumn(new Text("Space Name", Styles.SubHeading)))
-            .AddColumn(new TableColumn(new Text("Environment", Styles.SubHeading)))
-            .AddColumn(new TableColumn(new Text("User Id", Styles.SubHeading)))
-            .AddColumn(new TableColumn(new Text("User Name", Styles.SubHeading)))
+            .AddColumn(new TableColumn(new Text("Space Id", Styles.AlertAccent)))
+            .AddColumn(new TableColumn(new Text("Space Name", Styles.AlertAccent)))
+            .AddColumn(new TableColumn(new Text("Environment", Styles.AlertAccent)))
+            .AddColumn(new TableColumn(new Text("User Id", Styles.AlertAccent)))
+            .AddColumn(new TableColumn(new Text("User Name", Styles.AlertAccent)))
             .AddRow(
-                new Markup(space.GetId(), Styles.AlertAccent),
+                new Markup(space.GetId(), Styles.Alert),
                 new Markup(space.Name, Styles.Normal),
-                new Markup(environment.SystemProperties.Id, Styles.AlertAccent),
+                new Markup(environment.SystemProperties.Id, Styles.Alert),
                 new Markup(user.GetId(), Styles.Normal),
                 new Markup(user.Email, Styles.Normal)
             );
@@ -91,7 +92,7 @@ public sealed class InfoCommand(
         {
             table.AddRow(
                 new Markup(type.Name.Trim().Snip(28), Styles.Normal),
-                new Markup(type.GetId(), Styles.AlertAccent),
+                new Markup(type.GetId(), Styles.Alert),
                 //new Markup(ct.Fields.Count.ToString(), Styles.Normal),
                 new Markup(type.TotalEntries.ToString(), Styles.Normal));
         }
@@ -111,7 +112,7 @@ public sealed class InfoCommand(
         {
             table.AddRow(
                 new Markup(locale.Name, Styles.Normal),
-                new Markup(locale.Code, Styles.AlertAccent));
+                new Markup(locale.Code, locale.Default ? Styles.Alert : Styles.Normal));
         }
 
         return table;

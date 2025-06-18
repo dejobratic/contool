@@ -2,5 +2,5 @@
 
 public class WriteCommandBase : CommandBase
 {
-    public bool Apply { get; init; }
+    public bool ApplyChanges { get; init; }
 }

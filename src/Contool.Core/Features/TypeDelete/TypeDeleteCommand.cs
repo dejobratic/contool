@@ -1,4 +1,5 @@
-﻿using Contool.Core.Infrastructure.Contentful.Extensions;
+﻿using Contool.Core.Features.ContentDelete;
+using Contool.Core.Infrastructure.Contentful.Extensions;
 using Contool.Core.Infrastructure.Contentful.Services;
 
 namespace Contool.Core.Features.TypeDelete;
@@ -11,7 +12,8 @@ public class TypeDeleteCommand : CommandBase
 }
 
 public class TypeDeleteCommandHandler(
-    IContentfulServiceBuilder contentfulServiceBuilder) : ICommandHandler<TypeDeleteCommand>
+    IContentfulServiceBuilder contentfulServiceBuilder,
+    IContentDeleter contentDeleter) : ICommandHandler<TypeDeleteCommand>
 {
     public async Task HandleAsync(TypeDeleteCommand command, CancellationToken cancellationToken = default)
     {
@@ -24,8 +26,8 @@ public class TypeDeleteCommandHandler(
         await ThrowIfDeleteNotForcedWithExistingEntriesAsync(
             command.ContentTypeId, command.Force, contentfulService, cancellationToken);
 
-        await DeleteEntriesAsync(
-            command, contentfulService, cancellationToken);
+        await contentDeleter.DeleteAsync(
+            command.ContentTypeId, contentfulService, cancellationToken);
 
         await contentfulService.DeleteContentTypeAsync(
             command.ContentTypeId, cancellationToken);
@@ -67,17 +69,5 @@ public class TypeDeleteCommandHandler(
         }
 
         return hasEntries;
-    }
-
-    private static async Task DeleteEntriesAsync(
-        TypeDeleteCommand command,
-        IContentfulService contentfulService,
-        CancellationToken cancellationToken)
-    {
-        var entries = contentfulService.GetEntriesAsync(
-            contentTypeId: command.ContentTypeId, cancellationToken: cancellationToken);
-
-        await contentfulService.DeleteEntriesAsync(
-            entries, cancellationToken);
     }
 }

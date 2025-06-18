@@ -8,8 +8,8 @@ using Contool.Core.Features.TypeClone;
 using Contool.Core.Features.TypeDelete;
 using Contool.Core.Infrastructure.Contentful.Options;
 using Contool.Core.Infrastructure.Contentful.Services;
-using Contool.Core.Infrastructure.IO.Input;
-using Contool.Core.Infrastructure.IO.Output;
+using Contool.Core.Infrastructure.IO.Services;
+using Contool.Core.Infrastructure.Utils;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -42,6 +42,12 @@ public static class Dependencies
             .AddSingleton<IContentfulLoginService, ContentfulLoginService>()
             .AddSingleton<IContentfulServiceBuilder, ContentfulServiceBuilder>()
 
+            // Contentful serivices
+            .AddSingleton<IContentDownloader, ContentDownloader>()
+            .AddSingleton<IContentUploader, ContentUploader>()
+            .AddSingleton<IContentPublisher, ContentPublisher>()
+            .AddSingleton<IContentDeleter, ContentDeleter>()
+
             // Serialization/Deserialization
             .AddSingleton<IContentEntrySerializerFactory, ContentEntrySerializerFactory>()
             .AddSingleton<IContentEntryDeserializerFactory, ContentEntryDeserializerFactory>()
@@ -54,7 +60,10 @@ public static class Dependencies
             .AddSingleton<IInputReaderFactory, InputReaderFactory>()
             .AddSingleton<IInputReader, CsvInputReader>()
             .AddSingleton<IInputReader, ExcelInputReader>()
-            .AddSingleton<IInputReader, JsonInputReader>();
+            .AddSingleton<IInputReader, JsonInputReader>()
+
+            // Utils
+            .AddSingleton<IBatchProcessor, BatchProcessor>();
     }
 
     private static IServiceCollection AddCommands(this IServiceCollection services)

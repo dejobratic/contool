@@ -6,16 +6,17 @@ using System.ComponentModel.DataAnnotations;
 namespace Contool.Console.Commands.Type;
 
 public class TypeCloneCommand(
-    ICommandHandler<Core.Features.TypeClone.TypeCloneCommand> handler) : AsyncCommand<TypeCloneCommand.Settings>
+    ICommandHandler<Core.Features.TypeClone.TypeCloneCommand> handler)
+    : CommandBase<TypeCloneCommand.Settings>
 {
     public class Settings : SettingsBase
     {
-        [CommandOption("-t|--target-environment <TARGET_ENVIRONMENT_ID>")]
-        [Description("Target environment ID where the type will be cloned.")]
+        [CommandOption("-t|--target-environment-id <ID>")]
+        [Description("Target environment ID where the type will be cloned. See [italic LightGoldenrod2]https://www.contentful.com/help/spaces-and-organizations/[/]")]
         [Required]
         public string TargetEnvironmentId { get; init; } = default!;
 
-        [CommandOption("-c|--content-type <CONTENT_TYPE_ID>")]
+        [CommandOption("-c|--content-type-id <ID>")]
         [Description("Content type ID to clone.")]
         [Required]
         public string ContentTypeId { get; init; } = default!;
@@ -25,7 +26,7 @@ public class TypeCloneCommand(
         public bool Publish { get; init; }
     }
 
-    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
+    protected override async Task<int> ExecuteInternalAsync(CommandContext context, Settings settings)
     {
         var command = new Core.Features.TypeClone.TypeCloneCommand
         {

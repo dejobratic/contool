@@ -6,17 +6,18 @@ using System.ComponentModel.DataAnnotations;
 namespace Contool.Console.Commands.Content;
 
 public class ContentUploadCommand(
-    ICommandHandler<Core.Features.ContentUpload.ContentUploadCommand> handler) : AsyncCommand<ContentUploadCommand.Settings>
+    ICommandHandler<Core.Features.ContentUpload.ContentUploadCommand> handler)
+    : CommandBase<ContentUploadCommand.Settings>
 {
     public class Settings : SettingsBase
     {
-        [CommandOption("-c|--content-type <CONTENT_TYPE_ID>")]
+        [CommandOption("-c|--content-type-id <ID>")]
         [Description("Content type ID.")]
         [Required]
         public string ContentTypeId { get; init; } = default!;
 
-        [CommandOption("-i|--input <INPUT_PATH>")]
-        [Description("Path to input file (CSV, JSON).")]
+        [CommandOption("-i|--input-path <PATH>")]
+        [Description("Path to input file (EXCEL, CSV, JSON).")]
         [Required]
         public string InputPath { get; init; } = default!;
 
@@ -30,7 +31,7 @@ public class ContentUploadCommand(
         return base.Validate(context, settings);
     }
 
-    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
+    protected override async Task<int> ExecuteInternalAsync(CommandContext context, Settings settings)
     {
         var command = new Core.Features.ContentUpload.ContentUploadCommand
         {

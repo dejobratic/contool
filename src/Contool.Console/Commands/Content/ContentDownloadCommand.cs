@@ -6,22 +6,23 @@ using System.ComponentModel.DataAnnotations;
 namespace Contool.Console.Commands.Content;
 
 public class ContentDownloadCommand(
-    ICommandHandler<Core.Features.ContentDownload.ContentDownloadCommand> handler) : AsyncCommand<ContentDownloadCommand.Settings>
+    ICommandHandler<Core.Features.ContentDownload.ContentDownloadCommand> handler)
+    : CommandBase<ContentDownloadCommand.Settings>
 {
     public class Settings : SettingsBase
     {
-        [CommandOption("-c|--content-type <CONTENT_TYPE_ID>")]
+        [CommandOption("-c|--content-type-id <ID>")]
         [Description("The content type ID to download.")]
         [Required]
         public string ContentTypeId { get; init; } = default!;
 
-        [CommandOption("-o|--output-path <OUTPUT_PATH>")]
+        [CommandOption("-o|--output-path <PATH>")]
         [Description("The output folder path.")]
         [Required]
         public string OutputPath { get; init; } = default!;
 
-        [CommandOption("-f|--format <FORMAT>")]
-        [Description("The output file format (CSV, JSON).")]
+        [CommandOption("-f|--output-format <FORMAT>")]
+        [Description("The output file format (EXCEL, CSV, JSON).")]
         [Required]
         public string OutputFormat { get; init; } = default!;
     }
@@ -31,7 +32,7 @@ public class ContentDownloadCommand(
         return base.Validate(context, settings);
     }
 
-    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
+    protected override async Task<int> ExecuteInternalAsync(CommandContext context, Settings settings)
     {
         var command = new Core.Features.ContentDownload.ContentDownloadCommand
         {

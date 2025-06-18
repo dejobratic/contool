@@ -6,11 +6,12 @@ using System.ComponentModel.DataAnnotations;
 namespace Contool.Console.Commands.Type;
 
 public class TypeDeleteCommand(
-    ICommandHandler<Core.Features.TypeDelete.TypeDeleteCommand> handler) : AsyncCommand<TypeDeleteCommand.Settings>
+    ICommandHandler<Core.Features.TypeDelete.TypeDeleteCommand> handler)
+    : CommandBase<TypeDeleteCommand.Settings>
 {
     public class Settings : SettingsBase
     {
-        [CommandOption("-c|--content-type <CONTENT_TYPE_ID>")]
+        [CommandOption("-c|--content-type <ID>")]
         [Description("ID of the content type to delete.")]
         [Required]
         public string ContentTypeId { get; init; } = default!;
@@ -20,7 +21,7 @@ public class TypeDeleteCommand(
         public bool Force { get; init; } = false;
     }
 
-    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
+    protected override async Task<int> ExecuteInternalAsync(CommandContext context, Settings settings)
     {
         var command = new Core.Features.TypeDelete.TypeDeleteCommand
         {
