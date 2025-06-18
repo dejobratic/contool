@@ -3,6 +3,7 @@ using Contool.Core.Features;
 using Contool.Core.Features.ContentDelete;
 using Contool.Core.Features.ContentDownload;
 using Contool.Core.Features.ContentPublish;
+using Contool.Core.Features.ContentUnpublish;
 using Contool.Core.Features.ContentUpload;
 using Contool.Core.Features.TypeClone;
 using Contool.Core.Features.TypeDelete;
@@ -46,6 +47,7 @@ public static class Dependencies
             .AddSingleton<IContentDownloader, ContentDownloader>()
             .AddSingleton<IContentUploader, ContentUploader>()
             .AddSingleton<IContentPublisher, ContentPublisher>()
+            .AddSingleton<IContentUnpublisher, ContentUnpublisher>()
             .AddSingleton<IContentDeleter, ContentDeleter>()
 
             // Serialization/Deserialization
@@ -73,6 +75,7 @@ public static class Dependencies
             .AddSingleton<ICommandHandler<ContentDownloadCommand>, ContentDownloadCommandHandler>()
             .AddSingleton<ICommandHandler<ContentUploadCommand>, ContentUploadCommandHandler>()
             .AddSingleton<ICommandHandler<ContentPublishCommand>, ContentPublishCommandHandler>()
+            .AddSingleton<ICommandHandler<ContentUnpublishCommand>, ContentUnpublishCommandHandler>()
             .AddSingleton<ICommandHandler<ContentDeleteCommand>, ContentDeleteCommandHandler>()
 
             // types

@@ -1,13 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <UserSecretsId>9fe82b91-2cd8-4b9f-a8a6-2f6cd2052a23</UserSecretsId>
 	<TreatWarningsAsErrors>true</TreatWarningsAsErrors>  
   </PropertyGroup>
+	
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>contool</ToolCommandName>
+    <PackageId>contool</PackageId>
+    <Version>1.0.1</Version>
+  </PropertyGroup>
+
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="6.0.1" />

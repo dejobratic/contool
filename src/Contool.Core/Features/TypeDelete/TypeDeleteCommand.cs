@@ -57,17 +57,12 @@ public class TypeDeleteCommandHandler(
         IContentfulService contentfulService,
         CancellationToken cancellationToken)
     {
-        var hasEntries = false;
+        var entries = await contentfulService
+            .GetEntriesAsync(
+                contentTypeId: contentTypeId, pageSize: 1, cancellationToken: cancellationToken)
+            .ToListAsync(
+                cancellationToken: cancellationToken);
 
-        var entries = contentfulService.GetEntriesAsync(
-            contentTypeId: contentTypeId, pageSize: 1, cancellationToken: cancellationToken);
-
-        await foreach (var entry in entries)
-        {
-            hasEntries = true;
-            break;
-        }
-
-        return hasEntries;
+        return entries.Count > 0;
     }
 }

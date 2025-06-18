@@ -48,6 +48,9 @@ app.Configure(config =>
 
         branchConfig.AddCommand<ContentPublishCommand>("publish")
             .WithDescription("Publish entries for a given content type.");
+
+        branchConfig.AddCommand<ContentUnpublishCommand>("unpublish")
+            .WithDescription("Unpublish entries for a given content type.");
     });
 
     config.AddBranch("type", branchConfig =>

@@ -153,6 +153,28 @@ public class ContentfulService(
         await Task.WhenAll(tasks);
     }
 
+    public async Task UnpublishEntriesAsync(IEnumerable<Entry<dynamic>> entries, CancellationToken cancellationToken = default)
+    {
+        async Task UnpublishEntry(Entry<dynamic> entry, CancellationToken cancellationToken)
+        {
+            if (!entry.IsPublished())
+                return;
+
+            await client.UnpublishEntryAsync(
+                entryId: entry.GetId(),
+                version: entry.GetVersion(),
+                cancellationToken: cancellationToken);
+        }
+
+        var tasks = entries.Select(async entry =>
+        {
+            await UnpublishEntry(entry, cancellationToken);
+            progressReporter.Increment();
+        });
+
+        await Task.WhenAll(tasks);
+    }
+
     public async Task DeleteEntriesAsync(IEnumerable<Entry<dynamic>> entries, CancellationToken cancellationToken = default)
     {
         async Task PublishEntry(Entry<dynamic> entry, CancellationToken cancellationToken)
@@ -182,7 +204,6 @@ public class ContentfulService(
         {
             await PublishEntry(entry, cancellationToken);
             progressReporter.Increment();
-
         });
 
         await Task.WhenAll(tasks);
