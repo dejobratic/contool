@@ -34,7 +34,7 @@ public class ContentPublisher(
             source: entries,
             batchSize: DefaultBatchSize,
             batchActionAsync: contentfulService.PublishEntriesAsync,
-            cancellationToken);
+            cancellationToken: cancellationToken);
 
         progressReporter.Complete();
     }

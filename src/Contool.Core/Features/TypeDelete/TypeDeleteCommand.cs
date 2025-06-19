@@ -27,7 +27,7 @@ public class TypeDeleteCommandHandler(
             command.ContentTypeId, command.Force, contentfulService, cancellationToken);
 
         await contentDeleter.DeleteAsync(
-            command.ContentTypeId, contentfulService, cancellationToken);
+            command.ContentTypeId, contentfulService, includeArchived: true, cancellationToken);
 
         await contentfulService.DeleteContentTypeAsync(
             command.ContentTypeId, cancellationToken);

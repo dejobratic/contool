@@ -7,7 +7,7 @@ public class ContentDeleteCommand : WriteCommandBase
 {
     public string ContentTypeId { get; init; } = default!;
 
-    public bool IncludeArchived { get; init; } // TODO: implement this feature
+    public bool IncludeArchived { get; init; } 
 }
 
 public class ContentDeleteCommandHandler(
@@ -20,6 +20,6 @@ public class ContentDeleteCommandHandler(
             command.SpaceId, command.EnvironmentId);
 
         await contentDeleter.DeleteAsync(
-            command.ContentTypeId, contentfulService, cancellationToken);
+            command.ContentTypeId, contentfulService, command.IncludeArchived, cancellationToken);
     }
 }

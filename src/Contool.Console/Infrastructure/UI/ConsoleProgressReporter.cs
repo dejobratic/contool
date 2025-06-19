@@ -3,7 +3,7 @@ using Spectre.Console;
 
 namespace Contool.Console.Infrastructure.UI;
 
-public class ProgressReporter : IProgressReporter, IDisposable
+public class ConsoleProgressReporter : IProgressReporter, IDisposable
 {
     private const double MaxProgress = 1.0;
 

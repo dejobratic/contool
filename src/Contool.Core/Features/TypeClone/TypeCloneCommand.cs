@@ -10,7 +10,7 @@ public class TypeCloneCommand : CommandBase
 
     public string TargetEnvironmentId { get; init; } = default!;
 
-    public bool ShouldPublish { get; init; }
+    public bool ShouldPublish { get; init; } // TODO: clone all or only published entries?
 }
 
 public class TypeCloneCommandHandler(

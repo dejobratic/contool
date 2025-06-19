@@ -16,6 +16,10 @@ public class ContentDeleteCommand(
         [Required]
         public string ContentTypeId { get; init; } = default!;
 
+        [CommandOption("-i|--include-archived")]
+        [Description("Whether to include archived entries in the deletion process.")]
+        public bool IncludeArchived { get; init; }
+
         [CommandOption("-a|--apply")]
         [Description("Whether to perform the delete (omit for dry run).")]
         public bool Apply { get; init; }

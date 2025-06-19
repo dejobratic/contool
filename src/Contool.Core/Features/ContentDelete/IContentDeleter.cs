@@ -4,5 +4,5 @@ namespace Contool.Core.Features.ContentDelete;
 
 public interface IContentDeleter
 {
-    Task DeleteAsync(string contentTypeId, IContentfulService contentfulService, CancellationToken cancellationToken);
+    Task DeleteAsync(string contentTypeId, IContentfulService contentfulService, bool includeArchived, CancellationToken cancellationToken);
 }

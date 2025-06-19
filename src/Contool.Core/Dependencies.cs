@@ -40,7 +40,7 @@ public static class Dependencies
                 var resiliencyOptions = sp.GetRequiredService<IOptions<ResiliencyOptions>>();
                 return adapter => new ContentfulManagementClientAdapterResiliencyDecorator(resiliencyOptions, adapter);
             })
-            .AddSingleton<IContentfulLoginService, ContentfulLoginService>()
+            .AddSingleton<IContentfulLoginServiceBuilder, ContentfulLoginServiceBuilder>()
             .AddSingleton<IContentfulServiceBuilder, ContentfulServiceBuilder>()
 
             // Contentful serivices
@@ -49,6 +49,7 @@ public static class Dependencies
             .AddSingleton<IContentPublisher, ContentPublisher>()
             .AddSingleton<IContentUnpublisher, ContentUnpublisher>()
             .AddSingleton<IContentDeleter, ContentDeleter>()
+            .AddSingleton<IContentCloner, ContentCloner>()
 
             // Serialization/Deserialization
             .AddSingleton<IContentEntrySerializerFactory, ContentEntrySerializerFactory>()

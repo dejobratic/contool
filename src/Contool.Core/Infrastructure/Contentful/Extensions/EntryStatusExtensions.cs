@@ -18,12 +18,13 @@ public static class EntryStatusExtensions
 
     public static bool IsPublished(this Entry<dynamic> entry)
     {
-        return entry.SystemProperties.PublishedVersion is not null
-            && entry.SystemProperties.Version == entry.SystemProperties.PublishedVersion + 1;
+        return entry.SystemProperties.PublishedAt is not null;
+        //return entry.SystemProperties.PublishedVersion is not null
+        //    && entry.SystemProperties.Version == entry.SystemProperties.PublishedVersion + 1;
     }
 
     public static bool IsArchived(this Entry<dynamic> entry)
     {
-        return entry.SystemProperties.ArchivedVersion is not null;
+        return entry.SystemProperties.ArchivedAt is not null;
     }
 }

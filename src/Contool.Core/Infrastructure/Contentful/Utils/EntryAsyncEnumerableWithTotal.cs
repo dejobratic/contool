@@ -12,6 +12,7 @@ public class EntryAsyncEnumerableWithTotal<T>(
 
     public async IAsyncEnumerator<Entry<T>> GetAsyncEnumerator(CancellationToken cancellationToken = default)
     {
+        var count = 0;
         var skip = 0;
         var isFirst = true;
 
@@ -33,9 +34,14 @@ public class EntryAsyncEnumerableWithTotal<T>(
             }
 
             foreach (var item in page.Items)
+            {
+                count++;
                 yield return item;
+            }
 
             skip += page.Items.Count();
         }
+
+        Total = count;
     }
 }

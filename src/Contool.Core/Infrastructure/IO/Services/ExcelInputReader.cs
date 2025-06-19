@@ -102,9 +102,6 @@ public class ExcelInputReader : IInputReader
     {
         return cellValue switch
         {
-            // Handle Excel date values
-            double doubleValue when IsExcelDate(doubleValue) => DateTime.FromOADate(doubleValue),
-            // Handle other numeric values
             double d => d,
             decimal dec => dec,
             int i => i,
@@ -114,13 +111,5 @@ public class ExcelInputReader : IInputReader
             // Default to string representation
             _ => cellValue.ToString()
         };
-    }
-
-    private static bool IsExcelDate(double value)
-    {
-        // Basic heuristic to detect if a double value might be an Excel date
-        // Excel dates are typically between 1 (1900-01-01) and 2958465 (9999-12-31)
-        // This is a simplified check - in practice you might want more sophisticated logic
-        return value >= 1 && value <= 2958465 && value == Math.Floor(value);
     }
 }

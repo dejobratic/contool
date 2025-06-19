@@ -133,7 +133,7 @@ public class ContentfulService(
 
     public async Task PublishEntriesAsync(IEnumerable<Entry<dynamic>> entries, CancellationToken cancellationToken = default)
     {
-        async Task DeleteEntry(Entry<dynamic> entry, CancellationToken cancellationToken)
+        async Task PublishEntry(Entry<dynamic> entry, CancellationToken cancellationToken)
         {
             if (entry.IsPublished() || entry.IsArchived())
                 return;
@@ -146,7 +146,7 @@ public class ContentfulService(
 
         var tasks = entries.Select(async entry =>
         {
-            await DeleteEntry(entry, cancellationToken);
+            await PublishEntry(entry, cancellationToken);
             progressReporter.Increment();
         });
 
@@ -177,32 +177,34 @@ public class ContentfulService(
 
     public async Task DeleteEntriesAsync(IEnumerable<Entry<dynamic>> entries, CancellationToken cancellationToken = default)
     {
-        async Task PublishEntry(Entry<dynamic> entry, CancellationToken cancellationToken)
+        async Task DeleteEntryAsync(Entry<dynamic> entry, CancellationToken cancellationToken)
         {
+            var entryId = entry.GetId();
+
             if (entry.IsPublished())
             {
                 entry = await client.UnpublishEntryAsync(
-                    entryId: entry.GetId(),
+                    entryId: entryId,
                     version: entry.GetVersion(),
                     cancellationToken: cancellationToken);
             }
             else if (entry.IsArchived())
             {
                 entry = await client.UnarchiveEntryAsync(
-                    entryId: entry.GetId(),
+                    entryId: entryId,
                     version: entry.GetVersion(),
                     cancellationToken: cancellationToken);
             }
 
             await client.DeleteEntryAsync(
-                entryId: entry.GetId(),
+                entryId: entryId,
                 version: entry.GetVersion(),
                 cancellationToken: cancellationToken);
         }
 
         var tasks = entries.Select(async entry =>
         {
-            await PublishEntry(entry, cancellationToken);
+            await DeleteEntryAsync(entry, cancellationToken);
             progressReporter.Increment();
         });
 

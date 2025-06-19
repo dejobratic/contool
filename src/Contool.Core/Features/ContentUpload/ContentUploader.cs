@@ -28,7 +28,7 @@ public class ContentUploader(
             source: entries,
             batchSize: DefaultBatchSize,
             batchActionAsync: (batch, ct) => contentfulService.CreateOrUpdateEntriesAsync(batch, publish, ct),
-            cancellationToken);
+            cancellationToken: cancellationToken);
 
         progressReporter.Complete();
     }

@@ -11,6 +11,7 @@ public class AsyncEnumerableWithTotal<T>(
 
     public async IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
     {
+        var count = 0;
         await foreach (var item in source.WithCancellation(cancellationToken))
         {
             if (!isTotalSet)
@@ -19,10 +20,12 @@ public class AsyncEnumerableWithTotal<T>(
                 isTotalSet = true;
             }
 
+            count++;
             progressReporter?.Increment();
             yield return item;
         }
-
+        
+        Total = count;
         progressReporter?.Complete();
     }
 }

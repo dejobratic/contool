@@ -24,7 +24,7 @@ public class ContentCloner(
         LogInfo(contentTypeId, entriesForCloning.Total);
     }
 
-    private async Task CloneEntries(IAsyncEnumerableWithTotal<Entry<dynamic>> entries, IContentfulService contentfulService, bool publish, CancellationToken cancellationToken)
+    private async Task CloneEntries(AsyncEnumerableWithTotal<Entry<dynamic>> entries, IContentfulService contentfulService, bool publish, CancellationToken cancellationToken)
     {
         progressReporter.Start("Cloning", getTotal: () => entries.Total);
 
@@ -32,7 +32,7 @@ public class ContentCloner(
             source: entries,
             batchSize: DefaultBatchSize,
             batchActionAsync: (batch, ct) => contentfulService.CreateOrUpdateEntriesAsync(batch, publish, ct),
-            cancellationToken);
+            cancellationToken: cancellationToken);
 
         progressReporter.Complete();
     }

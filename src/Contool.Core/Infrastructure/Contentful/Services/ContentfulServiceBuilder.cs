@@ -6,8 +6,6 @@ public class ContentfulServiceBuilder(
     IContentfulManagementClientAdapterFactory adapterFactory,
     IProgressReporter progressReporter) : IContentfulServiceBuilder
 {
-    private readonly IContentfulManagementClientAdapterFactory _adapterFactory = adapterFactory;
-
     private string? _spaceId;
     private string? _environmentId;
     private bool _usePreviewApi = false;
@@ -32,7 +30,7 @@ public class ContentfulServiceBuilder(
 
     public IContentfulService Build()
     {
-        var adapter = _adapterFactory.Create(_spaceId!, _environmentId!, _usePreviewApi);
+        var adapter = adapterFactory.Create(_spaceId!, _environmentId!, _usePreviewApi);
 
         return new ContentfulService(adapter, progressReporter);
     }

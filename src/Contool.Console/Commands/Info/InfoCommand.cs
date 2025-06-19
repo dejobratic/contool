@@ -15,33 +15,31 @@ using Text = Spectre.Console.Text;
 namespace Contool.Console.Commands.Info;
 
 public sealed class InfoCommand(
-    IContentfulLoginService contentfulService)
+    IContentfulLoginServiceBuilder contentfulServiceBuilder)
     : CommandBase<InfoCommand.Settings>
 {
     public class Settings : SettingsBase { }
 
     protected override async Task<int> ExecuteInternalAsync(CommandContext context, Settings settings)
     {
-        var (space, environment, user, locales, contentTypes) = await LoadInfoAsync();
+        var contentfulService = contentfulServiceBuilder
+            .WithSpaceId(settings.SpaceId)
+            .WithEnvironmentId(settings.EnvironmentId)
+            .Build();
 
-        AnsiConsole.Write(BuildSpaceInfoTable(space, environment, user));
+        var (space, environment, user, locales, contentTypes) = await LoadInfoAsync(contentfulService);
 
-        var contentTypesTable = BuildContentTypesInfoTable(contentTypes);
-        var localesTable = BuildLocalesInfoTable(locales);
+        var spaceInfoTable = BuildSpaceInfoTable(space, environment, user);
+        AnsiConsole.Write(spaceInfoTable);
 
-        var mainTable = new Table()
-            .RoundedBorder()
-            .BorderColor(Styles.Dim.Foreground)
-            .AddColumn(new TableColumn(new Text("Content Types", Styles.AlertAccent)))
-            .AddColumn(new TableColumn(new Text("Locales", Styles.AlertAccent)))
-            .AddRow(contentTypesTable, localesTable);
-
+        var mainTable = BuildMainTable(locales, contentTypes);
         AnsiConsole.Write(mainTable);
 
         return 0;
     }
 
-    private async Task<(Space space, Environment environment, User user, IEnumerable<Locale> locales, IEnumerable<ContentTypeExtended> contentTypes)> LoadInfoAsync()
+    private static async Task<(Space space, Environment environment, User user, IEnumerable<Locale> locales, IEnumerable<ContentTypeExtended> contentTypes)> LoadInfoAsync(
+        IContentfulLoginService contentfulService)
     {
         var spaceTask = contentfulService.GetDefaultSpaceAsync();
         var environmentTask = contentfulService.GetDefaultEnvironmentAsync();
@@ -78,6 +76,16 @@ public sealed class InfoCommand(
             );
     }
 
+    private static Table BuildMainTable(IEnumerable<Locale> locales, IEnumerable<ContentTypeExtended> contentTypes)
+    {
+        return new Table()
+            .RoundedBorder()
+            .BorderColor(Styles.Dim.Foreground)
+            .AddColumn(new TableColumn(new Text("Content Types", Styles.AlertAccent)))
+            .AddColumn(new TableColumn(new Text("Locales", Styles.AlertAccent)))
+            .AddRow(BuildContentTypesInfoTable(contentTypes), BuildLocalesInfoTable(locales));
+    }
+
     private static Table BuildContentTypesInfoTable(IEnumerable<ContentTypeExtended> contentTypes)
     {
         var table = new Table()
@@ -108,7 +116,16 @@ public sealed class InfoCommand(
             .AddColumn("Name")
             .AddColumn("Code");
 
-        foreach (var locale in locales.OrderBy(l => l.Name))
+        var defaultLocale = locales.FirstOrDefault(l => l.Default);
+
+        if (defaultLocale is not null)
+        {
+            table.AddRow(
+                new Markup(defaultLocale.Name, Styles.Normal),
+                new Markup(defaultLocale.Code, Styles.Alert));
+        }
+
+        foreach (var locale in locales.Where(l => !l.Default).OrderBy(l => l.Name))
         {
             table.AddRow(
                 new Markup(locale.Name, Styles.Normal),

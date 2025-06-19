@@ -6,5 +6,6 @@ public interface IBatchProcessor
         IAsyncEnumerable<T> source,
         int batchSize,
         Func<IReadOnlyList<T>, CancellationToken, Task> batchActionAsync,
-        CancellationToken cancellationToken);
+        Func<T, bool>? batchItemFilter = null,
+        CancellationToken cancellationToken = default);
 }

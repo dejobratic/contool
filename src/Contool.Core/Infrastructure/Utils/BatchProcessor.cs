@@ -6,12 +6,16 @@ public class BatchProcessor : IBatchProcessor
         IAsyncEnumerable<T> source,
         int batchSize,
         Func<IReadOnlyList<T>, CancellationToken, Task> batchActionAsync,
-        CancellationToken cancellationToken)
+        Func<T, bool>? batchIteFilter = null,
+        CancellationToken cancellationToken = default)
     {
         var batch = new List<T>(batchSize);
 
         await foreach (var item in source.WithCancellation(cancellationToken))
         {
+            if(batchIteFilter is not null && !batchIteFilter(item))
+                continue;
+
             batch.Add(item);
 
             if (batch.Count != batchSize)
