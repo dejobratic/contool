@@ -18,7 +18,7 @@ internal class ContentFieldTypeRichText() : ContentFieldType("RichText")
     public override bool IsValidRawValue(object? value)
         => value is string || value is JObject;
 
-    private static object? ToDocument(object? value)
+    private static JObject? ToDocument(object? value)
     {
         if (value is null)
             return null;
