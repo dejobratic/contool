@@ -7,7 +7,7 @@ public class AsyncEnumerableWithTotal<T>(
     Func<int> getTotal,
     IProgressReporter? progressReporter = null) : IAsyncEnumerableWithTotal<T>
 {
-    private bool isTotalSet = false;
+    private bool _isTotalSet;
 
     public int Total { get; private set; }
 
@@ -15,10 +15,10 @@ public class AsyncEnumerableWithTotal<T>(
     {
         await foreach (var item in source.WithCancellation(cancellationToken))
         {
-            if (!isTotalSet)
+            if (!_isTotalSet)
             {
                 Total = getTotal();
-                isTotalSet = true;
+                _isTotalSet = true;
             }
 
             progressReporter?.Increment();

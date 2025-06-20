@@ -22,14 +22,7 @@ public sealed class TypeRegistrar(IServiceCollection builder) : ITypeRegistrar
 
     public void RegisterLazy(Type service, Func<object> func)
     {
-        if (func is not null)
-        {
-            builder.AddSingleton(service, (provider) => func());
-        }
-        else
-        {
-            throw new ArgumentNullException(nameof(func));
-        }
+        builder.AddSingleton(service, (_) => func());
     }
 }
 
@@ -37,12 +30,7 @@ public sealed class TypeResolver(IServiceProvider provider) : ITypeResolver, IDi
 {
     public object? Resolve(Type? type)
     {
-        if (type == null)
-        {
-            return null;
-        }
-
-        return provider.GetService(type);
+        return type is null ? null : provider.GetService(type);
     }
 
     public void Dispose()

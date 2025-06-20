@@ -30,7 +30,7 @@ public class AsyncEnumerableWithTotalTests
             getTotal: () => 3);
 
         // Act
-        await foreach (var item in asyncEnumerableWithTotal)
+        await foreach (var _ in asyncEnumerableWithTotal)
             break;
 
         // Assert
