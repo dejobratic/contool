@@ -1,4 +1,4 @@
-﻿using Contool.Core.Infrastructure.Utils;
+﻿using Contool.Core.Infrastructure.Utils.Models;
 using Contool.Core.Tests.Unit.Helpers;
 using Contool.Core.Tests.Unit.Mocks;
 
