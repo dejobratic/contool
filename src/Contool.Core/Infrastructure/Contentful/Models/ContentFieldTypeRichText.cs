@@ -18,7 +18,7 @@ internal class ContentFieldTypeRichText() : ContentFieldType("RichText")
     public override bool IsValidRawValue(object? value)
         => value is string || value is JObject;
 
-    public static object? ToDocument(object? value)
+    private static object? ToDocument(object? value)
     {
         if (value is null)
             return null;
@@ -44,14 +44,10 @@ internal class ContentFieldTypeRichText() : ContentFieldType("RichText")
         return doc.SerializeToJsonObject();
     }
 
-    public static string? ToMarkDown(object? richText)
+    private static string? ToMarkDown(object? richText)
     {
-        if (richText == null)
-            return null;
-
-        var document = richText
-            .ToString()
-            ?.DeserializeFromJsonString<Document>(); ;
+        var document = richText?.ToString()
+            ?.DeserializeFromJsonString<Document>();
 
         if (document is null)
             return null;

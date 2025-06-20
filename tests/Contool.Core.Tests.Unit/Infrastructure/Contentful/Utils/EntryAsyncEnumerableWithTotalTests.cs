@@ -80,14 +80,22 @@ public class EntryAsyncEnumerableWithTotalTests
         };
 
         var asyncEnumerable = new EntryAsyncEnumerableWithTotal<string>(
-            getEntriesAsync: new MockGetEntriesAsync(page1, page1).Execute,
+            getEntriesAsync: new MockGetEntriesAsync(page1, page2).Execute,
             query: new EntryQueryBuilder().Limit(2));
 
         // Act
         var actual = await asyncEnumerable.ToListAsync();
 
         // Assert
-        Assert.Equal(4, actual.Count);
+        var expected = new List<Entry<string>>
+        {
+            new() { Fields = "Entry1" },
+            new() { Fields = "Entry2" },
+            new() { Fields = "Entry3" },
+            new() { Fields = "Entry4" },
+        };
+        
+        Assert.Equal(expected, actual);
         Assert.Equal(4, asyncEnumerable.Total);
     }
 
