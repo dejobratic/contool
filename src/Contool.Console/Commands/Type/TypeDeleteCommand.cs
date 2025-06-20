@@ -17,8 +17,12 @@ public class TypeDeleteCommand(
         public string ContentTypeId { get; init; } = default!;
 
         [CommandOption("-f|--force")]
-        [Description("Force deletion without confirmation.")]
+        [Description("Force deletion of the content type even if it contains entries.")]
         public bool Force { get; init; } = false;
+
+        [CommandOption("-a|--apply")]
+        [Description("Whether to perform the deletion process (omit for dry run).")]
+        public bool Apply { get; init; }
     }
 
     protected override async Task<int> ExecuteInternalAsync(CommandContext context, Settings settings)

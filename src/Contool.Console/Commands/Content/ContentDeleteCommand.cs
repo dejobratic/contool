@@ -12,7 +12,7 @@ public class ContentDeleteCommand(
     public class Settings : SettingsBase
     {
         [CommandOption("-c|--content-type-id <ID>")]
-        [Description("Content type ID.")]
+        [Description("The Contentful content type ID.")]
         [Required]
         public string ContentTypeId { get; init; } = default!;
 
@@ -21,7 +21,7 @@ public class ContentDeleteCommand(
         public bool IncludeArchived { get; init; }
 
         [CommandOption("-a|--apply")]
-        [Description("Whether to perform the delete (omit for dry run).")]
+        [Description("Whether to perform the deletion process (omit for dry run).")]
         public bool Apply { get; init; }
     }
 

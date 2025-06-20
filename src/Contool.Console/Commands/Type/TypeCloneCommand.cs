@@ -17,13 +17,17 @@ public class TypeCloneCommand(
         public string TargetEnvironmentId { get; init; } = default!;
 
         [CommandOption("-c|--content-type-id <ID>")]
-        [Description("Content type ID to clone.")]
+        [Description("The Contentful content type ID.")]
         [Required]
         public string ContentTypeId { get; init; } = default!;
 
         [CommandOption("-p|--publish")]
-        [Description("Whether to publish the cloned type.")]
+        [Description("Whether to publish the cloned type entries (omit for draft).")]
         public bool Publish { get; init; }
+
+        [CommandOption("-a|--apply")]
+        [Description("Whether to perform the clone process (omit for dry run).")]
+        public bool Apply { get; init; }
     }
 
     protected override async Task<int> ExecuteInternalAsync(CommandContext context, Settings settings)

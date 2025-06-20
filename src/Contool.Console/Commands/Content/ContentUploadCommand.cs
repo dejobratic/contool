@@ -12,18 +12,22 @@ public class ContentUploadCommand(
     public class Settings : SettingsBase
     {
         [CommandOption("-c|--content-type-id <ID>")]
-        [Description("Content type ID.")]
+        [Description("The Contentful content type ID.")]
         [Required]
         public string ContentTypeId { get; init; } = default!;
 
         [CommandOption("-i|--input-path <PATH>")]
-        [Description("Path to input file (EXCEL, CSV, JSON).")]
+        [Description("The input file path (EXCEL, CSV, JSON).")]
         [Required]
         public string InputPath { get; init; } = default!;
 
         [CommandOption("-p|--publish")]
         [Description("Whether to publish the entries after upload (omit for draft).")]
         public bool Publish { get; init; }
+
+        [CommandOption("-a|--apply")]
+        [Description("Whether to perform the upload process (omit for dry run).")]
+        public bool Apply { get; init; }
     }
 
     public override Spectre.Console.ValidationResult Validate(CommandContext context, Settings settings)

@@ -2,7 +2,7 @@
 using Contool.Core.Tests.Unit.Helpers;
 using Contool.Core.Tests.Unit.Mocks;
 
-namespace Contool.Core.Tests.Unit.Infrastructure.Utils
+namespace Contool.Core.Tests.Unit.Infrastructure.Utils.Models
 {
     public class AsyncEnumerableWithTotalTests
     {

@@ -12,7 +12,7 @@ public class ContentDownloadCommand(
     public class Settings : SettingsBase
     {
         [CommandOption("-c|--content-type-id <ID>")]
-        [Description("The content type ID to download.")]
+        [Description("The Contentful content type ID.")]
         [Required]
         public string ContentTypeId { get; init; } = default!;
 

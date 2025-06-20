@@ -1,4 +1,4 @@
-﻿namespace Contool.Core.Infrastructure.Utils;
+﻿namespace Contool.Core.Infrastructure.Utils.Services;
 
 public interface IBatchProcessor
 {

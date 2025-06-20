@@ -10,7 +10,7 @@ using Contool.Core.Features.TypeDelete;
 using Contool.Core.Infrastructure.Contentful.Options;
 using Contool.Core.Infrastructure.Contentful.Services;
 using Contool.Core.Infrastructure.IO.Services;
-using Contool.Core.Infrastructure.Utils;
+using Contool.Core.Infrastructure.Utils.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;

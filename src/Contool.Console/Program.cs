@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
 using System.Runtime.InteropServices;
 using System.Text;
+
 using TypeRegistrar = Contool.Console.Infrastructure.Utils.TypeRegistrar;
 
 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -17,9 +18,7 @@ if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
     Console.OutputEncoding = Encoding.Unicode;
 }
 
-var configuration = BuildConfiguration();
-
-var services = BuildServiceCollection(configuration);
+var services = BuildServiceCollection();
 
 var registrar = new TypeRegistrar(services);
 
@@ -65,16 +64,13 @@ app.Configure(config =>
 
 return await app.RunAsync(args);
 
-static IServiceCollection BuildServiceCollection(IConfiguration configuration)
+static IServiceCollection BuildServiceCollection()
 {
+    var configuration = new ConfigurationBuilder()
+        .AddUserSecrets<Program>()
+        .Build();
+
     return new ServiceCollection()
         .AddContoolDependencies(configuration)
         .AddConsoleDependencies();
-}
-
-static IConfigurationRoot BuildConfiguration()
-{
-    return new ConfigurationBuilder()
-        .AddUserSecrets<Program>()
-        .Build();
 }

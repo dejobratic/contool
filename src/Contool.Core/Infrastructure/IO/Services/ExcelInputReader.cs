@@ -1,5 +1,5 @@
 ﻿using Contool.Core.Infrastructure.IO.Models;
-using Contool.Core.Infrastructure.Utils;
+using Contool.Core.Infrastructure.Utils.Models;
 using OfficeOpenXml;
 using System.Dynamic;
 using System.Runtime.CompilerServices;

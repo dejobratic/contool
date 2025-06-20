@@ -1,6 +1,6 @@
 ﻿using Contool.Console.Infrastructure.Logging;
 using Contool.Console.Infrastructure.UI;
-using Contool.Core.Infrastructure.Utils;
+using Contool.Core.Infrastructure.Utils.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 

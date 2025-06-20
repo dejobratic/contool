@@ -1,4 +1,6 @@
-﻿namespace Contool.Core.Infrastructure.Utils;
+﻿using Contool.Core.Infrastructure.Utils.Services;
+
+namespace Contool.Core.Infrastructure.Utils.Models;
 
 public class AsyncEnumerableWithTotal<T>(
     IAsyncEnumerable<T> source,

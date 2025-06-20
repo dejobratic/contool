@@ -12,9 +12,13 @@ public class ContentPublishCommand(
     public class Settings : SettingsBase
     {
         [CommandOption("-c|--content-type-id <ID>")]
-        [Description("The ID of the content type to publish.")]
+        [Description("The Contentful content type ID.")]
         [Required]
         public string ContentTypeId { get; init; } = default!;
+
+        [CommandOption("-a|--apply")]
+        [Description("Whether to perform the pubish process (omit for dry run).")]
+        public bool Apply { get; init; }
     }
 
     protected override async Task<int> ExecuteInternalAsync(CommandContext context, Settings settings)

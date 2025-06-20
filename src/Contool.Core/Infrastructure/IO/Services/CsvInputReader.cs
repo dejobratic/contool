@@ -1,5 +1,5 @@
 ﻿using Contool.Core.Infrastructure.IO.Models;
-using Contool.Core.Infrastructure.Utils;
+using Contool.Core.Infrastructure.Utils.Models;
 using CsvHelper;
 using System.Globalization;
 using System.Runtime.CompilerServices;

@@ -1,7 +1,7 @@
-﻿using Contool.Core.Infrastructure.Utils;
+﻿using Contool.Core.Infrastructure.Utils.Services;
 using Contool.Core.Tests.Unit.Helpers;
 
-namespace Contool.Core.Tests.Unit.Infrastructure.Utils;
+namespace Contool.Core.Tests.Unit.Infrastructure.Utils.Services;
 
 public class BatchProcessorTests
 {

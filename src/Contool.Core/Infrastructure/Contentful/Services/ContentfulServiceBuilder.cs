@@ -1,4 +1,4 @@
-﻿using Contool.Core.Infrastructure.Utils;
+﻿using Contool.Core.Infrastructure.Utils.Services;
 
 namespace Contool.Core.Infrastructure.Contentful.Services;
 

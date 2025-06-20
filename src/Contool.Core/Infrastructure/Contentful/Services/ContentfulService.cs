@@ -3,7 +3,8 @@ using Contentful.Core.Models;
 using Contentful.Core.Models.Management;
 using Contool.Core.Infrastructure.Contentful.Extensions;
 using Contool.Core.Infrastructure.Contentful.Utils;
-using Contool.Core.Infrastructure.Utils;
+using Contool.Core.Infrastructure.Utils.Models;
+using Contool.Core.Infrastructure.Utils.Services;
 
 namespace Contool.Core.Infrastructure.Contentful.Services;
 
