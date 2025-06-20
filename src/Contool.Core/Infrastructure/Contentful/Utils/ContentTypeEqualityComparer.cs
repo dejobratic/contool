@@ -5,6 +5,8 @@ namespace Contool.Core.Infrastructure.Contentful.Utils;
 
 public class ContentTypeEqualityComparer : IEqualityComparer<ContentType>
 {
+    private static readonly ContentTypeFieldEqualityComparer FieldComparer = new();
+
     public bool Equals(ContentType? x, ContentType? y)
     {
         if (ReferenceEquals(x, y))
@@ -24,13 +26,13 @@ public class ContentTypeEqualityComparer : IEqualityComparer<ContentType>
             return false;
 
         // Compare fields one by one by Id
-        foreach (var xField in x.Fields!)
+        foreach (var xField in x.Fields ?? [])
         {
-            var yField = y.Fields!.FirstOrDefault(f => f.Id == xField.Id);
+            var yField = y.Fields?.FirstOrDefault(f => f.Id == xField.Id);
             if (yField is null)
                 return false;
 
-            if (!FieldEquals(xField, yField))
+            if (!FieldComparer.Equals(xField, yField))
                 return false;
         }
 
@@ -43,26 +45,10 @@ public class ContentTypeEqualityComparer : IEqualityComparer<ContentType>
         {
             int hash = 17;
             hash = hash * 23 + (obj.Name?.GetHashCode() ?? 0);
+            hash = hash * 23 + (obj.Description?.GetHashCode() ?? 0);
             hash = hash * 23 + (obj.DisplayField?.GetHashCode() ?? 0);
             hash = hash * 23 + (obj.Fields?.Count ?? 0);
             return hash;
         }
-    }
-
-    private static bool FieldEquals(Field x, Field y)
-    {
-        if (!string.Equals(x.Name, y.Name, StringComparison.Ordinal) ||
-            !string.Equals(x.Type, y.Type, StringComparison.Ordinal) ||
-            !string.Equals(x.LinkType, y.LinkType, StringComparison.Ordinal) ||
-            x.Required != y.Required ||
-            x.Disabled != y.Disabled ||
-            x.Omitted != y.Omitted ||
-            x.Localized != y.Localized)
-            return false;
-
-        // Optional: compare Validations (can be complex → skip if not critical for your clone safety)
-        // Optional: compare Items if field.Type == "Array"
-
-        return true;
     }
 }

@@ -6,7 +6,8 @@ namespace Contool.Core.Infrastructure.Contentful.Utils;
 // cannot implement dynamic interface with IAsyncEnumerableWithTotal<Entry<dynamic>>
 public class EntryAsyncEnumerableWithTotal<T>(
     Func<string, CancellationToken, Task<ContentfulCollection<Entry<T>>>> getEntriesAsync,
-    EntryQueryBuilder query) : IAsyncEnumerableWithTotal<Entry<T>>
+    EntryQueryBuilder query,
+    PagingMode pagingMode) : IAsyncEnumerableWithTotal<Entry<T>>
 {
     public int Total { get; private set; }
 
@@ -39,7 +40,11 @@ public class EntryAsyncEnumerableWithTotal<T>(
                 yield return item;
             }
 
-            skip += page.Items.Count();
+            skip = pagingMode switch
+            {
+                PagingMode.RestartFromBeginning => 0,
+                _ => skip + page.Items.Count(),
+            };
         }
 
         Total = count;

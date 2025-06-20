@@ -1,6 +1,7 @@
 ﻿using Contentful.Core.Models;
 using Contool.Core.Infrastructure.Contentful.Extensions;
 using Contool.Core.Infrastructure.Contentful.Services;
+using Contool.Core.Infrastructure.Contentful.Utils;
 using Contool.Core.Infrastructure.Utils.Models;
 using Contool.Core.Infrastructure.Utils.Services;
 using Microsoft.Extensions.Logging;
@@ -17,7 +18,7 @@ public class ContentDeleter(
     public async Task DeleteAsync(string contentTypeId, IContentfulService contentfulService, bool includeArchived, CancellationToken cancellationToken = default)
     {
         var entries = contentfulService.GetEntriesAsync(
-            contentTypeId: contentTypeId, cancellationToken: cancellationToken);
+            contentTypeId: contentTypeId, pagingMode: PagingMode.RestartFromBeginning, cancellationToken: cancellationToken);
 
         await DeleteEntriesAsync(
             entries, contentfulService, includeArchived, cancellationToken);

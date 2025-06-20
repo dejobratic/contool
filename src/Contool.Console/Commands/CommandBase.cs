@@ -8,10 +8,16 @@ namespace Contool.Console.Commands;
 public abstract class CommandBase<TSettings> : AsyncCommand<TSettings>
     where TSettings : SettingsBase
 {
-    public override Task<int> ExecuteAsync(CommandContext context, TSettings settings)
+    public override async Task<int> ExecuteAsync(CommandContext context, TSettings settings)
     {
         DisplaySettings(context, settings);
-        return ExecuteInternalAsync(context, settings);
+
+        var profiledResult = await ExecutionProfiler.ProfileAsync(
+            async () => await ExecuteInternalAsync(context, settings));
+
+        DisplayMetrics(profiledResult);
+
+        return profiledResult.Result;
     }
 
     private static void DisplaySettings(CommandContext context, TSettings settings)
@@ -98,6 +104,14 @@ public abstract class CommandBase<TSettings> : AsyncCommand<TSettings>
             .ToArray();
 
         return string.Join(' ', commandParts).EscapeMarkup();
+    }
+
+    private static void DisplayMetrics(MeasuredResult<int> profiledResult)
+    {
+        AnsiConsole.WriteLine();
+        AnsiConsole.MarkupLine($"[bold {Styles.Dim.Foreground}]Execution Time:[/] {profiledResult.FormattedElapsedTime}");
+        AnsiConsole.MarkupLine($"[bold {Styles.Dim.Foreground}]Peak Memory Usage:[/] {profiledResult.FormatedMemoryUsage}");
+        AnsiConsole.WriteLine();
     }
 
     protected abstract Task<int> ExecuteInternalAsync(CommandContext context, TSettings settings);

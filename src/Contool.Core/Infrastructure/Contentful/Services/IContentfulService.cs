@@ -1,5 +1,6 @@
 ﻿using Contentful.Core.Models;
 using Contentful.Core.Models.Management;
+using Contool.Core.Infrastructure.Contentful.Utils;
 using Contool.Core.Infrastructure.Utils.Models;
 
 namespace Contool.Core.Infrastructure.Contentful.Services;
@@ -16,7 +17,7 @@ public interface IContentfulService
 
     Task DeleteContentTypeAsync(string contentTypeId, CancellationToken cancellationToken = default);
 
-    IAsyncEnumerableWithTotal<Entry<dynamic>> GetEntriesAsync(string contentTypeId, int? pageSize = null, CancellationToken cancellationToken = default);
+    IAsyncEnumerableWithTotal<Entry<dynamic>> GetEntriesAsync(string contentTypeId, int? pageSize = null, PagingMode pagingMode = PagingMode.SkipForward, CancellationToken cancellationToken = default);
 
     Task CreateOrUpdateEntriesAsync(IEnumerable<Entry<dynamic>> entries, bool publish = false, CancellationToken cancellationToken = default);
 

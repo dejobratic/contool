@@ -73,6 +73,7 @@ public class ContentfulService(
     public IAsyncEnumerableWithTotal<Entry<dynamic>> GetEntriesAsync(
         string contentTypeId,
         int? pageSize = null,
+        PagingMode pagingMode = PagingMode.SkipForward,
         CancellationToken cancellationToken = default)
     {
         async Task<ContentfulCollection<Entry<dynamic>>> GetEntriesAsync(string queryString, CancellationToken ct)
@@ -82,14 +83,24 @@ public class ContentfulService(
             .WithContentTypeId(contentTypeId)
             .Limit(pageSize ?? DefaultBatchSize);
 
-        return new EntryAsyncEnumerableWithTotal<dynamic>(GetEntriesAsync, query);
+        return new EntryAsyncEnumerableWithTotal<dynamic>(GetEntriesAsync, query, pagingMode);
     }
 
     public async Task CreateOrUpdateEntriesAsync(IEnumerable<Entry<dynamic>> entries, bool publish = false, CancellationToken cancellationToken = default)
     {
         async Task CreateOrUpdateEntry(
-            Entry<dynamic> entry, int version, bool publish, CancellationToken cancellationToken)
+            Entry<dynamic> entry, int version, bool archived, bool publish, CancellationToken cancellationToken)
         {
+            if (archived)
+            {
+                var unarchived = await client.UnarchiveEntryAsync(
+                    entryId: entry.GetId(),
+                    version: version,
+                    cancellationToken: cancellationToken);
+
+                version = unarchived.GetVersion();
+            }
+
             var upserted = await client.CreateOrUpdateEntryAsync(
                 entry,
                 version: version,
@@ -121,11 +132,13 @@ public class ContentfulService(
                 ? existing.GetVersion()
                 : entry.GetVersion();
 
+            var archived = existing?.IsArchived() == true;
+
             // all referenced entries are published
             var canPublish = unpublishedReferencedEntriesLookup.TryGetValue(entry.GetId(), out var unpublishedReferencedEntries)
                 && unpublishedReferencedEntries.Count == 0;
 
-            await CreateOrUpdateEntry(entry, version, publish && canPublish, cancellationToken);
+            await CreateOrUpdateEntry(entry, version, archived, publish && canPublish, cancellationToken);
             progressReporter.Increment();
         });
 

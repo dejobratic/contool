@@ -1,6 +1,7 @@
-﻿using System.Collections.Generic;
-using Contentful.Core.Models;
+﻿using Contentful.Core.Models;
+using Contentful.Core.Models.Management;
 using Contool.Core.Infrastructure.Contentful.Utils;
+using System.Collections.Generic;
 using Xunit;
 
 namespace Contool.Core.Tests.Unit.Infrastructure.Contentful.Utils;
@@ -13,8 +14,8 @@ public class ContentTypeEqualityComparerTests
     public void GivenTwoIdenticalContentTypes_WhenCompared_ThenTheyAreEqual()
     {
         // Arrange
-        var contentType1 = CreateContentType("BlogPost", "A blog post", "title", CreateFields());
-        var contentType2 = CreateContentType("BlogPost", "A blog post", "title", CreateFields());
+        var contentType1 = CreateContentType("BlogPost", "A blog post", "title", CreateFields("title", "body"));
+        var contentType2 = CreateContentType("BlogPost", "A blog post", "title", CreateFields("title", "body"));
 
         // Act
         var actual = _sut.Equals(contentType1, contentType2);
@@ -27,8 +28,8 @@ public class ContentTypeEqualityComparerTests
     public void GivenContentTypesWithDifferentNames_WhenCompared_ThenTheyAreNotEqual()
     {
         // Arrange
-        var contentType1 = CreateContentType("BlogPost", "A blog post", "title", CreateFields());
-        var contentType2 = CreateContentType("Article", "A blog post", "title", CreateFields());
+        var contentType1 = CreateContentType("BlogPost", "A blog post", "title", CreateFields("title", "body"));
+        var contentType2 = CreateContentType("Article", "A blog post", "title", CreateFields("title", "body"));
 
         // Act
         var actual = _sut.Equals(contentType1, contentType2);
@@ -41,8 +42,8 @@ public class ContentTypeEqualityComparerTests
     public void GivenContentTypesWithDifferentDescriptions_WhenCompared_ThenTheyAreNotEqual()
     {
         // Arrange
-        var contentType1 = CreateContentType("BlogPost", "A blog post", "title", CreateFields());
-        var contentType2 = CreateContentType("BlogPost", "An article", "title", CreateFields());
+        var contentType1 = CreateContentType("BlogPost", "A blog post", "title", CreateFields("title", "body"));
+        var contentType2 = CreateContentType("BlogPost", "An article", "title", CreateFields("title", "body"));
 
         // Act
         var actual = _sut.Equals(contentType1, contentType2);
@@ -55,8 +56,8 @@ public class ContentTypeEqualityComparerTests
     public void GivenContentTypesWithDifferentDisplayFields_WhenCompared_ThenTheyAreNotEqual()
     {
         // Arrange
-        var contentType1 = CreateContentType("BlogPost", "A blog post", "title", CreateFields());
-        var contentType2 = CreateContentType("BlogPost", "A blog post", "headline", CreateFields());
+        var contentType1 = CreateContentType("BlogPost", "A blog post", "title", CreateFields("title", "body"));
+        var contentType2 = CreateContentType("BlogPost", "A blog post", "headline", CreateFields("title", "body"));
 
         // Act
         var actual = _sut.Equals(contentType1, contentType2);
@@ -69,8 +70,22 @@ public class ContentTypeEqualityComparerTests
     public void GivenContentTypesWithDifferentFields_WhenCompared_ThenTheyAreNotEqual()
     {
         // Arrange
-        var contentType1 = CreateContentType("BlogPost", "A blog post", "title", CreateFields());
+        var contentType1 = CreateContentType("BlogPost", "A blog post", "title", CreateFields("title", "body"));
         var contentType2 = CreateContentType("BlogPost", "A blog post", "title", CreateFields("headline"));
+
+        // Act
+        var actual = _sut.Equals(contentType1, contentType2);
+
+        // Assert
+        Assert.False(actual);
+    }
+
+    [Fact]
+    public void GivenContentTypesWithDifferentFieldValidators_WhenCompared_ThenTheyAreNotEqual()
+    {
+        // Arrange
+        var contentType1 = CreateContentType("BlogPost", "A blog post", "title", CreateFieldsWithValidators("title", "body"));
+        var contentType2 = CreateContentType("BlogPost", "A blog post", "title", CreateFieldsWithValidators("title", "headline"));
 
         // Act
         var actual = _sut.Equals(contentType1, contentType2);
@@ -97,7 +112,7 @@ public class ContentTypeEqualityComparerTests
     public void GivenOneNullContentType_WhenCompared_ThenTheyAreNotEqual()
     {
         // Arrange
-        var contentType1 = CreateContentType("BlogPost", "A blog post", "title", CreateFields());
+        var contentType1 = CreateContentType("BlogPost", "A blog post", "title", CreateFields("title", "body"));
         ContentType? contentType2 = null;
 
         // Act
@@ -111,7 +126,7 @@ public class ContentTypeEqualityComparerTests
     public void GivenContentType_WhenGetHashCodeIsCalled_ThenHashCodeIsConsistent()
     {
         // Arrange
-        var contentType = CreateContentType("BlogPost", "A blog post", "title", CreateFields());
+        var contentType = CreateContentType("BlogPost", "A blog post", "title", CreateFields("title", "body"));
 
         // Act
         var hashCode1 = _sut.GetHashCode(contentType);
@@ -135,7 +150,7 @@ public class ContentTypeEqualityComparerTests
     private static List<Field> CreateFields(params string[] fieldNames)
     {
         var fields = new List<Field>();
-        foreach (var fieldName in fieldNames.Length > 0 ? fieldNames : new[] { "title", "body" })
+        foreach (var fieldName in fieldNames)
         {
             fields.Add(new Field
             {
@@ -146,7 +161,32 @@ public class ContentTypeEqualityComparerTests
                 Required = true,
                 Disabled = false,
                 Omitted = false,
-                Localized = false
+                Localized = false,
+                Validations = new List<IFieldValidator>()
+            });
+        }
+        return fields;
+    }
+
+    private static List<Field> CreateFieldsWithValidators(params string[] fieldNames)
+    {
+        var fields = new List<Field>();
+        foreach (var fieldName in fieldNames)
+        {
+            fields.Add(new Field
+            {
+                Id = fieldName,
+                Name = fieldName,
+                Type = "Text",
+                LinkType = null,
+                Required = true,
+                Disabled = false,
+                Omitted = false,
+                Localized = false,
+                Validations =
+                [
+                    new RegexValidator(expression: "^[a-zA-Z0-9]*$", flags: null) // Example validator
+                ]
             });
         }
         return fields;
