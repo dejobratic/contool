@@ -3,7 +3,7 @@ using Contool.Core.Infrastructure.Contentful.Services;
 
 namespace Contool.Core.Features.ContentUnpublish;
 
-public class ContentUnpublishCommand : CommandBase
+public class ContentUnpublishCommand : WriteCommandBase
 {
     public string ContentTypeId { get; init; } = default!;
 }

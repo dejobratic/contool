@@ -5,6 +5,7 @@ using Contool.Console.Infrastructure.UI;
 using Contool.Core.Infrastructure.Contentful.Extensions;
 using Contool.Core.Infrastructure.Contentful.Models;
 using Contool.Core.Infrastructure.Contentful.Services;
+using Contool.Core.Infrastructure.Utils.Models;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
@@ -15,8 +16,9 @@ using Text = Spectre.Console.Text;
 namespace Contool.Console.Commands.Info;
 
 public sealed class InfoCommand(
+    IRuntimeContext runtimeContext,
     IContentfulLoginServiceBuilder contentfulServiceBuilder)
-    : CommandBase<InfoCommand.Settings>
+    : CommandBase<InfoCommand.Settings>(runtimeContext)
 {
     public class Settings : SettingsBase { }
 

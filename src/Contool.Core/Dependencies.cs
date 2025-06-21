@@ -10,6 +10,7 @@ using Contool.Core.Features.TypeDelete;
 using Contool.Core.Infrastructure.Contentful.Options;
 using Contool.Core.Infrastructure.Contentful.Services;
 using Contool.Core.Infrastructure.IO.Services;
+using Contool.Core.Infrastructure.Utils.Models;
 using Contool.Core.Infrastructure.Utils.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -66,7 +67,9 @@ public static class Dependencies
             .AddSingleton<IInputReader, JsonInputReader>()
 
             // Utils
-            .AddSingleton<IBatchProcessor, BatchProcessor>();
+            .AddSingleton<IEntriesOperationTracker, EntriesOperationTracker>()
+            .AddSingleton<IBatchProcessor, BatchProcessor>()
+            .AddSingleton<IRuntimeContext, RuntimeContext>();
     }
 
     private static IServiceCollection AddCommands(this IServiceCollection services)

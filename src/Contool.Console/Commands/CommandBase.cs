@@ -1,15 +1,21 @@
 ﻿using Contool.Console.Infrastructure.UI;
 using Contool.Console.Infrastructure.Utils;
+using Contool.Core.Infrastructure.Utils.Models;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
 namespace Contool.Console.Commands;
 
-public abstract class CommandBase<TSettings> : AsyncCommand<TSettings>
+public abstract class CommandBase<TSettings>(
+    IRuntimeContext runtimeContext) : AsyncCommand<TSettings>
     where TSettings : SettingsBase
 {
     public override async Task<int> ExecuteAsync(CommandContext context, TSettings settings)
     {
+        // TODO: refactor
+        var isDryRun = settings is WriteSettingsBase writeSettins && writeSettins.Apply is false;
+        runtimeContext.SetDryRun(isDryRun);
+
         DisplaySettings(context, settings);
 
         var profiledResult = await ExecutionProfiler.ProfileAsync(

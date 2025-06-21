@@ -16,10 +16,6 @@ public static class Styles
     public static readonly Style Alert = new(Color.Orange1);
     public static readonly Style AlertAccent = new(Color.LightGoldenrod2, null, Decoration.Bold);
 
-    // Code blocks
-    public static readonly Style Code = new(Color.White, Color.Grey23);          // white on charcoal
-    public static readonly Style CodeHeading = new(Color.White, Color.Grey19);   // slightly darker
-
     // Input Prompts
     public static readonly Style Input = new(Color.PaleTurquoise1, Color.Grey11);
 }

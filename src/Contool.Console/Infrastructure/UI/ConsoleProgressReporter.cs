@@ -1,9 +1,11 @@
-﻿using Contool.Core.Infrastructure.Utils.Services;
+﻿using Contool.Console.Infrastructure.UI.Extensions;
+using Contool.Core.Infrastructure.Utils.Services;
 using Spectre.Console;
 
 namespace Contool.Console.Infrastructure.UI;
 
-public class ConsoleProgressReporter : IProgressReporter, IDisposable
+public class ConsoleProgressReporter(
+    IEntriesOperationTracker operationTracker) : IProgressReporter, IDisposable
 {
     private const double MaxProgress = 1.0;
 
@@ -52,6 +54,10 @@ public class ConsoleProgressReporter : IProgressReporter, IDisposable
 
         _cts?.Cancel();
         _renderLoopTask?.Wait();
+
+        // TODO: refactor
+        var result = operationTracker.GetResults();
+        result?.DrawTable();
     }
 
     public void Dispose()

@@ -13,7 +13,7 @@ public class BatchProcessor : IBatchProcessor
 
         await foreach (var item in source.WithCancellation(cancellationToken))
         {
-            if(batchItemFilter is not null && !batchItemFilter(item))
+            if (batchItemFilter is not null && !batchItemFilter(item))
                 continue;
 
             batch.Add(item);

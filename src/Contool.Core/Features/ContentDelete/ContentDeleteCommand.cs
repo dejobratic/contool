@@ -7,7 +7,7 @@ public class ContentDeleteCommand : WriteCommandBase
 {
     public string ContentTypeId { get; init; } = default!;
 
-    public bool IncludeArchived { get; init; } 
+    public bool IncludeArchived { get; init; }
 }
 
 public class ContentDeleteCommandHandler(

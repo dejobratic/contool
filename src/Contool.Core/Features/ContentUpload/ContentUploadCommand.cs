@@ -8,7 +8,7 @@ using System.Runtime.CompilerServices;
 
 namespace Contool.Core.Features.ContentUpload;
 
-public class ContentUploadCommand : CommandBase
+public class ContentUploadCommand : WriteCommandBase
 {
     public string ContentTypeId { get; init; } = default!;
 

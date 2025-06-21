@@ -33,7 +33,7 @@ internal static class ProgressBar
                 {
                     Alignment = Justify.Left
                 },
-                new CustomRemainingTimeColumn(),
+                new ProgressBarRemainingTimeColumn(),
             ]);
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace Contool.Console.Infrastructure.Utils;
+﻿using System.Diagnostics;
+
+namespace Contool.Console.Infrastructure.Utils;
 
 public static class ExecutionProfiler
 {
@@ -7,7 +9,7 @@ public static class ExecutionProfiler
         bool forceFullCollection = true)
     {
         // Start measuring time and memory
-        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        var stopwatch = Stopwatch.StartNew();
         var initialMemory = GC.GetTotalMemory(forceFullCollection);
 
         var result = await action();

@@ -1,5 +1,7 @@
 ﻿using Contentful.Core;
 using Contentful.Core.Configuration;
+using Contool.Core.Infrastructure.Utils.Models;
+using Contool.Core.Infrastructure.Utils.Services;
 using Microsoft.Extensions.Options;
 
 namespace Contool.Core.Infrastructure.Contentful.Services;
@@ -7,7 +9,9 @@ namespace Contool.Core.Infrastructure.Contentful.Services;
 public class ContentfulManagementClientAdapterFactory(
     IHttpClientFactory httpClientFactory,
     IOptions<ContentfulOptions> options,
-    Func<IContentfulManagementClientAdapter, IContentfulManagementClientAdapter> decorator) : IContentfulManagementClientAdapterFactory
+    Func<IContentfulManagementClientAdapter, IContentfulManagementClientAdapter> decorator,
+    IEntriesOperationTracker operationTracker,
+    IRuntimeContext runtimeContext) : IContentfulManagementClientAdapterFactory
 {
     private readonly ContentfulOptions _options = options.Value;
 
@@ -27,6 +31,10 @@ public class ContentfulManagementClientAdapterFactory(
 
         var baseAdapter = new ContentfulManagementClientAdapter(contentfulManagementClient);
 
-        return decorator(baseAdapter);
+        var client = decorator(baseAdapter);
+
+        return runtimeContext.IsDryRun
+            ? new ContentfulManagementClientAdapterDryRunDecorator(client, operationTracker)
+            : client;
     }
 }

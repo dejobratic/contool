@@ -3,7 +3,7 @@ using Spectre.Console.Rendering;
 
 namespace Contool.Console.Infrastructure.UI;
 
-public sealed class CustomRemainingTimeColumn : ProgressColumn
+public sealed class ProgressBarRemainingTimeColumn : ProgressColumn
 {
     public override IRenderable Render(RenderOptions options, ProgressTask task, TimeSpan deltaTime)
     {
@@ -18,6 +18,6 @@ public sealed class CustomRemainingTimeColumn : ProgressColumn
         return new Text($"{remaining.Value:hh\\:mm\\:ss}", Styles.Dim);
     }
 
-    public override int? GetColumnWidth(RenderOptions options) 
+    public override int? GetColumnWidth(RenderOptions options)
         => 8;
 }

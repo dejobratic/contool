@@ -4,7 +4,7 @@ using Contool.Core.Infrastructure.Contentful.Services;
 
 namespace Contool.Core.Features.TypeClone;
 
-public class TypeCloneCommand : CommandBase
+public class TypeCloneCommand : WriteCommandBase
 {
     public string ContentTypeId { get; init; } = default!;
 

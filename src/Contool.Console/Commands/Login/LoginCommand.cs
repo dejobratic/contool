@@ -1,12 +1,14 @@
 ﻿using Contentful.Core.Configuration;
 using Contool.Console.Infrastructure.Utils;
+using Contool.Core.Infrastructure.Utils.Models;
 using Spectre.Console;
 using Spectre.Console.Cli;
 using System.ComponentModel;
 
 namespace Contool.Console.Commands.Login;
 
-public class LoginCommand : CommandBase<LoginCommand.Settings>
+public class LoginCommand(
+    IRuntimeContext runtimeContext) : CommandBase<LoginCommand.Settings>(runtimeContext)
 {
     public class Settings : SettingsBase
     {

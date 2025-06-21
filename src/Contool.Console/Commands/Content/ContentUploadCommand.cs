@@ -1,4 +1,5 @@
 ﻿using Contool.Core.Features;
+using Contool.Core.Infrastructure.Utils.Models;
 using Spectre.Console.Cli;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -6,10 +7,11 @@ using System.ComponentModel.DataAnnotations;
 namespace Contool.Console.Commands.Content;
 
 public class ContentUploadCommand(
+    IRuntimeContext runtimeContext,
     ICommandHandler<Core.Features.ContentUpload.ContentUploadCommand> handler)
-    : CommandBase<ContentUploadCommand.Settings>
+    : CommandBase<ContentUploadCommand.Settings>(runtimeContext)
 {
-    public class Settings : SettingsBase
+    public class Settings : WriteSettingsBase
     {
         [CommandOption("-c|--content-type-id <ID>")]
         [Description("The Contentful content type ID.")]
@@ -24,15 +26,6 @@ public class ContentUploadCommand(
         [CommandOption("-p|--publish")]
         [Description("Whether to publish the entries after upload (omit for draft).")]
         public bool Publish { get; init; }
-
-        [CommandOption("-a|--apply")]
-        [Description("Whether to perform the upload process (omit for dry run).")]
-        public bool Apply { get; init; }
-    }
-
-    public override Spectre.Console.ValidationResult Validate(CommandContext context, Settings settings)
-    {
-        return base.Validate(context, settings);
     }
 
     protected override async Task<int> ExecuteInternalAsync(CommandContext context, Settings settings)
@@ -43,7 +36,8 @@ public class ContentUploadCommand(
             EnvironmentId = settings.EnvironmentId,
             ContentTypeId = settings.ContentTypeId,
             InputPath = settings.InputPath,
-            ShouldPublish = settings.Publish
+            ShouldPublish = settings.Publish,
+            ApplyChanges = settings.Apply,
         };
 
         await handler.HandleAsync(command);

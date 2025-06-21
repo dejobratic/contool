@@ -1,4 +1,5 @@
 ﻿using Contool.Core.Features;
+using Contool.Core.Infrastructure.Utils.Models;
 using Spectre.Console.Cli;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -6,8 +7,9 @@ using System.ComponentModel.DataAnnotations;
 namespace Contool.Console.Commands.Content;
 
 public class ContentDownloadCommand(
+    IRuntimeContext runtimeContext,
     ICommandHandler<Core.Features.ContentDownload.ContentDownloadCommand> handler)
-    : CommandBase<ContentDownloadCommand.Settings>
+    : CommandBase<ContentDownloadCommand.Settings>(runtimeContext)
 {
     public class Settings : SettingsBase
     {

@@ -1,8 +1,6 @@
 ﻿using Contentful.Core.Models;
 using Contentful.Core.Models.Management;
 using Contool.Core.Infrastructure.Contentful.Utils;
-using System.Collections.Generic;
-using Xunit;
 
 namespace Contool.Core.Tests.Unit.Infrastructure.Contentful.Utils;
 

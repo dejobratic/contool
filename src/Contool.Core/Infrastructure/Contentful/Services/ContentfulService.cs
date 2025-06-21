@@ -89,6 +89,22 @@ public class ContentfulService(
     public async Task CreateOrUpdateEntriesAsync(IEnumerable<Entry<dynamic>> entries, bool publish = false, CancellationToken cancellationToken = default)
     {
         async Task CreateOrUpdateEntry(
+            Entry<dynamic> entry, bool publish, Dictionary<string, Entry<dynamic>> existingEntriesLookup, Dictionary<string, HashSet<string>> unpublishedReferencedEntriesLookup, CancellationToken cancellationToken)
+        {
+            var version = existingEntriesLookup.TryGetValue(entry.GetId(), out var existing)
+                ? existing.GetVersion()
+                : entry.GetVersion();
+
+            var archived = existing?.IsArchived() == true;
+
+            // all referenced entries are published
+            var canPublish = unpublishedReferencedEntriesLookup.TryGetValue(entry.GetId(), out var unpublishedReferencedEntries)
+                && unpublishedReferencedEntries.Count == 0;
+
+            await ExecuteCreateOrUpdateEntry(entry, version, archived, publish && canPublish, cancellationToken);
+        }
+
+        async Task ExecuteCreateOrUpdateEntry(
             Entry<dynamic> entry, int version, bool archived, bool publish, CancellationToken cancellationToken)
         {
             if (archived)
@@ -121,6 +137,7 @@ public class ContentfulService(
             var existingEntriesLookupTask = client.GetExistingEntriesLookupByIdAsync(entries.Select(e => e.GetId()), cancellationToken);
             var unpublishedReferencedEntriesLookupTask = client.GetUnpublishedOrMissingReferencedEntriesIdsLookup(entries, cancellationToken);
             await Task.WhenAll(existingEntriesLookupTask, unpublishedReferencedEntriesLookupTask);
+
             return (await existingEntriesLookupTask, await unpublishedReferencedEntriesLookupTask);
         }
 
@@ -128,17 +145,7 @@ public class ContentfulService(
 
         var tasks = entries.Select(async entry =>
         {
-            var version = existingEntriesLookup.TryGetValue(entry.GetId(), out var existing)
-                ? existing.GetVersion()
-                : entry.GetVersion();
-
-            var archived = existing?.IsArchived() == true;
-
-            // all referenced entries are published
-            var canPublish = unpublishedReferencedEntriesLookup.TryGetValue(entry.GetId(), out var unpublishedReferencedEntries)
-                && unpublishedReferencedEntries.Count == 0;
-
-            await CreateOrUpdateEntry(entry, version, archived, publish && canPublish, cancellationToken);
+            await CreateOrUpdateEntry(entry, publish, existingEntriesLookup, unpublishedReferencedEntriesLookup, cancellationToken);
             progressReporter.Increment();
         });
 

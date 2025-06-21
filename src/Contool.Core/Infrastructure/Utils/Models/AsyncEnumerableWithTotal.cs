@@ -24,7 +24,7 @@ public class AsyncEnumerableWithTotal<T>(
             progressReporter?.Increment();
             yield return item;
         }
-        
+
         progressReporter?.Complete();
     }
 }

@@ -4,7 +4,7 @@ using Contool.Core.Infrastructure.Contentful.Services;
 
 namespace Contool.Core.Features.TypeDelete;
 
-public class TypeDeleteCommand : CommandBase
+public class TypeDeleteCommand : WriteCommandBase
 {
     public string ContentTypeId { get; init; } = default!;
 
