@@ -65,29 +65,6 @@ app.Configure(config =>
 return await app.RunAsync(args);
 
 // TODO: storing secrets
-// TODO: dry run
-
-//var command = new Contool.Core.Features.ContentUpload.ContentUploadCommand
-//{
-//    ContentTypeId = "brand",
-//    InputPath = @"C:\Users\dejanbratic\Desktop\brand.xlsx",
-//    ShouldPublish = true,
-//};
-
-//var commandHandler = services.BuildServiceProvider().GetRequiredService<Contool.Core.Features.ICommandHandler<Contool.Core.Features.ContentUpload.ContentUploadCommand>>();
-
-//await commandHandler.HandleAsync(command, default);
-
-//var command = new Contool.Core.Features.ContentPublish.ContentPublishCommand
-//{
-//    ContentTypeId = "brand",
-//};
-
-//var commandHandler = services
-//    .BuildServiceProvider()
-//    .GetRequiredService<Contool.Core.Features.ICommandHandler<Contool.Core.Features.ContentPublish.ContentPublishCommand>>();
-
-//await commandHandler.HandleAsync(command, default);
 
 static IServiceCollection BuildServiceCollection()
 {
