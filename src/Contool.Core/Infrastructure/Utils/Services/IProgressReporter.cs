@@ -1,8 +1,10 @@
-﻿namespace Contool.Core.Infrastructure.Utils.Services;
+﻿using Contool.Core.Infrastructure.Utils.Models;
+
+namespace Contool.Core.Infrastructure.Utils.Services;
 
 public interface IProgressReporter
 {
-    void Start(string operationName, Func<int> getTotal);
+    void Start(Operation operation, Func<int> getTotal);
 
     void Increment();
 

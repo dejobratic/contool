@@ -1,37 +1,20 @@
 ﻿namespace Contool.Core.Infrastructure.Utils.Models;
 
-public abstract class Operation
+public record Operation
 {
-    public string Action { get; }              // e.g. "DELETE"
+    public static readonly Operation Download = new("DOWNLOAD");
+    public static readonly Operation Upload = new("UPLOAD");
+    public static readonly Operation Publish = new("PUBLISH");
+    public static readonly Operation Unpublish = new("UNPUBLISH");
+    public static readonly Operation Archive = new("ARCHIVE");
+    public static readonly Operation Unarchive = new("UNARCHIVE");
+    public static readonly Operation Delete = new("DELETE");
 
-    public string PresentParticiple { get; }   // e.g. "Deleting"
+    // Had to name it 'Copy' instead of 'Clone' to avoid conflicts with records' Clone method
+    public static readonly Operation Copy = new("CLONE");
 
-    public string PastTense { get; }           // e.g. "deleted"
+    public string Name { get; }
 
-    public string Target { get; }              // e.g. "entry" or "ContentTypeId"
-
-    protected Operation(string action, string presentParticiple, string pastTense, string target)
-    {
-        Action = action;
-        PresentParticiple = presentParticiple;
-        PastTense = pastTense;
-        Target = target;
-    }
-}
-
-public class EntryOperation : Operation
-{
-    public static readonly EntryOperation DownloadEntries = new("DOWNLOAD", "downloading", "downloaded");
-    public static readonly EntryOperation UploadEntries = new("UPLOAD", "uploading", "uploaded");
-    public static readonly EntryOperation DeleteEntries = new("DELETE", "deleting", "deleted");
-    public static readonly EntryOperation PublishEntries = new("PUBLISH", "publishing", "published");
-    public static readonly EntryOperation UnpublishEntries = new("UNPUBLISH", "unpublishing", "unpublished");
-    public static readonly EntryOperation ArchiveEntries = new("ARCHIVE", "archiving", "archived");
-    public static readonly EntryOperation UnarchiveEntries = new("UNARCHIVE", "unarchiving", "unarchived");
-    public static readonly EntryOperation CloneEntries = new("CLONE", "cloning", "cloned");
-
-    private EntryOperation(string action, string presentParticiple, string pastTense)
-        : base(action, presentParticiple, pastTense, "entries")
-    {
-    }
+    protected Operation(string name)
+        => Name = name;
 }

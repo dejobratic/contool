@@ -5,45 +5,30 @@ namespace Contool.Console.Infrastructure.UI.Extensions;
 
 public static class EntriesOperationTrackResultExtensions
 {
-    public static void DrawTable(this EntriesOperationTrackResults? result)
+    public static Table DrawTable(this EntriesOperationTrackResults result)
     {
-        if (result is null)
-            return;
+        return new Table()
+             .RoundedBorder()
+             .BorderColor(Styles.Dim.Foreground)
+             .AddColumn(new TableColumn(new Text("Entry operations", Styles.AlertAccent)))
+             .AddRow(result.ToOperationsTable());
+    }
 
+    private static Table ToOperationsTable(this EntriesOperationTrackResults result)
+    {
         var table = new Table()
             .RoundedBorder()
             .BorderColor(Styles.Dim.Foreground)
             .AddColumn(new TableColumn(new Text("Operation", Styles.AlertAccent)))
-            .AddColumn(new TableColumn(new Text("Record #", Styles.AlertAccent)))
-            .AddRow(
-                new Markup("Created or updated", Styles.Normal),
-                new Markup(result.CreatedOrUpdatedCount.ToString(), Styles.Alert))
-            .AddRow(
-                new Markup("Published", Styles.Normal),
-                new Markup(result.PublishedCount.ToString(), Styles.Alert))
-            .AddRow(
-                new Markup("Unpublished", Styles.Normal),
-                new Markup(result.UnpublishedCount.ToString(), Styles.Alert))
-            .AddRow(
-                new Markup("Archived", Styles.Normal),
-                new Markup(result.ArchivedCount.ToString(), Styles.Alert))
-            .AddRow(
-                new Markup("Unarchived", Styles.Normal),
-                new Markup(result.UnarchivedCount.ToString(), Styles.Alert))
-            .AddRow(
-                new Markup("Deleted", Styles.Normal),
-                new Markup(result.DeletedCount.ToString(), Styles.Alert));
+            .AddColumn(new TableColumn(new Text("Succeded #", Styles.AlertAccent)))
+            .AddColumn(new TableColumn(new Text("Failed #", Styles.AlertAccent)));
 
-        var mainTable = new Table()
-            .RoundedBorder()
-            .BorderColor(Styles.Dim.Foreground)
-            .AddColumn(new TableColumn(new Text("Entry operations", Styles.AlertAccent)))
-            .AddRow(table);
+        foreach (var operation in result.Operations)
+            table.AddRow(
+                new Markup(operation.Key.Name, Styles.Normal),
+                new Markup(operation.Value.SuccessCount.ToString(), Styles.Alert),
+                new Markup(operation.Value.ErrorCount.ToString(), Styles.Alert));
 
-
-
-        AnsiConsole.WriteLine();
-        AnsiConsole.Write(mainTable);
-        AnsiConsole.WriteLine();
+        return table;
     }
 }

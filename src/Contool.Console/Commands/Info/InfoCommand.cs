@@ -95,7 +95,6 @@ public sealed class InfoCommand(
             .BorderColor(Styles.Dim.Foreground)
             .AddColumn("Type Name")
             .AddColumn("Type Id")
-            //.AddColumn("Field #", column => column.RightAligned())
             .AddColumn("Record #", column => column.RightAligned());
 
         foreach (var type in contentTypes)
@@ -103,7 +102,6 @@ public sealed class InfoCommand(
             table.AddRow(
                 new Markup(type.Name.Trim().Snip(28), Styles.Normal),
                 new Markup(type.GetId(), Styles.Alert),
-                //new Markup(ct.Fields.Count.ToString(), Styles.Normal),
                 new Markup(type.TotalEntries.ToString(), Styles.Normal));
         }
 

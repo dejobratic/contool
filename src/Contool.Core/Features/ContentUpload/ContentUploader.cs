@@ -23,7 +23,7 @@ public class ContentUploader(
 
     private async Task UploadEntriesAsync(IAsyncEnumerableWithTotal<Entry<dynamic>> entries, IContentfulService contentfulService, bool publish, CancellationToken cancellationToken)
     {
-        progressReporter.Start("Uploading", getTotal: () => entries.Total);
+        progressReporter.Start(Operation.Upload, getTotal: () => entries.Total);
 
         await batchProcessor.ProcessAsync(
             source: entries,

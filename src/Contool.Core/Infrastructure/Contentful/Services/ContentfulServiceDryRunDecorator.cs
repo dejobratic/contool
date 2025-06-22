@@ -32,7 +32,7 @@ public class ContentfulServiceDryRunDecorator(
         return inner.GetEntriesAsync(
             contentTypeId: contentTypeId,
             pageSize: pageSize,
-            pagingMode: PagingMode.SkipForward, // TODO: just this is the difference. Need to think of a better approach than this decorator
+            pagingMode: PagingMode.SkipForward, // TODO: This is the only difference. Need to think of a better approach than this decorator
             cancellationToken: cancellationToken);
     }
 

@@ -27,7 +27,7 @@ public class ContentCloner(
 
     private async Task CloneEntries(AsyncEnumerableWithTotal<Entry<dynamic>> entries, IContentfulService contentfulService, bool publish, CancellationToken cancellationToken)
     {
-        progressReporter.Start("Cloning", getTotal: () => entries.Total);
+        progressReporter.Start(Operation.Copy, getTotal: () => entries.Total);
 
         await batchProcessor.ProcessAsync(
             source: entries,

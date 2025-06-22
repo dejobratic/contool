@@ -12,62 +12,62 @@ using Policy = Polly.Policy;
 namespace Contool.Core.Infrastructure.Contentful.Services;
 
 public class ContentfulManagementClientAdapterResiliencyDecorator(
-    IOptions<ResiliencyOptions> resiliencyOptions,
-    IContentfulManagementClientAdapter innerAdapter) : IContentfulManagementClientAdapter
+    IContentfulManagementClientAdapter inner,
+    IOptions<ResiliencyOptions> resiliencyOptions) : IContentfulManagementClientAdapter
 {
     private readonly AsyncRetryPolicy _retryPolicy = CreateRetryPolicy(resiliencyOptions.Value.RetryPolicy);
     private readonly SemaphoreSlim _concurrencySemaphore = new(resiliencyOptions.Value.ConcurrencyLimiter.ConcurrencyLimit);
 
     public async Task<Space> GetSpaceAsync(string spaceId, CancellationToken cancellationToken)
-        => await ExecuteAsync(ct => innerAdapter.GetSpaceAsync(spaceId, ct), cancellationToken);
+        => await ExecuteAsync(ct => inner.GetSpaceAsync(spaceId, ct), cancellationToken);
 
     public async Task<ContentfulEnvironment> GetEnvironmentAsync(string environmentId, CancellationToken cancellationToken)
-        => await ExecuteAsync(ct => innerAdapter.GetEnvironmentAsync(environmentId, ct), cancellationToken);
+        => await ExecuteAsync(ct => inner.GetEnvironmentAsync(environmentId, ct), cancellationToken);
 
     public async Task<User> GetCurrentUser(CancellationToken cancellationToken)
-        => await ExecuteAsync(ct => innerAdapter.GetCurrentUser(ct), cancellationToken);
+        => await ExecuteAsync(ct => inner.GetCurrentUser(ct), cancellationToken);
 
     public async Task<IEnumerable<Locale>> GetLocalesCollectionAsync(CancellationToken cancellationToken)
-        => await ExecuteAsync(ct => innerAdapter.GetLocalesCollectionAsync(ct), cancellationToken);
+        => await ExecuteAsync(ct => inner.GetLocalesCollectionAsync(ct), cancellationToken);
 
     public async Task<ContentType?> GetContentTypeAsync(string contentTypeId, CancellationToken cancellationToken)
-        => await ExecuteAsync(ct => innerAdapter.GetContentTypeAsync(contentTypeId, ct), cancellationToken);
+        => await ExecuteAsync(ct => inner.GetContentTypeAsync(contentTypeId, ct), cancellationToken);
 
     public async Task<IEnumerable<ContentType>> GetContentTypesAsync(CancellationToken cancellationToken)
-        => await ExecuteAsync(ct => innerAdapter.GetContentTypesAsync(ct), cancellationToken);
+        => await ExecuteAsync(ct => inner.GetContentTypesAsync(ct), cancellationToken);
 
     public async Task<ContentType> CreateOrUpdateContentTypeAsync(ContentType contentType, CancellationToken cancellationToken)
-        => await ExecuteAsync(ct => innerAdapter.CreateOrUpdateContentTypeAsync(contentType, ct), cancellationToken);
+        => await ExecuteAsync(ct => inner.CreateOrUpdateContentTypeAsync(contentType, ct), cancellationToken);
 
     public async Task<ContentType> ActivateContentTypeAsync(string contentTypeId, int version, CancellationToken cancellationToken)
-        => await ExecuteAsync(ct => innerAdapter.ActivateContentTypeAsync(contentTypeId, version, ct), cancellationToken);
+        => await ExecuteAsync(ct => inner.ActivateContentTypeAsync(contentTypeId, version, ct), cancellationToken);
 
     public async Task DeactivateContentTypeAsync(string contentTypeId, CancellationToken cancellationToken)
-        => await ExecuteAsync(ct => innerAdapter.DeactivateContentTypeAsync(contentTypeId, ct), cancellationToken);
+        => await ExecuteAsync(ct => inner.DeactivateContentTypeAsync(contentTypeId, ct), cancellationToken);
 
     public async Task DeleteContentTypeAsync(string contentTypeId, CancellationToken cancellationToken)
-        => await ExecuteAsync(ct => innerAdapter.DeleteContentTypeAsync(contentTypeId, ct), cancellationToken);
+        => await ExecuteAsync(ct => inner.DeleteContentTypeAsync(contentTypeId, ct), cancellationToken);
 
     public async Task<ContentfulCollection<Entry<dynamic>>> GetEntriesCollectionAsync(string queryString, CancellationToken cancellationToken)
-        => await ExecuteAsync(ct => innerAdapter.GetEntriesCollectionAsync(queryString, ct), cancellationToken);
+        => await ExecuteAsync(ct => inner.GetEntriesCollectionAsync(queryString, ct), cancellationToken);
 
     public async Task<Entry<dynamic>> CreateOrUpdateEntryAsync(Entry<dynamic> entry, int version, CancellationToken cancellationToken)
-        => await ExecuteAsync(ct => innerAdapter.CreateOrUpdateEntryAsync(entry, version, ct), cancellationToken);
+        => await ExecuteAsync(ct => inner.CreateOrUpdateEntryAsync(entry, version, ct), cancellationToken);
 
     public async Task<Entry<dynamic>> PublishEntryAsync(string entryId, int version, CancellationToken cancellationToken)
-        => await ExecuteAsync(ct => innerAdapter.PublishEntryAsync(entryId, version, ct), cancellationToken);
+        => await ExecuteAsync(ct => inner.PublishEntryAsync(entryId, version, ct), cancellationToken);
 
     public async Task<Entry<dynamic>> UnpublishEntryAsync(string entryId, int version, CancellationToken cancellationToken)
-        => await ExecuteAsync(ct => innerAdapter.UnpublishEntryAsync(entryId, version, ct), cancellationToken);
+        => await ExecuteAsync(ct => inner.UnpublishEntryAsync(entryId, version, ct), cancellationToken);
 
     public async Task<Entry<dynamic>> ArchiveEntryAsync(string entryId, int version, CancellationToken cancellationToken)
-        => await ExecuteAsync(ct => innerAdapter.ArchiveEntryAsync(entryId, version, ct), cancellationToken);
+        => await ExecuteAsync(ct => inner.ArchiveEntryAsync(entryId, version, ct), cancellationToken);
 
     public async Task<Entry<dynamic>> UnarchiveEntryAsync(string entryId, int version, CancellationToken cancellationToken)
-        => await ExecuteAsync(ct => innerAdapter.UnarchiveEntryAsync(entryId, version, ct), cancellationToken);
+        => await ExecuteAsync(ct => inner.UnarchiveEntryAsync(entryId, version, ct), cancellationToken);
 
     public async Task DeleteEntryAsync(string entryId, int version, CancellationToken cancellationToken)
-        => await ExecuteAsync(ct => innerAdapter.DeleteEntryAsync(entryId, version, ct), cancellationToken);
+        => await ExecuteAsync(ct => inner.DeleteEntryAsync(entryId, version, ct), cancellationToken);
 
     private async Task<T> ExecuteAsync<T>(Func<CancellationToken, Task<T>> action, CancellationToken cancellationToken)
     {

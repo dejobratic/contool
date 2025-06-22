@@ -160,7 +160,7 @@ public class ContentTypeEqualityComparerTests
                 Disabled = false,
                 Omitted = false,
                 Localized = false,
-                Validations = new List<IFieldValidator>()
+                Validations = []
             });
         }
         return fields;

@@ -36,11 +36,6 @@ public static class Dependencies
             .Configure<ContentfulOptions>(configuration.GetSection("ContentfulOptions"))
             .AddHttpClient()
             .AddSingleton<IContentfulManagementClientAdapterFactory, ContentfulManagementClientAdapterFactory>()
-            .AddSingleton<Func<IContentfulManagementClientAdapter, IContentfulManagementClientAdapter>>(sp =>
-            {
-                var resiliencyOptions = sp.GetRequiredService<IOptions<ResiliencyOptions>>();
-                return adapter => new ContentfulManagementClientAdapterResiliencyDecorator(resiliencyOptions, adapter);
-            })
             .AddSingleton<IContentfulLoginServiceBuilder, ContentfulLoginServiceBuilder>()
             .AddSingleton<IContentfulServiceBuilder, ContentfulServiceBuilder>()
 

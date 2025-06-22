@@ -12,6 +12,7 @@ public static class Dependencies
     {
         return services
             .AddSingleton<IProgressReporter, ConsoleProgressReporter>()
+            .Decorate<IProgressReporter, ConsoleProgressReporterLogingDecorator>()
             .AddLogging(builder =>
             {
                 builder.ClearProviders();                                   // no console/file logging

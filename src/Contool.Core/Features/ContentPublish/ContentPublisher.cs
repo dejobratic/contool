@@ -29,7 +29,7 @@ public class ContentPublisher(
         IContentfulService contentfulService,
         CancellationToken cancellationToken)
     {
-        progressReporter.Start("Publishing", getTotal: () => entries.Total);
+        progressReporter.Start(Operation.Publish, getTotal: () => entries.Total);
 
         await batchProcessor.ProcessAsync(
             source: entries,

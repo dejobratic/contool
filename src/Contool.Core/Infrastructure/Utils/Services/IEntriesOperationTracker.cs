@@ -4,17 +4,9 @@ namespace Contool.Core.Infrastructure.Utils.Services;
 
 public interface IEntriesOperationTracker
 {
-    void IncrementCreatedOrUpdatedCount();
+    void IncrementSuccessCount(Operation operation);
 
-    void IncrementPublishedCount();
+    void IncrementErrorCount(Operation operation);
 
-    void IncrementUnpublishedCount();
-
-    void IncrementArchivedCount();
-
-    void IncrementUnarchivedCount();
-
-    void IncrementDeletedCount();
-
-    EntriesOperationTrackResults? GetResults();
+    EntriesOperationTrackResults GetResults();
 }

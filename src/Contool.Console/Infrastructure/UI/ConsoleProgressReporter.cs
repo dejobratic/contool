@@ -1,4 +1,5 @@
 ﻿using Contool.Console.Infrastructure.UI.Extensions;
+using Contool.Core.Infrastructure.Utils.Models;
 using Contool.Core.Infrastructure.Utils.Services;
 using Spectre.Console;
 
@@ -17,7 +18,7 @@ public class ConsoleProgressReporter(
     private int? _targetTotal;
     private Func<int>? _getTotal;
 
-    public void Start(string operationName, Func<int> getTotal)
+    public void Start(Operation operation, Func<int> getTotal)
     {
         _cts = new CancellationTokenSource();
         _getTotal = getTotal;
@@ -26,7 +27,7 @@ public class ConsoleProgressReporter(
         {
             ProgressBar.GetInstance().Start(ctx =>
             {
-                _task = ctx.AddTask(operationName, maxValue: MaxProgress);
+                _task = ctx.AddTask(operation.Name, maxValue: MaxProgress);
                 RunRenderLoop(_cts.Token);
             });
         });
@@ -55,7 +56,7 @@ public class ConsoleProgressReporter(
         _cts?.Cancel();
         _renderLoopTask?.Wait();
 
-        // TODO: refactor
+        // TODO: is this the concern of the reporter?
         var result = operationTracker.GetResults();
         result?.DrawTable();
     }

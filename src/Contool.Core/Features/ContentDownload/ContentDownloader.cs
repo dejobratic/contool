@@ -23,7 +23,7 @@ public class ContentDownloader(
     private AsyncEnumerableWithTotal<dynamic> GetEntriesToDownload(
         IAsyncEnumerableWithTotal<dynamic> entries)
     {
-        progressReporter.Start("Downloading", getTotal: () => entries.Total);
+        progressReporter.Start(Operation.Download, getTotal: () => entries.Total);
 
         return new AsyncEnumerableWithTotal<dynamic>(
             source: entries,

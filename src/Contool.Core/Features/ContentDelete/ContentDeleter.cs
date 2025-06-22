@@ -32,7 +32,7 @@ public class ContentDeleter(
         bool includeArchived,
         CancellationToken cancellationToken)
     {
-        progressReporter.Start("Deleting", getTotal: () => entries.Total);
+        progressReporter.Start(Operation.Delete, getTotal: () => entries.Total);
 
         await batchProcessor.ProcessAsync(
             source: entries,

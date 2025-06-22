@@ -4,66 +4,30 @@ namespace Contool.Core.Infrastructure.Utils.Services;
 
 public class EntriesOperationTracker : IEntriesOperationTracker
 {
-    private bool _tracked;
+    private readonly Dictionary<Operation, (int SuccessCount, int ErrorCount)> _operations = [];
 
-    private int _createdOrUpdatedCount;
-    private int _publishedCount;
-    private int _unpublishedCount;
-    private int _archivedCount;
-    private int _unarchivedCount;
-    private int _deletedCount;
-
-    public void IncrementCreatedOrUpdatedCount()
+    public void IncrementSuccessCount(Operation operation)
     {
-        Increment(ref _createdOrUpdatedCount);
+        _operations.TryGetValue(operation, out (int SuccessCount, int ErrorCount) counts);
+
+        Increment(ref counts.SuccessCount);
+        _operations[operation] = counts;
     }
 
-    public void IncrementPublishedCount()
+    public void IncrementErrorCount(Operation operation)
     {
-        Increment(ref _publishedCount);
+        _operations.TryGetValue(operation, out (int SuccessCount, int ErrorCount) counts);
+
+        Increment(ref counts.ErrorCount);
+        _operations[operation] = counts;
     }
 
-    public void IncrementUnpublishedCount()
-    {
-        Increment(ref _unpublishedCount);
-    }
+    private static void Increment(ref int count)
+        => Interlocked.Increment(ref count);
 
-    public void IncrementArchivedCount()
-    {
-        Increment(ref _archivedCount);
-    }
-
-    public void IncrementUnarchivedCount()
-    {
-        Increment(ref _unarchivedCount);
-    }
-
-    public void IncrementDeletedCount()
-    {
-        Increment(ref _deletedCount);
-    }
-
-    private void Increment(ref int count)
-    {
-        _tracked = true;
-        Interlocked.Increment(ref count);
-    }
-
-    public EntriesOperationTrackResults? GetResults()
-    {
-        return _tracked ? CreateResults() : null;
-    }
-
-    private EntriesOperationTrackResults CreateResults()
-    {
-        return new EntriesOperationTrackResults
+    public EntriesOperationTrackResults GetResults() 
+        => new()
         {
-            CreatedOrUpdatedCount = _createdOrUpdatedCount,
-            PublishedCount = _publishedCount,
-            UnpublishedCount = _unpublishedCount,
-            ArchivedCount = _archivedCount,
-            UnarchivedCount = _unarchivedCount,
-            DeletedCount = _deletedCount
+            Operations = _operations,
         };
-    }
 }
