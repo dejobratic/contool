@@ -5,7 +5,7 @@ namespace Contool.Console.Infrastructure.UI.Extensions;
 
 public static class EntriesOperationTrackResultExtensions
 {
-    public static Table DrawTable(this EntriesOperationTrackResults result)
+    public static Table DrawTable(this OperationTrackResult result)
     {
         return new Table()
              .RoundedBorder()
@@ -14,7 +14,7 @@ public static class EntriesOperationTrackResultExtensions
              .AddRow(result.ToOperationsTable());
     }
 
-    private static Table ToOperationsTable(this EntriesOperationTrackResults result)
+    private static Table ToOperationsTable(this OperationTrackResult result)
     {
         var table = new Table()
             .RoundedBorder()

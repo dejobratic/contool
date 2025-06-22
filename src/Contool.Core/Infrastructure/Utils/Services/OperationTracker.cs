@@ -2,7 +2,7 @@ using Contool.Core.Infrastructure.Utils.Models;
 
 namespace Contool.Core.Infrastructure.Utils.Services;
 
-public class EntriesOperationTracker : IEntriesOperationTracker
+public class OperationTracker : IOperationTracker
 {
     private readonly Dictionary<Operation, (int SuccessCount, int ErrorCount)> _operations = [];
 
@@ -25,7 +25,7 @@ public class EntriesOperationTracker : IEntriesOperationTracker
     private static void Increment(ref int count)
         => Interlocked.Increment(ref count);
 
-    public EntriesOperationTrackResults GetResults() 
+    public OperationTrackResult GetResult()
         => new()
         {
             Operations = _operations,

@@ -7,7 +7,7 @@ namespace Contool.Core.Infrastructure.Contentful.Services;
 
 public class ContentfulManagementClientAdapterOperationTrackerDecorator(
     IContentfulManagementClientAdapter inner,
-    IEntriesOperationTracker operationTracker) : IContentfulManagementClientAdapter
+    IOperationTracker operationTracker) : IContentfulManagementClientAdapter
 {
     public Task<Space> GetSpaceAsync(string spaceId, CancellationToken cancellationToken)
         => inner.GetSpaceAsync(spaceId, cancellationToken);

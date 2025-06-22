@@ -1,13 +1,24 @@
-﻿using Contool.Console.Infrastructure.UI.Extensions;
-using Contool.Core.Infrastructure.Utils.Models;
+﻿using Contool.Core.Infrastructure.Utils.Models;
 using Contool.Core.Infrastructure.Utils.Services;
 using Spectre.Console;
 
 namespace Contool.Console.Infrastructure.UI;
 
-public class ConsoleProgressReporter(
-    IEntriesOperationTracker operationTracker) : IProgressReporter, IDisposable
+public class ConsoleProgressReporter : IProgressReporter, IDisposable
 {
+    // TODO: think of a better way
+    private static readonly Dictionary<Operation, string> _progressNames = new()
+    {
+        [Operation.Download] = "Downloading",
+        [Operation.Upload] = "Uploading",
+        [Operation.Publish] = "Publishing",
+        [Operation.Unpublish] = "Unpublishing",
+        [Operation.Archive] = "Archiving",
+        [Operation.Unarchive] = "Unarchiving",
+        [Operation.Delete] = "Deleting",
+        [Operation.Clon] = "Cloning",
+    };
+
     private const double MaxProgress = 1.0;
 
     private ProgressTask? _task;
@@ -23,11 +34,14 @@ public class ConsoleProgressReporter(
         _cts = new CancellationTokenSource();
         _getTotal = getTotal;
 
+        if (!_progressNames.TryGetValue(operation, out var operationName))
+            operationName = operation.Name;
+
         _renderLoopTask = Task.Run(() =>
         {
             ProgressBar.GetInstance().Start(ctx =>
             {
-                _task = ctx.AddTask(operation.Name, maxValue: MaxProgress);
+                _task = ctx.AddTask(operationName, maxValue: MaxProgress);
                 RunRenderLoop(_cts.Token);
             });
         });
@@ -55,10 +69,6 @@ public class ConsoleProgressReporter(
 
         _cts?.Cancel();
         _renderLoopTask?.Wait();
-
-        // TODO: is this the concern of the reporter?
-        var result = operationTracker.GetResults();
-        result?.DrawTable();
     }
 
     public void Dispose()

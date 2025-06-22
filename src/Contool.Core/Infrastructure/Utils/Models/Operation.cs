@@ -10,8 +10,8 @@ public record Operation
     public static readonly Operation Unarchive = new("UNARCHIVE");
     public static readonly Operation Delete = new("DELETE");
 
-    // Had to name it 'Copy' instead of 'Clone' to avoid conflicts with records' Clone method
-    public static readonly Operation Copy = new("CLONE");
+    // Had to name it 'Clon' instead of 'Clone' to avoid conflicts with records' Clone method
+    public static readonly Operation Clon = new("CLONE");
 
     public string Name { get; }
 

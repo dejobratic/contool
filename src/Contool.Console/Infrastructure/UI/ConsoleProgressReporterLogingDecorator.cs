@@ -7,7 +7,7 @@ namespace Contool.Console.Infrastructure.UI;
 
 public class ConsoleProgressReporterLogingDecorator(
     IProgressReporter inner,
-    IEntriesOperationTracker operationTracker) : IProgressReporter
+    IOperationTracker operationTracker) : IProgressReporter
 {
     private Operation _operation = null!;
 
@@ -24,8 +24,8 @@ public class ConsoleProgressReporterLogingDecorator(
     {
         inner.Complete();
 
-        var result = operationTracker.GetResults();
-        if(result.Operations.Count == 0)
+        var result = operationTracker.GetResult();
+        if (result.Operations.Count == 0)
         {
             //AnsiConsole.WriteLine($"[{Styles.Alert.Foreground}]No entries found for operation '{_operation.Name}'.[/]");
             return;
@@ -36,6 +36,5 @@ public class ConsoleProgressReporterLogingDecorator(
         AnsiConsole.WriteLine();
         AnsiConsole.Write(table);
         AnsiConsole.WriteLine();
-        //AnsiConsole.WriteLine();
     }
 }

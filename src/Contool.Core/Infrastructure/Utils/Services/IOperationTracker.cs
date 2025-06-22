@@ -2,11 +2,11 @@
 
 namespace Contool.Core.Infrastructure.Utils.Services;
 
-public interface IEntriesOperationTracker
+public interface IOperationTracker
 {
     void IncrementSuccessCount(Operation operation);
 
     void IncrementErrorCount(Operation operation);
 
-    EntriesOperationTrackResults GetResults();
+    OperationTrackResult GetResult();
 }

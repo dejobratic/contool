@@ -11,7 +11,7 @@ public class ContentfulManagementClientAdapterFactory(
     IHttpClientFactory httpClientFactory,
     IOptions<ContentfulOptions> options,
     IOptions<ResiliencyOptions> resiliencyOptions,
-    IEntriesOperationTracker operationTracker,
+    IOperationTracker operationTracker,
     IRuntimeContext runtimeContext) : IContentfulManagementClientAdapterFactory
 {
     private readonly ContentfulOptions _contentfulOptions = options.Value;

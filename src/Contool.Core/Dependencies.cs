@@ -14,7 +14,6 @@ using Contool.Core.Infrastructure.Utils.Models;
 using Contool.Core.Infrastructure.Utils.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 
 namespace Contool.Core;
 
@@ -62,7 +61,7 @@ public static class Dependencies
             .AddSingleton<IInputReader, JsonInputReader>()
 
             // Utils
-            .AddSingleton<IEntriesOperationTracker, EntriesOperationTracker>()
+            .AddSingleton<IOperationTracker, OperationTracker>()
             .AddSingleton<IBatchProcessor, BatchProcessor>()
             .AddSingleton<IRuntimeContext, RuntimeContext>();
     }
