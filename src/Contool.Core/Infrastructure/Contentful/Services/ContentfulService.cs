@@ -145,8 +145,15 @@ public class ContentfulService(
 
         var tasks = entries.Select(async entry =>
         {
-            await CreateOrUpdateEntry(entry, publish, existingEntriesLookup, unpublishedReferencedEntriesLookup, cancellationToken);
-            progressReporter.Increment();
+            try
+            {
+                await CreateOrUpdateEntry(entry, publish, existingEntriesLookup, unpublishedReferencedEntriesLookup, cancellationToken);
+                progressReporter.Increment();
+            }
+            catch
+            {
+                // will be tracked by operation tracker
+            }
         });
 
         await Task.WhenAll(tasks);
@@ -167,8 +174,15 @@ public class ContentfulService(
 
         var tasks = entries.Select(async entry =>
         {
-            await PublishEntry(entry, cancellationToken);
-            progressReporter.Increment();
+            try
+            {
+                await PublishEntry(entry, cancellationToken);
+                progressReporter.Increment();
+            }
+            catch
+            {
+                // will be tracked by operation tracker
+            }
         });
 
         await Task.WhenAll(tasks);
@@ -189,8 +203,15 @@ public class ContentfulService(
 
         var tasks = entries.Select(async entry =>
         {
-            await UnpublishEntry(entry, cancellationToken);
-            progressReporter.Increment();
+            try
+            {
+                await UnpublishEntry(entry, cancellationToken);
+                progressReporter.Increment();
+            }
+            catch
+            {
+                // will be tracked by operation tracker
+            }
         });
 
         await Task.WhenAll(tasks);
@@ -225,8 +246,15 @@ public class ContentfulService(
 
         var tasks = entries.Select(async entry =>
         {
-            await DeleteEntryAsync(entry, cancellationToken);
-            progressReporter.Increment();
+            try
+            {
+                await DeleteEntryAsync(entry, cancellationToken);
+                progressReporter.Increment();
+            }
+            catch
+            {
+                // will be tracked by operation tracker
+            }
         });
 
         await Task.WhenAll(tasks);

@@ -18,7 +18,7 @@ public class ContentDeleter(
     public async Task DeleteAsync(string contentTypeId, IContentfulService contentfulService, bool includeArchived, CancellationToken cancellationToken = default)
     {
         var entries = contentfulService.GetEntriesAsync(
-            contentTypeId: contentTypeId, pagingMode: PagingMode.RestartFromBeginning, cancellationToken: cancellationToken);
+            contentTypeId, DefaultBatchSize, PagingMode.RestartFromBeginning, cancellationToken);
 
         await DeleteEntriesAsync(
             entries, contentfulService, includeArchived, cancellationToken);

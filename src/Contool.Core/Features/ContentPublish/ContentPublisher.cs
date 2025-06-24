@@ -16,7 +16,7 @@ public class ContentPublisher(
     public async Task PublishAsync(string contentTypeId, IContentfulService contentfulService, CancellationToken cancellationToken = default)
     {
         var entries = contentfulService.GetEntriesAsync(
-            contentTypeId: contentTypeId, cancellationToken: cancellationToken);
+            contentTypeId, DefaultBatchSize, cancellationToken: cancellationToken);
 
         await PublishEntriesAsync(
             entries, contentfulService, cancellationToken);

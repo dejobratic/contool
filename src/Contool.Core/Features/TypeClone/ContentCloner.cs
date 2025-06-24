@@ -33,6 +33,7 @@ public class ContentCloner(
             source: entries,
             batchSize: DefaultBatchSize,
             batchActionAsync: (batch, ct) => contentfulService.CreateOrUpdateEntriesAsync(batch, publish, ct),
+            batchItemFilter: entry => entry.IsPublished(),
             cancellationToken: cancellationToken);
 
         progressReporter.Complete();
@@ -47,16 +48,8 @@ public class ContentCloner(
             contentTypeId, cancellationToken: cancellationToken);
 
         return new AsyncEnumerableWithTotal<Entry<dynamic>>(
-            FilterPublishedEntries(entries),
+            entries,
             getTotal: () => entries.Total);
-    }
-
-    private static async IAsyncEnumerable<Entry<dynamic>> FilterPublishedEntries(
-        IAsyncEnumerable<Entry<dynamic>> entries)
-    {
-        await foreach (var entry in entries)
-            if (entry.IsPublished())
-                yield return entry;
     }
 
     private void LogInfo(string contentTypeId, int total)

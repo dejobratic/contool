@@ -1,10 +1,11 @@
 using Contool.Core.Infrastructure.Utils.Models;
+using System.Collections.Concurrent;
 
 namespace Contool.Core.Infrastructure.Utils.Services;
 
 public class OperationTracker : IOperationTracker
 {
-    private readonly Dictionary<Operation, (int SuccessCount, int ErrorCount)> _operations = [];
+    private readonly ConcurrentDictionary<Operation, (int SuccessCount, int ErrorCount)> _operations = [];
 
     public void IncrementSuccessCount(Operation operation)
     {

@@ -16,7 +16,7 @@ public class ContentUnpublisher(
     public async Task UnpublishAsync(string contentTypeId, IContentfulService contentfulService, CancellationToken cancellationToken = default)
     {
         var entries = contentfulService.GetEntriesAsync(
-            contentTypeId: contentTypeId, cancellationToken: cancellationToken);
+            contentTypeId, DefaultBatchSize, cancellationToken: cancellationToken);
 
         await UnpublishEntriesAsync(
             entries, contentfulService, cancellationToken);

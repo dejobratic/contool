@@ -15,6 +15,7 @@ public static class Styles
     // Alerts and Highlights
     public static readonly Style Alert = new(Color.Orange1);
     public static readonly Style AlertAccent = new(Color.LightGoldenrod2, null, Decoration.Bold);
+    public static readonly Style Highlight = new(Color.LightGoldenrod3, null, Decoration.Italic);
 
     // Input Prompts
     public static readonly Style Input = new(Color.PaleTurquoise1, Color.Grey11);

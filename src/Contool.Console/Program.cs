@@ -2,11 +2,9 @@
 using Contool.Console.Commands.Content;
 using Contool.Console.Commands.Info;
 using Contool.Console.Commands.Login;
+using Contool.Console.Commands.Logout;
 using Contool.Console.Commands.Type;
 using Contool.Console.Infrastructure;
-using Contool.Core;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -18,7 +16,7 @@ if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
     Console.OutputEncoding = Encoding.Unicode;
 }
 
-var services = BuildServiceCollection();
+var services = Dependencies.BuildServiceCollection();
 
 var registrar = new TypeRegistrar(services);
 
@@ -33,6 +31,9 @@ app.Configure(config =>
 
     config.AddCommand<LoginCommand>("login")
         .WithDescription("Configure Contentful profile.");
+
+    config.AddCommand<LogoutCommand>("logout")
+        .WithDescription("Remove Contentful profile configuration.");
 
     config.AddBranch("content", branchConfig =>
     {
@@ -63,16 +64,3 @@ app.Configure(config =>
 });
 
 return await app.RunAsync(args);
-
-// TODO: storing secrets
-
-static IServiceCollection BuildServiceCollection()
-{
-    var configuration = new ConfigurationBuilder()
-        .AddUserSecrets<Program>()
-        .Build();
-
-    return new ServiceCollection()
-        .AddContoolDependencies(configuration)
-        .AddConsoleDependencies();
-}

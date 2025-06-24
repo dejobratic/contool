@@ -8,7 +8,7 @@ namespace Contool.Console.Commands;
 
 public abstract class CommandBase<TSettings>(
     IRuntimeContext runtimeContext) : AsyncCommand<TSettings>
-    where TSettings : SettingsBase
+    where TSettings : CommandSettings
 {
     public override async Task<int> ExecuteAsync(CommandContext context, TSettings settings)
     {
