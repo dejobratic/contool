@@ -15,4 +15,6 @@ public interface IContentfulLoginService
     Task<User> GetCurrentUserAsync(CancellationToken cancellationToken = default);
 
     Task<IEnumerable<ContentTypeExtended>> GetContentTypeExtendedAsync(CancellationToken cancellationToken = default);
+
+    Task<bool> CanConnectAsync(CancellationToken cancellationToken = default);
 }

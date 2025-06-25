@@ -1,35 +1,23 @@
 ﻿using Contool.Console.Infrastructure.UI;
 using Contool.Console.Infrastructure.Utils;
-using Contool.Core.Infrastructure.Utils.Models;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
 namespace Contool.Console.Commands;
 
-public abstract class CommandBase<TSettings>(
-    IRuntimeContext runtimeContext) : AsyncCommand<TSettings>
+public abstract class CommandBase<TSettings> : AsyncCommand<TSettings>
     where TSettings : CommandSettings
 {
     public override async Task<int> ExecuteAsync(CommandContext context, TSettings settings)
     {
-        UpdateRuntimeContext(settings);
-
         DisplayCommandDetails(context, settings);
 
         var profiledResult = await ExecutionProfiler.ProfileAsync(
-            () => ExecuteInternalAsync(context, settings));
+            () => ExecuteCommandAsync(context, settings));
 
         DisplayCommandExecutionMetrics(profiledResult);
 
         return profiledResult.Result;
-    }
-
-    private void UpdateRuntimeContext(TSettings settings)
-    {
-        var isDryRun = settings is WriteSettingsBase writeSettings 
-            && writeSettings.Apply is false;
-       
-        runtimeContext.SetDryRun(isDryRun);
     }
 
     private static void DisplayCommandDetails(CommandContext context, TSettings settings)
@@ -126,5 +114,5 @@ public abstract class CommandBase<TSettings>(
         AnsiConsole.WriteLine();
     }
 
-    protected abstract Task<int> ExecuteInternalAsync(CommandContext context, TSettings settings);
+    protected abstract Task<int> ExecuteCommandAsync(CommandContext context, TSettings settings);
 }

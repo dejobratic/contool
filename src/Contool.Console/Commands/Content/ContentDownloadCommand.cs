@@ -1,4 +1,5 @@
 ﻿using Contool.Core.Features;
+using Contool.Core.Infrastructure.Contentful.Services;
 using Contool.Core.Infrastructure.Utils.Models;
 using Spectre.Console.Cli;
 using System.ComponentModel;
@@ -8,8 +9,9 @@ namespace Contool.Console.Commands.Content;
 
 public class ContentDownloadCommand(
     IRuntimeContext runtimeContext,
+    IContentfulLoginServiceBuilder contentfulServiceBuilder,
     ICommandHandler<Core.Features.ContentDownload.ContentDownloadCommand> handler)
-    : CommandBase<ContentDownloadCommand.Settings>(runtimeContext)
+    : LoggedInCommandBase<ContentDownloadCommand.Settings>(runtimeContext, contentfulServiceBuilder)
 {
     public class Settings : SettingsBase
     {
@@ -34,7 +36,7 @@ public class ContentDownloadCommand(
         return base.Validate(context, settings);
     }
 
-    protected override async Task<int> ExecuteInternalAsync(CommandContext context, Settings settings)
+    protected override async Task<int> ExecuteLoggedInCommandAsync(CommandContext context, Settings settings)
     {
         var command = new Core.Features.ContentDownload.ContentDownloadCommand
         {

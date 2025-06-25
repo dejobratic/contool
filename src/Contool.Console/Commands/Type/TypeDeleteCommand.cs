@@ -1,4 +1,5 @@
 ﻿using Contool.Core.Features;
+using Contool.Core.Infrastructure.Contentful.Services;
 using Contool.Core.Infrastructure.Utils.Models;
 using Spectre.Console.Cli;
 using System.ComponentModel;
@@ -8,8 +9,9 @@ namespace Contool.Console.Commands.Type;
 
 public class TypeDeleteCommand(
     IRuntimeContext runtimeContext,
+    IContentfulLoginServiceBuilder contentfulServiceBuilder,
     ICommandHandler<Core.Features.TypeDelete.TypeDeleteCommand> handler)
-    : CommandBase<TypeDeleteCommand.Settings>(runtimeContext)
+    : LoggedInCommandBase<TypeDeleteCommand.Settings>(runtimeContext, contentfulServiceBuilder)
 {
     public class Settings : WriteSettingsBase
     {
@@ -23,7 +25,7 @@ public class TypeDeleteCommand(
         public bool Force { get; init; } = false;
     }
 
-    protected override async Task<int> ExecuteInternalAsync(CommandContext context, Settings settings)
+    protected override async Task<int> ExecuteLoggedInCommandAsync(CommandContext context, Settings settings)
     {
         var command = new Core.Features.TypeDelete.TypeDeleteCommand
         {

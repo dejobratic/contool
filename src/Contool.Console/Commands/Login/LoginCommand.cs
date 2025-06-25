@@ -3,7 +3,6 @@ using Contentful.Core.Configuration;
 using Contool.Console.Infrastructure.Secrets;
 using Contool.Console.Infrastructure.UI;
 using Contool.Console.Infrastructure.Utils;
-using Contool.Core.Infrastructure.Utils.Models;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Options;
 using Spectre.Console;
@@ -13,10 +12,9 @@ using System.ComponentModel;
 namespace Contool.Console.Commands.Login;
 
 public class LoginCommand(
-    IRuntimeContext runtimeContext,
+    IDataProtector dataProtector,
     IHttpClientFactory httpClientFactory,
-    IDataProtector protector,
-    IOptions<ContentfulOptions> contentfulOptions) : CommandBase<LoginCommand.Settings>(runtimeContext)
+    IOptions<ContentfulOptions> contentfulOptions) : CommandBase<LoginCommand.Settings>
 {
     public class Settings : SettingsBase
     {
@@ -36,7 +34,7 @@ public class LoginCommand(
         public string? ContentPreviewToken { get; set; }
     }
 
-    protected override async Task<int> ExecuteInternalAsync(CommandContext context, Settings settings)
+    protected override async Task<int> ExecuteCommandAsync(CommandContext context, Settings settings)
     {
         AnsiConsole.MarkupLine($"You can create personal access tokens using the Contentful web app (See [{Styles.Highlight.ToMarkup()}]https://www.contentful.com/developers/docs/references/authentication/#the-management-api[/]). To create a personal access token:");
         AnsiConsole.WriteLine();
@@ -64,7 +62,7 @@ public class LoginCommand(
         secrets.DeliveryApiKey = settings.ContentDeliveryToken ?? PromptForDeliveryToken();
         secrets.PreviewApiKey = settings.ContentPreviewToken ?? PromptForPreviewToken();
 
-        SecretWriter.Save(secrets, protector);
+        SecretWriter.Save(secrets, dataProtector);
 
         AnsiConsole.WriteLine();
         AnsiConsole.MarkupLine("[italic Orange1]Secrets saved.[/]");

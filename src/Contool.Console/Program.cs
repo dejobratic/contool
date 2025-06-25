@@ -27,7 +27,7 @@ app.Configure(config =>
     config.SetApplicationName(AppInfo.Name);
 
     config.AddCommand<InfoCommand>("info")
-        .WithDescription("Show information about the current space and environment.");
+        .WithDescription("Show Contentful profile information.");
 
     config.AddCommand<LoginCommand>("login")
         .WithDescription("Configure Contentful profile.");
@@ -37,6 +37,8 @@ app.Configure(config =>
 
     config.AddBranch("content", branchConfig =>
     {
+        branchConfig.SetDescription("Manage Contentful content entries using bulk operations.");
+
         branchConfig.AddCommand<ContentDownloadCommand>("download") // TODO: consider renaming to "export"
             .WithDescription("Download entries for a given content type.");
 
@@ -55,6 +57,8 @@ app.Configure(config =>
 
     config.AddBranch("type", branchConfig =>
     {
+        branchConfig.SetDescription("Manage Contentful content types (models).");
+
         branchConfig.AddCommand<TypeCloneCommand>("clone")
             .WithDescription("Clone a content type.");
 

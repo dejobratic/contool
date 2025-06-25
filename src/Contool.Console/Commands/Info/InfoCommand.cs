@@ -17,12 +17,14 @@ namespace Contool.Console.Commands.Info;
 
 public sealed class InfoCommand(
     IRuntimeContext runtimeContext,
-    IContentfulLoginServiceBuilder contentfulServiceBuilder)
-    : CommandBase<InfoCommand.Settings>(runtimeContext)
+    IContentfulLoginServiceBuilder contentfulServiceBuilder) 
+    : LoggedInCommandBase<InfoCommand.Settings>(runtimeContext, contentfulServiceBuilder)
 {
+    private readonly IContentfulLoginServiceBuilder contentfulServiceBuilder = contentfulServiceBuilder;
+
     public class Settings : SettingsBase { }
 
-    protected override async Task<int> ExecuteInternalAsync(CommandContext context, Settings settings)
+    protected override async Task<int> ExecuteLoggedInCommandAsync(CommandContext context, Settings settings)
     {
         var contentfulService = contentfulServiceBuilder
             .WithSpaceId(settings.SpaceId)

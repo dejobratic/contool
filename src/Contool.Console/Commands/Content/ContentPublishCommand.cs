@@ -1,4 +1,5 @@
 ﻿using Contool.Core.Features;
+using Contool.Core.Infrastructure.Contentful.Services;
 using Contool.Core.Infrastructure.Utils.Models;
 using Spectre.Console.Cli;
 using System.ComponentModel;
@@ -8,8 +9,9 @@ namespace Contool.Console.Commands.Content;
 
 public class ContentPublishCommand(
     IRuntimeContext runtimeContext,
+    IContentfulLoginServiceBuilder contentfulServiceBuilder,
     ICommandHandler<Core.Features.ContentPublish.ContentPublishCommand> handler)
-    : CommandBase<ContentPublishCommand.Settings>(runtimeContext)
+    : LoggedInCommandBase<ContentPublishCommand.Settings>(runtimeContext, contentfulServiceBuilder)
 {
     public class Settings : WriteSettingsBase
     {
@@ -19,7 +21,7 @@ public class ContentPublishCommand(
         public string ContentTypeId { get; init; } = default!;
     }
 
-    protected override async Task<int> ExecuteInternalAsync(CommandContext context, Settings settings)
+    protected override async Task<int> ExecuteLoggedInCommandAsync(CommandContext context, Settings settings)
     {
         var command = new Core.Features.ContentPublish.ContentPublishCommand
         {

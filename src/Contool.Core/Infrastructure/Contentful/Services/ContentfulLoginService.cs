@@ -1,4 +1,5 @@
-﻿using Contentful.Core.Models;
+﻿using Contentful.Core.Errors;
+using Contentful.Core.Models;
 using Contentful.Core.Models.Management;
 using Contool.Core.Infrastructure.Contentful.Extensions;
 using Contool.Core.Infrastructure.Contentful.Models;
@@ -47,5 +48,18 @@ public class ContentfulLoginService(
         await Task.WhenAll(contentTypeExtTasks.Values);
 
         return contentTypeExtTasks.Select(kv => new ContentTypeExtended(kv.Key, kv.Value.Result.Total));
+    }
+
+    public async Task<bool> CanConnectAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            _ = await GetCurrentUserAsync(cancellationToken);
+            return true;
+        }
+        catch (ContentfulException)
+        {
+            return false;
+        }
     }
 }
