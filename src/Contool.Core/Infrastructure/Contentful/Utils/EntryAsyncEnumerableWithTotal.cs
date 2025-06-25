@@ -25,7 +25,7 @@ public class EntryAsyncEnumerableWithTotal<T>(
 
             var page = await getEntriesAsync(queryString, cancellationToken);
 
-            if (page?.Items.Any() != true || count >= page.Total)
+            if (page?.Items.Any() != true)
                 break;
 
             if (isFirst)
@@ -33,6 +33,9 @@ public class EntryAsyncEnumerableWithTotal<T>(
                 Total = page.Total;
                 isFirst = false;
             }
+
+            if (count >= Total)
+                break;
 
             foreach (var item in page.Items)
             {

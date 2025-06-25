@@ -7,23 +7,23 @@ namespace Contool.Core.Infrastructure.Contentful.Services;
 public class ContentfulManagementClientAdapter(
     IContentfulManagementClient client) : IContentfulManagementClientAdapter
 {
-    public async Task<Space> GetSpaceAsync(string spaceId, CancellationToken cancellationToken)
+    public Task<Space> GetSpaceAsync(string spaceId, CancellationToken cancellationToken)
     {
-        return await client.GetSpace(
+        return client.GetSpace(
             spaceId,
             cancellationToken);
     }
 
-    public async Task<ContentfulEnvironment> GetEnvironmentAsync(string environmentId, CancellationToken cancellationToken)
+    public Task<ContentfulEnvironment> GetEnvironmentAsync(string environmentId, CancellationToken cancellationToken)
     {
-        return await client.GetEnvironment(
+        return client.GetEnvironment(
             environmentId,
             cancellationToken: cancellationToken);
     }
 
-    public async Task<User> GetCurrentUser(CancellationToken cancellationToken)
+    public Task<User> GetCurrentUser(CancellationToken cancellationToken)
     {
-        return await client.GetCurrentUser(
+        return client.GetCurrentUser(
             cancellationToken);
     }
 
@@ -33,99 +33,99 @@ public class ContentfulManagementClientAdapter(
             cancellationToken: cancellationToken);
     }
 
-    public async Task<ContentType?> GetContentTypeAsync(string contentTypeId, CancellationToken cancellationToken)
+    public Task<ContentType?> GetContentTypeAsync(string contentTypeId, CancellationToken cancellationToken)
     {
-        return await client.GetContentType(
+        return client.GetContentType(
             contentTypeId: contentTypeId,
             cancellationToken: cancellationToken);
     }
 
-    public async Task<IEnumerable<ContentType>> GetContentTypesAsync(CancellationToken cancellationToken)
+    public Task<IEnumerable<ContentType>> GetContentTypesAsync(CancellationToken cancellationToken)
     {
-        return await client.GetContentTypes(
+        return client.GetContentTypes(
             cancellationToken: cancellationToken);
     }
 
-    public async Task<ContentType> CreateOrUpdateContentTypeAsync(ContentType contentType, CancellationToken cancellationToken)
+    public Task<ContentType> CreateOrUpdateContentTypeAsync(ContentType contentType, CancellationToken cancellationToken)
     {
-        return await client.CreateOrUpdateContentType(
+        return client.CreateOrUpdateContentType(
             contentType: contentType,
             cancellationToken: cancellationToken);
     }
 
-    public async Task<ContentType> ActivateContentTypeAsync(string contentTypeId, int version, CancellationToken cancellationToken)
+    public Task<ContentType> ActivateContentTypeAsync(string contentTypeId, int version, CancellationToken cancellationToken)
     {
-        return await client.ActivateContentType(
+        return client.ActivateContentType(
             contentTypeId: contentTypeId,
             version: version,
             cancellationToken: cancellationToken);
     }
 
-    public async Task DeactivateContentTypeAsync(string contentTypeId, CancellationToken cancellationToken)
+    public Task DeactivateContentTypeAsync(string contentTypeId, CancellationToken cancellationToken)
     {
-        await client.DeactivateContentType(
+        return client.DeactivateContentType(
             contentTypeId: contentTypeId,
             cancellationToken: cancellationToken);
     }
 
-    public async Task DeleteContentTypeAsync(string contentTypeId, CancellationToken cancellationToken)
+    public Task DeleteContentTypeAsync(string contentTypeId, CancellationToken cancellationToken)
     {
-        await client.DeleteContentType(
+        return client.DeleteContentType(
             contentTypeId: contentTypeId,
             cancellationToken: cancellationToken);
     }
 
-    public async Task<ContentfulCollection<Entry<dynamic>>> GetEntriesCollectionAsync(string queryString, CancellationToken cancellationToken)
+    public Task<ContentfulCollection<Entry<dynamic>>> GetEntriesCollectionAsync(string queryString, CancellationToken cancellationToken)
     {
-        return await client.GetEntriesCollection<Entry<dynamic>>(
+        return client.GetEntriesCollection<Entry<dynamic>>(
             queryString: queryString,
             cancellationToken: cancellationToken);
     }
 
-    public async Task<Entry<dynamic>> CreateOrUpdateEntryAsync(Entry<dynamic> entry, int version, CancellationToken cancellationToken)
+    public Task<Entry<dynamic>> CreateOrUpdateEntryAsync(Entry<dynamic> entry, int version, CancellationToken cancellationToken)
     {
-        return await client.CreateOrUpdateEntry(
+        return client.CreateOrUpdateEntry(
             entry,
             contentTypeId: entry.SystemProperties?.ContentType?.SystemProperties?.Id,
             version: version,
             cancellationToken: cancellationToken);
     }
 
-    public async Task<Entry<dynamic>> PublishEntryAsync(string entryId, int version, CancellationToken cancellationToken)
+    public Task<Entry<dynamic>> PublishEntryAsync(string entryId, int version, CancellationToken cancellationToken)
     {
-        return await client.PublishEntry(
+        return client.PublishEntry(
             entryId: entryId,
             version: version,
             cancellationToken: cancellationToken);
     }
 
-    public async Task<Entry<dynamic>> UnpublishEntryAsync(string entryId, int version, CancellationToken cancellationToken)
+    public Task<Entry<dynamic>> UnpublishEntryAsync(string entryId, int version, CancellationToken cancellationToken)
     {
-        return await client.UnpublishEntry(
+        return client.UnpublishEntry(
             entryId: entryId,
             version: version,
             cancellationToken: cancellationToken);
     }
 
-    public async Task<Entry<dynamic>> ArchiveEntryAsync(string entryId, int version, CancellationToken cancellationToken)
+    public Task<Entry<dynamic>> ArchiveEntryAsync(string entryId, int version, CancellationToken cancellationToken)
     {
-        return await client.ArchiveEntry(
+        return client.ArchiveEntry(
             entryId: entryId,
             version: version,
             cancellationToken: cancellationToken);
     }
 
-    public async Task<Entry<dynamic>> UnarchiveEntryAsync(string entryId, int version, CancellationToken cancellationToken)
+    public Task<Entry<dynamic>> UnarchiveEntryAsync(string entryId, int version, CancellationToken cancellationToken)
     {
-        return await client.UnarchiveEntry(
+        return client.UnarchiveEntry(
             entryId: entryId,
             version: version,
             cancellationToken: cancellationToken);
     }
 
-    public async Task DeleteEntryAsync(string entryId, int version, CancellationToken cancellationToken)
+    public Task DeleteEntryAsync(string entryId, int version, CancellationToken cancellationToken)
     {
-        await client.DeleteEntry(
+        return client.DeleteEntry(
             entryId: entryId,
             version: version,
             cancellationToken: cancellationToken);

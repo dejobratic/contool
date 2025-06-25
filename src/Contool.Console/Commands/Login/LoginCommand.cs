@@ -20,6 +20,20 @@ public class LoginCommand(
 {
     public class Settings : SettingsBase
     {
+        [Secret]
+        [CommandOption("--management-token <TOKEN>")]
+        [Description($"Your Contentful Management API (CMA) token. See [italic LightGoldenrod2]https://www.contentful.com/developers/docs/references/authentication/[/]")]
+        public string? ContentManagementToken { get; set; }
+
+        [Secret]
+        [CommandOption("--delivery-token <TOKEN>")]
+        [Description("Your Contentful Content Delivery API (CDA) token. See [italic LightGoldenrod2]https://www.contentful.com/developers/docs/references/authentication/[/]")]
+        public string? ContentDeliveryToken { get; set; }
+
+        [Secret]
+        [CommandOption("--preview-token <TOKEN>")]
+        [Description("Your Contentful Content Preview API token. See [italic LightGoldenrod2]https://www.contentful.com/developers/docs/references/authentication/[/]")]
+        public string? ContentPreviewToken { get; set; }
     }
 
     protected override async Task<int> ExecuteInternalAsync(CommandContext context, Settings settings)
@@ -41,40 +55,13 @@ public class LoginCommand(
 
         if (!string.IsNullOrWhiteSpace(secrets.ManagementApiKey))
         {
-            var httpClient = httpClientFactory.CreateClient();
-            var contentfulManagementClient = new ContentfulManagementClient(httpClient, secrets.ManagementApiKey, string.Empty);
+            var contentfulClient = CreateContentfulClient(secrets);
 
-            // Load spaces
-            var spaces = await contentfulManagementClient.GetSpaces();
-
-            if (spaces?.Any() != true)
-                throw new InvalidOperationException("No spaces found.");
-
-            // Build a lookup of Name => ID
-            var spacesSet = spaces
-                .Where(s => !string.IsNullOrWhiteSpace(s?.Name))
-                .ToDictionary(s => s.Name, s => s.SystemProperties.Id);
-
-            var selectedSpaceName = PromptForDefaultSpace(spacesSet.Keys);
-            secrets.SpaceId = spacesSet[selectedSpaceName];
-            AnsiConsole.MarkupLine($"[{Styles.Normal.Foreground}]Selected default space:[/] [{Styles.AlertAccent.ToMarkup()}]{selectedSpaceName} ({secrets.SpaceId})[/]");
-
-            // Load environments for the selected space
-            var environments = await contentfulManagementClient.GetEnvironments(secrets.SpaceId);
-
-            if (environments?.Any() != true)
-                throw new InvalidOperationException("No environments found in the selected space.");
-
-            // Build Name => ID map
-            var environmentIds = environments
-                .Select(e => e.SystemProperties.Id);
-
-            secrets.Environment = PromptForDefaultEnvironment(environmentIds);
-            AnsiConsole.MarkupLine($"[{Styles.Normal.Foreground}]Selected default environment:[/] [{Styles.AlertAccent.ToMarkup()}]{secrets.Environment}[/]");
+            secrets.SpaceId = await PromptForDefaultSpaceAsync(contentfulClient);
+            secrets.Environment = await PromptForDefaultEnvironmentAsync(contentfulClient, secrets.SpaceId);
         }
 
         secrets.DeliveryApiKey = settings.ContentDeliveryToken ?? PromptForDeliveryToken();
-
         secrets.PreviewApiKey = settings.ContentPreviewToken ?? PromptForPreviewToken();
 
         SecretWriter.Save(secrets, protector);
@@ -95,6 +82,63 @@ public class LoginCommand(
         return AnsiConsole.Prompt(managementTokenPrompt);
     }
 
+    private static async Task<string> PromptForDefaultSpaceAsync(ContentfulManagementClient contentfulClient)
+    {
+        var spaces = await contentfulClient.GetSpaces();
+
+        if (spaces?.Any() != true)
+            throw new InvalidOperationException("No spaces found.");
+
+        var spacesLookup = spaces
+            .Where(s => !string.IsNullOrWhiteSpace(s?.Name))
+            .ToDictionary(s => s.Name, s => s.SystemProperties.Id);
+
+        var selectedSpaceName = PromptForDefaultSpace(spacesLookup.Keys);
+        var selectedSpaceId = spacesLookup[selectedSpaceName];
+
+        AnsiConsole.MarkupLine($"[{Styles.Normal.Foreground}]Selected default space:[/] [{Styles.AlertAccent.ToMarkup()}]{selectedSpaceName} ({selectedSpaceId})[/]");
+
+        return selectedSpaceId;
+    }
+
+    private static string PromptForDefaultSpace(IEnumerable<string> spaces)
+    {
+        var spacePrompt = CreateSelectionPrompt(
+            title: $"[{Styles.Normal.Foreground}]Select your default space:[/]",
+            moreChoicesText: $"[{Styles.Dim.ToMarkup()}](Move up and down to reveal more spaces)[/]",
+            choices: spaces);
+
+        return AnsiConsole.Prompt(spacePrompt);
+    }
+
+    private static async Task<string> PromptForDefaultEnvironmentAsync(ContentfulManagementClient contentfulClient, string spaceId)
+    {
+        var environments = await contentfulClient.GetEnvironments(spaceId);
+
+        if (environments?.Any() != true)
+            throw new InvalidOperationException("No environments found in the selected space.");
+
+        var environmentIds = environments
+            .Select(e => e.SystemProperties.Id);
+
+        var environmentId = PromptForDefaultEnvironment(environmentIds);
+
+        AnsiConsole.MarkupLine($"[{Styles.Normal.Foreground}]Selected default environment:[/] [{Styles.AlertAccent.ToMarkup()}]{environmentId}[/]");
+
+        return environmentId;
+    }
+
+
+    private static string PromptForDefaultEnvironment(IEnumerable<string> environments)
+    {
+        var environmentPrompt = CreateSelectionPrompt(
+            title: $"[{Styles.Normal.Foreground}]Select your default environmentId:[/]",
+            moreChoicesText: $"[{Styles.Dim.ToMarkup()}](Move up and down to reveal more environments)[/]",
+            choices: environments);
+
+        return AnsiConsole.Prompt(environmentPrompt);
+    }
+
     private string PromptForDeliveryToken()
     {
         var deliveryTokenPrompt = CreateTextPrompt(
@@ -111,26 +155,6 @@ public class LoginCommand(
             defaultValue: contentfulOptions.Value.PreviewApiKey);
 
         return AnsiConsole.Prompt(previewTokenPrompt);
-    }
-
-    private static string PromptForDefaultSpace(IEnumerable<string> spaces)
-    {
-        var spacePrompt = CreateSelectionPrompt(
-            title: $"[{Styles.Normal.Foreground}]Select your default space:[/]",
-            moreChoicesText: $"[{Styles.Dim.ToMarkup()}](Move up and down to reveal more spaces)[/]",
-            choices: spaces);
-
-        return AnsiConsole.Prompt(spacePrompt);
-    }
-
-    private static string PromptForDefaultEnvironment(IEnumerable<string> environments)
-    {
-        var environmentPrompt = CreateSelectionPrompt(
-            title: $"[{Styles.Normal.Foreground}]Select your default environment:[/]",
-            moreChoicesText: $"[{Styles.Dim.ToMarkup()}](Move up and down to reveal more environments)[/]",
-            choices: environments);
-
-        return AnsiConsole.Prompt(environmentPrompt);
     }
 
     private static TextPrompt<string> CreateTextPrompt(string text, string? defaultValue = null)
@@ -155,5 +179,11 @@ public class LoginCommand(
             .MoreChoicesText(moreChoicesText)
             .HighlightStyle(Styles.Alert)
             .AddChoices(choices);
+    }
+
+    private ContentfulManagementClient CreateContentfulClient(ContentfulOptions secrets)
+    {
+        var httpClient = httpClientFactory.CreateClient();
+        return new ContentfulManagementClient(httpClient, secrets.ManagementApiKey, string.Empty);
     }
 }

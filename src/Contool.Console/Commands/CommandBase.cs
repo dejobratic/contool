@@ -12,34 +12,40 @@ public abstract class CommandBase<TSettings>(
 {
     public override async Task<int> ExecuteAsync(CommandContext context, TSettings settings)
     {
-        // TODO: refactor
-        var isDryRun = settings is WriteSettingsBase writeSettins && writeSettins.Apply is false;
-        runtimeContext.SetDryRun(isDryRun);
+        UpdateRuntimeContext(settings);
 
-        DisplaySettings(context, settings);
+        DisplayCommandDetails(context, settings);
 
         var profiledResult = await ExecutionProfiler.ProfileAsync(
-            async () => await ExecuteInternalAsync(context, settings));
+            () => ExecuteInternalAsync(context, settings));
 
-        DisplayMetrics(profiledResult);
+        DisplayCommandExecutionMetrics(profiledResult);
 
         return profiledResult.Result;
     }
 
-    private static void DisplaySettings(CommandContext context, TSettings settings)
+    private void UpdateRuntimeContext(TSettings settings)
     {
-        var command = BuildCommandHeader(context);
-        var optionTable = BuildOptionTable(settings);
+        var isDryRun = settings is WriteSettingsBase writeSettings 
+            && writeSettings.Apply is false;
+       
+        runtimeContext.SetDryRun(isDryRun);
+    }
+
+    private static void DisplayCommandDetails(CommandContext context, TSettings settings)
+    {
+        var commandHeader = BuildCommandDetailsHeader(context);
+        var commandOptions = BuildCommandDetailsTable(settings);
 
         AnsiConsole.WriteLine();
-        AnsiConsole.Write(command);
+        AnsiConsole.Write(commandHeader);
         AnsiConsole.WriteLine();
         AnsiConsole.WriteLine();
-        AnsiConsole.Write(optionTable);
+        AnsiConsole.Write(commandOptions);
         AnsiConsole.WriteLine();
     }
 
-    private static Table BuildOptionTable(TSettings settings)
+    private static Table BuildCommandDetailsTable(TSettings settings)
     {
         var optionTable = new Table().NoBorder();
 
@@ -47,7 +53,7 @@ public abstract class CommandBase<TSettings>(
         optionTable.AddColumn(new TableColumn(new Text("", Styles.AlertAccent)));
         optionTable.AddColumn(new TableColumn(new Text("Value", Styles.AlertAccent)));
 
-        var options = GetOptions(settings);
+        var options = GetCommandOptions(settings);
 
         foreach (var (option, value) in options)
         {
@@ -67,7 +73,7 @@ public abstract class CommandBase<TSettings>(
         return optionTable;
     }
 
-    private static Dictionary<string, object?> GetOptions(TSettings settings)
+    private static Dictionary<string, object?> GetCommandOptions(TSettings settings)
     {
         var result = new Dictionary<string, object?>();
 
@@ -97,7 +103,7 @@ public abstract class CommandBase<TSettings>(
         return result;
     }
 
-    private static Markup BuildCommandHeader(CommandContext context)
+    private static Markup BuildCommandDetailsHeader(CommandContext context)
     {
         var command = GetCommand(context);
         return new Markup(command, Styles.Alert);
@@ -112,7 +118,7 @@ public abstract class CommandBase<TSettings>(
         return string.Join(' ', commandParts).EscapeMarkup();
     }
 
-    private static void DisplayMetrics(MeasuredResult<int> profiledResult)
+    private static void DisplayCommandExecutionMetrics(MeasuredResult<int> profiledResult)
     {
         AnsiConsole.WriteLine();
         AnsiConsole.MarkupLine($"[bold {Styles.Dim.Foreground}]Execution Time:[/] {profiledResult.FormattedElapsedTime}");
