@@ -18,8 +18,8 @@ public static class EntriesOperationTrackResultExtensions
 
     private static Table ToOperationSummaryTable(this OperationTrackResult result)
     {
-        var totalProcessed = result.Operations.Values.Sum(o => o.SuccessCount + o.ErrorCount);
-        var totalSucceeded = result.Operations.Values.Sum(o => o.SuccessCount);
+        var totalProcessed = result.TotalEntries;
+        var totalSucceeded = result.SuccessfulEntries;
         var successRate = totalProcessed > 0 ? (double)totalSucceeded / totalProcessed * 100 : 0;
 
         var table = new Table()

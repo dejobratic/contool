@@ -116,9 +116,23 @@ public abstract class CommandBase<TSettings> : AsyncCommand<TSettings>
 
     private static void DisplayCommandExecutionMetrics(MeasuredResult<int> profiledResult)
     {
+        var table = new Table()
+            .NoBorder()
+            .AddColumns(
+                new TableColumn(new Text("Profiling", Styles.Normal)),
+                new TableColumn(new Text(string.Empty)),
+                new TableColumn(new Text(string.Empty)))
+            .AddRow(
+                new Text("  Execution Time", Styles.Normal),
+                new Text(" : ", Styles.Dim),
+                new Text($"{profiledResult.FormattedElapsedTime}"))
+            .AddRow(
+                new Text("  Peak Memory Usage", Styles.Normal),
+                new Text(" : ", Styles.Dim),
+                new Text($"{profiledResult.FormatedMemoryUsage}"));
+        
         AnsiConsole.WriteLine();
-        AnsiConsole.MarkupLine($"[bold {Styles.Dim.Foreground}]Execution Time:[/] {profiledResult.FormattedElapsedTime}");
-        AnsiConsole.MarkupLine($"[bold {Styles.Dim.Foreground}]Peak Memory Usage:[/] {profiledResult.FormatedMemoryUsage}");
+        AnsiConsole.Write(table);
         AnsiConsole.WriteLine();
     }
 

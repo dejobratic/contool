@@ -1,5 +1,6 @@
 ﻿using Contentful.Core.Models;
 using Contentful.Core.Models.Management;
+using Contool.Core.Infrastructure.Contentful.Extensions;
 using Contool.Core.Infrastructure.Utils.Models;
 using Contool.Core.Infrastructure.Utils.Services;
 
@@ -47,37 +48,38 @@ public class ContentfulManagementClientAdapterOperationTrackerDecorator(
         => await inner.GetEntriesCollectionAsync(queryString, cancellationToken);
 
     public Task<Entry<dynamic>> CreateOrUpdateEntryAsync(Entry<dynamic> entry, int version, CancellationToken cancellationToken)
-        => ExecuteAsync(ct => inner.CreateOrUpdateEntryAsync(entry, version, ct), Operation.Upload, cancellationToken);
+        => ExecuteAsync(ct => inner.CreateOrUpdateEntryAsync(entry, version, ct), Operation.Upload, entry.GetId(), cancellationToken);
 
     public Task<Entry<dynamic>> PublishEntryAsync(string entryId, int version, CancellationToken cancellationToken)
-        => ExecuteAsync(ct => inner.PublishEntryAsync(entryId, version, ct), Operation.Publish, cancellationToken);
+        => ExecuteAsync(ct => inner.PublishEntryAsync(entryId, version, ct), Operation.Publish, entryId, cancellationToken);
 
     public Task<Entry<dynamic>> UnpublishEntryAsync(string entryId, int version, CancellationToken cancellationToken)
-        => ExecuteAsync(ct => inner.UnpublishEntryAsync(entryId, version, ct), Operation.Unpublish, cancellationToken);
+        => ExecuteAsync(ct => inner.UnpublishEntryAsync(entryId, version, ct), Operation.Unpublish, entryId, cancellationToken);
 
     public Task<Entry<dynamic>> ArchiveEntryAsync(string entryId, int version, CancellationToken cancellationToken)
-        => ExecuteAsync(ct => inner.ArchiveEntryAsync(entryId, version, ct), Operation.Archive, cancellationToken);
+        => ExecuteAsync(ct => inner.ArchiveEntryAsync(entryId, version, ct), Operation.Archive, entryId, cancellationToken);
 
     public Task<Entry<dynamic>> UnarchiveEntryAsync(string entryId, int version, CancellationToken cancellationToken)
-        => ExecuteAsync(ct => inner.UnarchiveEntryAsync(entryId, version, ct), Operation.Unarchive, cancellationToken);
+        => ExecuteAsync(ct => inner.UnarchiveEntryAsync(entryId, version, ct), Operation.Unarchive, entryId, cancellationToken);
 
     public Task DeleteEntryAsync(string entryId, int version, CancellationToken cancellationToken)
-        => ExecuteAsync(ct => inner.DeleteEntryAsync(entryId, version, ct), Operation.Delete, cancellationToken);
+        => ExecuteAsync(ct => inner.DeleteEntryAsync(entryId, version, ct), Operation.Delete, entryId, cancellationToken);
 
     private Task ExecuteAsync(
         Func<CancellationToken, Task> action,
         Operation operation,
+        string entryId,
         CancellationToken cancellationToken)
     {
         try
         {
             var result = action(cancellationToken);
-            operationTracker.IncrementSuccessCount(operation);
+            operationTracker.IncrementSuccessCount(operation, entryId);
             return result;
         }
         catch
         {
-            operationTracker.IncrementErrorCount(operation);
+            operationTracker.IncrementErrorCount(operation, entryId);
             throw;
         }
     }
@@ -85,17 +87,18 @@ public class ContentfulManagementClientAdapterOperationTrackerDecorator(
     private Task<T> ExecuteAsync<T>(
         Func<CancellationToken, Task<T>> action,
         Operation operation,
+        string entryId,
         CancellationToken cancellationToken)
     {
         try
         {
             var result = action(cancellationToken);
-            operationTracker.IncrementSuccessCount(operation);
+            operationTracker.IncrementSuccessCount(operation, entryId);
             return result;
         }
         catch
         {
-            operationTracker.IncrementErrorCount(operation);
+            operationTracker.IncrementErrorCount(operation, entryId);
             throw;
         }
     }

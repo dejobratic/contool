@@ -25,12 +25,6 @@ public class ConsoleProgressReporterLogingDecorator(
         inner.Complete();
 
         var result = operationTracker.GetResult();
-        if (result.Operations.Count == 0)
-        {
-            //AnsiConsole.WriteLine($"[{Styles.Alert.Foreground}]No entries found for operation '{_operation.Name}'.[/]");
-            return;
-        }
-
         result.DrawTable();
     }
 }

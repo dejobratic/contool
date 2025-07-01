@@ -10,13 +10,15 @@ public static class ExecutionProfiler
     {
         // Start measuring time and memory
         var stopwatch = Stopwatch.StartNew();
-        var initialMemory = GC.GetTotalMemory(forceFullCollection);
+        var process = Process.GetCurrentProcess();
+        var initialMemory = process.WorkingSet64;
 
         var result = await action();
 
         // Stop measuring time and memory
         stopwatch.Stop();
-        var finalMemory = GC.GetTotalMemory(forceFullCollection);
+        process.Refresh();
+        var finalMemory = process.WorkingSet64;
 
         return new MeasuredResult<T>(
             result,
