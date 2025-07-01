@@ -61,7 +61,7 @@ public abstract class CommandBase<TSettings> : AsyncCommand<TSettings>
                 {
                     displayValue = string.Join(',', stringArray.Select(e => $"'{e}'"));
                 }
-                
+
                 var valueMarkup = displayValue?.ToString().EscapeMarkup() is null
                     ? new Text("null", Styles.Dim)
                     : new Text(displayValue.ToString().EscapeMarkup(), Styles.Alert);
@@ -72,10 +72,10 @@ public abstract class CommandBase<TSettings> : AsyncCommand<TSettings>
                     valueMarkup);
             }
         }
-        
+
         return table;
     }
-    
+
     private static string GetCommand(CommandContext context)
     {
         var commandParts = context.Arguments
@@ -83,8 +83,8 @@ public abstract class CommandBase<TSettings> : AsyncCommand<TSettings>
             .ToArray();
 
         return string.Join(' ', commandParts).EscapeMarkup();
-    }  
-    
+    }
+
     private static Dictionary<string, object?> GetCommandOptions(TSettings settings)
     {
         var result = new Dictionary<string, object?>();
@@ -104,10 +104,10 @@ public abstract class CommandBase<TSettings> : AsyncCommand<TSettings>
 
             if (attr is null || attr.Length == 0)
                 continue;
-            
+
             var option = attr[0];
             var value = prop.GetValue(settings);
-            
+
             result.Add(option, value);
         }
 

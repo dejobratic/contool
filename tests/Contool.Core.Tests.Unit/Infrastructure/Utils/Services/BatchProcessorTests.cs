@@ -90,7 +90,7 @@ public class BatchProcessorTests
                     {
                         if (item == 2)
                             await cts.CancelAsync(); // Cancel after processing second item
-                        
+
                         await Task.Delay(10, cancellationToken); // This should throw
                     }
                 },

@@ -1,6 +1,5 @@
 ﻿using Contentful.Core.Models;
 using Contentful.Core.Models.Management;
-using Contool.Console.Infrastructure.Extensions;
 using Contool.Console.Infrastructure.UI;
 using Contool.Core.Infrastructure.Contentful.Extensions;
 using Contool.Core.Infrastructure.Contentful.Models;
@@ -17,7 +16,7 @@ namespace Contool.Console.Commands.Info;
 
 public sealed class InfoCommand(
     IRuntimeContext runtimeContext,
-    IContentfulLoginServiceBuilder contentfulServiceBuilder) 
+    IContentfulLoginServiceBuilder contentfulServiceBuilder)
     : LoggedInCommandBase<InfoCommand.Settings>(runtimeContext, contentfulServiceBuilder)
 {
     private readonly IContentfulLoginServiceBuilder _contentfulServiceBuilder = contentfulServiceBuilder;
@@ -77,7 +76,7 @@ public sealed class InfoCommand(
             .AddRow(
                 new Text("  Space"),
                 new Text(" : ", Styles.Dim),
-                new Markup($"{space.GetId()} [{Styles.Dim.ToMarkup()}]({space.GetId()})[/]", Styles.Alert))
+                new Markup($"{space.GetId()} [{Styles.Dim.ToMarkup()}]({space.Name})[/]", Styles.Alert))
             .AddRow(
                 new Text("  Env"),
                 new Text(" : ", Styles.Dim),
@@ -122,7 +121,7 @@ public sealed class InfoCommand(
             table.AddRow(
                 new Markup($"  {defaultLocale.Name}", Styles.Normal),
                 new Markup(" : ", Styles.Dim),
-                new Markup($"{defaultLocale.Code}", Styles.Alert));
+                new Markup($"{defaultLocale.Code} [{Styles.Dim.ToMarkup()}](default)[/]", Styles.Alert));
         }
 
         foreach (var locale in locales.Where(l => !l.Default).OrderBy(l => l.Name))

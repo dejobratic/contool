@@ -1,7 +1,6 @@
 ﻿using Contool.Console.Infrastructure.UI.Extensions;
 using Contool.Core.Infrastructure.Utils.Models;
 using Contool.Core.Infrastructure.Utils.Services;
-using Spectre.Console;
 
 namespace Contool.Console.Infrastructure.UI;
 
