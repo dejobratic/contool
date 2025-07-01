@@ -23,6 +23,13 @@ public abstract class LoggedInCommandBase<TSettings>(
         }
 
         UpdateRuntimeContext(settings);
+        
+        if (runtimeContext.IsDryRun)
+        {
+            AnsiConsole.MarkupLine(
+                $"[{Styles.Alert.ToMarkup()}]DRY RUN MODE[/] - " +
+                $"[{Styles.Normal.ToMarkup()}] Use [{Styles.Highlight.ToMarkup()}]--apply|-a[/] to execute operations.[/]");
+        }
 
         return await ExecuteLoggedInCommandAsync(context, settings);
     }
@@ -39,9 +46,7 @@ public abstract class LoggedInCommandBase<TSettings>(
 
     private void UpdateRuntimeContext(TSettings settings)
     {
-        var isDryRun = settings is WriteSettingsBase writeSettings
-            && writeSettings.Apply is false;
-
+        var isDryRun = settings is WriteSettingsBase { Apply: false };
         runtimeContext.SetDryRun(isDryRun);
     }
 

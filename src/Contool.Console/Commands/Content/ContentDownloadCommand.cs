@@ -21,9 +21,8 @@ public class ContentDownloadCommand(
         public string ContentTypeId { get; init; } = default!;
 
         [CommandOption("-o|--output-path <PATH>")]
-        [Description("The output folder path.")]
-        [Required]
-        public string OutputPath { get; init; } = default!;
+        [Description("The output folder path. If not specified, uses the current working directory.")]
+        public string? OutputPath { get; init; }
 
         [CommandOption("-f|--output-format <FORMAT>")]
         [Description("The output file format (EXCEL, CSV, JSON).")]
@@ -43,7 +42,7 @@ public class ContentDownloadCommand(
             SpaceId = settings.SpaceId,
             EnvironmentId = settings.EnvironmentId,
             ContentTypeId = settings.ContentTypeId,
-            OutputPath = settings.OutputPath,
+            OutputPath = settings.OutputPath ?? Environment.CurrentDirectory,
             OutputFormat = settings.OutputFormat
         };
 

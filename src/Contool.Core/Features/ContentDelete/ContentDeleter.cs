@@ -10,8 +10,7 @@ namespace Contool.Core.Features.ContentDelete;
 
 public class ContentDeleter(
     IBatchProcessor batchProcessor,
-    IProgressReporter progressReporter,
-    ILogger<ContentDeleter> logger) : IContentDeleter
+    IProgressReporter progressReporter) : IContentDeleter
 {
     private const int DefaultBatchSize = 50;
 
@@ -22,8 +21,6 @@ public class ContentDeleter(
 
         await DeleteEntriesAsync(
             entries, contentfulService, includeArchived, cancellationToken);
-
-        LogInfo(contentTypeId, entries.Total);
     }
 
     private async Task DeleteEntriesAsync(
@@ -42,19 +39,5 @@ public class ContentDeleter(
             cancellationToken: cancellationToken);
 
         progressReporter.Complete();
-    }
-
-    private void LogInfo(string contentTypeId, int total)
-    {
-        if (total == 0)
-        {
-            logger.LogInformation(
-                "No {ContentTypeId} entries found for deleting.", contentTypeId);
-        }
-        else
-        {
-            logger.LogInformation(
-                "{Total} {ContentTypeId} entries deleted.", total, contentTypeId);
-        }
     }
 }

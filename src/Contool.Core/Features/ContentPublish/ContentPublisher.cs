@@ -8,8 +8,7 @@ namespace Contool.Core.Features.ContentPublish;
 
 public class ContentPublisher(
     IBatchProcessor batchProcessor,
-    IProgressReporter progressReporter,
-    ILogger<ContentPublisher> logger) : IContentPublisher
+    IProgressReporter progressReporter) : IContentPublisher
 {
     private const int DefaultBatchSize = 50;
 
@@ -20,8 +19,6 @@ public class ContentPublisher(
 
         await PublishEntriesAsync(
             entries, contentfulService, cancellationToken);
-
-        LogInfo(contentTypeId, entries.Total);
     }
 
     private async Task PublishEntriesAsync(
@@ -38,19 +35,5 @@ public class ContentPublisher(
             cancellationToken: cancellationToken);
 
         progressReporter.Complete();
-    }
-
-    private void LogInfo(string contentTypeId, int total)
-    {
-        if (total == 0)
-        {
-            logger.LogInformation(
-                "No {ContentTypeId} entries found for publishing.", contentTypeId);
-        }
-        else
-        {
-            logger.LogInformation(
-                "{Total} {ContentTypeId} entries published.", total, contentTypeId);
-        }
     }
 }

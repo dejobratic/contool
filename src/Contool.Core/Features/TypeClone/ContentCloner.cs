@@ -9,8 +9,7 @@ namespace Contool.Core.Features.TypeClone;
 
 public class ContentCloner(
     IBatchProcessor batchProcessor,
-    IProgressReporter progressReporter,
-    ILogger<ContentCloner> logger) : IContentCloner
+    IProgressReporter progressReporter) : IContentCloner
 {
     private const int DefaultBatchSize = 50;
 
@@ -21,8 +20,6 @@ public class ContentCloner(
 
         await CloneEntries(
             entriesForCloning, targetContentfulService, publish, cancellationToken);
-
-        LogInfo(contentTypeId, entriesForCloning.Total);
     }
 
     private async Task CloneEntries(AsyncEnumerableWithTotal<Entry<dynamic>> entries, IContentfulService contentfulService, bool publish, CancellationToken cancellationToken)
@@ -50,19 +47,5 @@ public class ContentCloner(
         return new AsyncEnumerableWithTotal<Entry<dynamic>>(
             entries,
             getTotal: () => entries.Total);
-    }
-
-    private void LogInfo(string contentTypeId, int total)
-    {
-        if (total == 0)
-        {
-            logger.LogInformation(
-                "No {ContentTypeId} entries found for cloning.", contentTypeId);
-        }
-        else
-        {
-            logger.LogInformation(
-                "{Total} {ContentTypeId} entries cloned.", total, contentTypeId);
-        }
     }
 }

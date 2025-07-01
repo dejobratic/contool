@@ -14,14 +14,14 @@ internal static class ProgressBar
             [
                 new ProgressBarColumn
                 {
-                    CompletedStyle = Styles.AlertAccent,
-                    FinishedStyle = Styles.AlertAccent,
+                    CompletedStyle = Styles.Alert,
+                    FinishedStyle = Styles.Alert,
                     IndeterminateStyle = Styles.Dim,
                     RemainingStyle = Styles.Dim,
                 },
                 new PercentageColumn
                 {
-                    CompletedStyle = Styles.AlertAccent,
+                    CompletedStyle = Styles.Alert,
                     Style = Styles.Normal,
                 },
                 new SpinnerColumn
