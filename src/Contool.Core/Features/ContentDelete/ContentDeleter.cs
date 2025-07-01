@@ -4,7 +4,6 @@ using Contool.Core.Infrastructure.Contentful.Services;
 using Contool.Core.Infrastructure.Contentful.Utils;
 using Contool.Core.Infrastructure.Utils.Models;
 using Contool.Core.Infrastructure.Utils.Services;
-using Microsoft.Extensions.Logging;
 
 namespace Contool.Core.Features.ContentDelete;
 

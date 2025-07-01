@@ -1,5 +1,4 @@
-﻿using Contentful.Core.Models;
-using Contool.Core.Infrastructure.Utils.Models;
+﻿using Contool.Core.Infrastructure.Utils.Models;
 using Spectre.Console;
 using Spectre.Console.Rendering;
 using Table = Spectre.Console.Table;

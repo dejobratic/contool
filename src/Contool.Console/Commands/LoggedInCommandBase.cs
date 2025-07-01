@@ -23,7 +23,7 @@ public abstract class LoggedInCommandBase<TSettings>(
         }
 
         UpdateRuntimeContext(settings);
-        
+
         if (runtimeContext.IsDryRun)
         {
             AnsiConsole.MarkupLine(
