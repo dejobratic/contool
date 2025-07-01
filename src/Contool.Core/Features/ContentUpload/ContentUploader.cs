@@ -8,20 +8,11 @@ namespace Contool.Core.Features.ContentUpload;
 
 public class ContentUploader(
     IBatchProcessor batchProcessor,
-    IProgressReporter progressReporter,
-    ILogger<ContentUploader> logger) : IContentUploader
+    IProgressReporter progressReporter) : IContentUploader
 {
     private const int DefaultBatchSize = 50;
 
     public async Task UploadAsync(string contentTypeId, IAsyncEnumerableWithTotal<Entry<dynamic>> entries, IContentfulService contentfulService, bool publish, CancellationToken cancellationToken)
-    {
-        await UploadEntriesAsync(
-            entries, contentfulService, publish, cancellationToken);
-
-        Log(contentTypeId, entries.Total);
-    }
-
-    private async Task UploadEntriesAsync(IAsyncEnumerableWithTotal<Entry<dynamic>> entries, IContentfulService contentfulService, bool publish, CancellationToken cancellationToken)
     {
         progressReporter.Start(Operation.Upload, getTotal: () => entries.Total);
 
@@ -32,19 +23,5 @@ public class ContentUploader(
             cancellationToken: cancellationToken);
 
         progressReporter.Complete();
-    }
-
-    private void Log(string contentTypeId, int total)
-    {
-        if (total == 0)
-        {
-            logger.LogInformation(
-                "No {ContentTypeId} entries found for uploading.", contentTypeId);
-        }
-        else
-        {
-            logger.LogInformation(
-                "{Total} {ContentTypeId} entries uploaded.", total, contentTypeId);
-        }
     }
 }

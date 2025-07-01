@@ -8,8 +8,7 @@ namespace Contool.Core.Features.ContentUnpublish;
 
 public class ContentUnpublisher(
     IBatchProcessor batchProcessor,
-    IProgressReporter progressReporter,
-    ILogger<ContentUnpublisher> logger) : IContentUnpublisher
+    IProgressReporter progressReporter) : IContentUnpublisher
 {
     private const int DefaultBatchSize = 50;
 
@@ -20,8 +19,6 @@ public class ContentUnpublisher(
 
         await UnpublishEntriesAsync(
             entries, contentfulService, cancellationToken);
-
-        LogInfo(contentTypeId, entries.Total);
     }
 
     private async Task UnpublishEntriesAsync(
@@ -38,19 +35,5 @@ public class ContentUnpublisher(
             cancellationToken: cancellationToken);
 
         progressReporter.Complete();
-    }
-
-    private void LogInfo(string contentTypeId, int total)
-    {
-        if (total == 0)
-        {
-            logger.LogInformation(
-                "No {ContentTypeId} entries found for unpublishing.", contentTypeId);
-        }
-        else
-        {
-            logger.LogInformation(
-                "{Total} {ContentTypeId} entries unpublished.", total, contentTypeId);
-        }
     }
 }

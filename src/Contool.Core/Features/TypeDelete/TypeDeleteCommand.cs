@@ -8,7 +8,7 @@ public class TypeDeleteCommand : WriteCommandBase
 {
     public string ContentTypeId { get; init; } = default!;
 
-    public bool Force { get; init; } = false;
+    public bool Force { get; init; }
 }
 
 public class TypeDeleteCommandHandler(

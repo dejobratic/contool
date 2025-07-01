@@ -9,7 +9,7 @@ public class OperationTracker : IOperationTracker
 
     public void IncrementSuccessCount(Operation operation)
     {
-        _operations.TryGetValue(operation, out (int SuccessCount, int ErrorCount) counts);
+        _operations.TryGetValue(operation, out var counts);
 
         Increment(ref counts.SuccessCount);
         _operations[operation] = counts;
@@ -17,7 +17,7 @@ public class OperationTracker : IOperationTracker
 
     public void IncrementErrorCount(Operation operation)
     {
-        _operations.TryGetValue(operation, out (int SuccessCount, int ErrorCount) counts);
+        _operations.TryGetValue(operation, out var counts);
 
         Increment(ref counts.ErrorCount);
         _operations[operation] = counts;

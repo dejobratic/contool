@@ -31,10 +31,6 @@ public class ConsoleProgressReporterLogingDecorator(
             return;
         }
 
-        var table = result.DrawTable();
-
-        AnsiConsole.WriteLine();
-        AnsiConsole.Write(table);
-        AnsiConsole.WriteLine();
+        result.DrawTable();
     }
 }
