@@ -41,14 +41,10 @@ public static class Dependencies
             // Logging
             .AddLogging(builder =>
             {
-                builder.ClearProviders();                                   // no console/file logging
+                builder.ClearProviders(); // no console/file logging
                 builder.AddProvider(new ConsoleLoggerProvider());
-                builder.SetMinimumLevel(LogLevel.None);                     // Disable all implicit logs
+                builder.SetMinimumLevel(LogLevel.None); // Disable all implicit logs
                 builder.AddFilter("Contool", LogLevel.Information); // Allow logging only from your namespace
-            })
-
-            // Options
-
-            ;
+            });
     }
 }

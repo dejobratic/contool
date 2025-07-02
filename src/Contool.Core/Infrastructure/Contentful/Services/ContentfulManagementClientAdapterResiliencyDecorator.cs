@@ -25,16 +25,16 @@ public class ContentfulManagementClientAdapterResiliencyDecorator(
         => await ExecuteAsync(ct => inner.GetEnvironmentAsync(environmentId, ct), cancellationToken);
 
     public async Task<User> GetCurrentUser(CancellationToken cancellationToken)
-        => await ExecuteAsync(ct => inner.GetCurrentUser(ct), cancellationToken);
+        => await ExecuteAsync(inner.GetCurrentUser, cancellationToken);
 
     public async Task<IEnumerable<Locale>> GetLocalesCollectionAsync(CancellationToken cancellationToken)
-        => await ExecuteAsync(ct => inner.GetLocalesCollectionAsync(ct), cancellationToken);
+        => await ExecuteAsync(inner.GetLocalesCollectionAsync, cancellationToken);
 
     public async Task<ContentType?> GetContentTypeAsync(string contentTypeId, CancellationToken cancellationToken)
         => await ExecuteAsync(ct => inner.GetContentTypeAsync(contentTypeId, ct), cancellationToken);
 
     public async Task<IEnumerable<ContentType>> GetContentTypesAsync(CancellationToken cancellationToken)
-        => await ExecuteAsync(ct => inner.GetContentTypesAsync(ct), cancellationToken);
+        => await ExecuteAsync(inner.GetContentTypesAsync, cancellationToken);
 
     public async Task<ContentType> CreateOrUpdateContentTypeAsync(ContentType contentType, CancellationToken cancellationToken)
         => await ExecuteAsync(ct => inner.CreateOrUpdateContentTypeAsync(contentType, ct), cancellationToken);

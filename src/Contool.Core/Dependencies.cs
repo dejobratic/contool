@@ -38,7 +38,8 @@ public static class Dependencies
             .AddSingleton<IContentfulLoginServiceBuilder, ContentfulLoginServiceBuilder>()
             .AddSingleton<IContentfulServiceBuilder, ContentfulServiceBuilder>()
 
-            // Contentful serivices
+            // Contentful services
+            .AddSingleton<IContentfulEntryOperationServiceFactory, ContentfulEntryOperationServiceFactory>()
             .AddSingleton<IContentDownloader, ContentDownloader>()
             .AddSingleton<IContentUploader, ContentUploader>()
             .AddSingleton<IContentPublisher, ContentPublisher>()

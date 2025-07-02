@@ -15,7 +15,7 @@ public sealed class ProgressBarRemainingTimeColumn : ProgressColumn
         if (remaining.Value.TotalHours > 99)
             return new Markup("**:**:**");
 
-        return new Text($"{remaining.Value:hh\\:mm\\:ss}", Styles.Dim);
+        return new Text($@"{remaining.Value:hh\:mm\:ss}", Styles.Dim);
     }
 
     public override int? GetColumnWidth(RenderOptions options)

@@ -65,7 +65,7 @@ public class ContentfulManagementClientAdapterOperationTrackerDecorator(
     public Task DeleteEntryAsync(string entryId, int version, CancellationToken cancellationToken)
         => ExecuteAsync(ct => inner.DeleteEntryAsync(entryId, version, ct), Operation.Delete, entryId, cancellationToken);
 
-    private Task ExecuteAsync(
+    private async Task ExecuteAsync(
         Func<CancellationToken, Task> action,
         Operation operation,
         string entryId,
@@ -73,9 +73,8 @@ public class ContentfulManagementClientAdapterOperationTrackerDecorator(
     {
         try
         {
-            var result = action(cancellationToken);
+            await action(cancellationToken);
             operationTracker.IncrementSuccessCount(operation, entryId);
-            return result;
         }
         catch
         {
@@ -84,7 +83,7 @@ public class ContentfulManagementClientAdapterOperationTrackerDecorator(
         }
     }
 
-    private Task<T> ExecuteAsync<T>(
+    private async Task<T> ExecuteAsync<T>(
         Func<CancellationToken, Task<T>> action,
         Operation operation,
         string entryId,
@@ -92,7 +91,7 @@ public class ContentfulManagementClientAdapterOperationTrackerDecorator(
     {
         try
         {
-            var result = action(cancellationToken);
+            var result = await action(cancellationToken);
             operationTracker.IncrementSuccessCount(operation, entryId);
             return result;
         }

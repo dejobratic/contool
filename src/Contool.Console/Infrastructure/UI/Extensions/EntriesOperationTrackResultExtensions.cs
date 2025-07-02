@@ -12,6 +12,14 @@ public static class EntriesOperationTrackResultExtensions
     {
         AnsiConsole.Write(result.ToOperationSummaryTable());
         AnsiConsole.WriteLine();
+
+        if (result.Operations.Count == 0)
+        {
+            AnsiConsole.Write(new Text("  No operations performed.", Styles.Alert));
+            AnsiConsole.WriteLine();
+            return;
+        }
+        
         AnsiConsole.Write(result.ToOperationDetailsTable());
     }
 
@@ -40,13 +48,6 @@ public static class EntriesOperationTrackResultExtensions
     }
 
     private static Renderable ToOperationDetailsTable(this OperationTrackResult result)
-    {
-        return result.Operations.Count == 0
-            ? new Markup("  No operations performed.", Styles.Alert)
-            : result.ToOperationsTable();
-    }
-
-    private static Table ToOperationsTable(this OperationTrackResult result)
     {
         var table = new Table()
             .NoBorder()

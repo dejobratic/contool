@@ -1,11 +1,10 @@
 ﻿using Contool.Core.Infrastructure.Utils.Models;
-using Contool.Core.Infrastructure.Utils.Services;
 
 namespace Contool.Core.Infrastructure.Contentful.Services;
 
 public class ContentfulServiceBuilder(
     IContentfulManagementClientAdapterFactory adapterFactory,
-    IProgressReporter progressReporter,
+    IContentfulEntryOperationServiceFactory operationServiceFactory,
     IRuntimeContext runtimeContext) : IContentfulServiceBuilder
 {
     private string? _spaceId;
@@ -33,11 +32,12 @@ public class ContentfulServiceBuilder(
     public IContentfulService Build()
     {
         var adapter = adapterFactory.Create(_spaceId!, _environmentId!, _usePreviewApi);
+        var operationService = operationServiceFactory.Create(adapter);
 
-        var servicBase = new ContentfulService(adapter, progressReporter);
+        var service = new ContentfulService(adapter, operationService);
 
         return runtimeContext.IsDryRun
-            ? new ContentfulServiceDryRunDecorator(servicBase)
-            : servicBase;
+            ? new ContentfulServiceDryRunDecorator(service)
+            : service;
     }
 }
