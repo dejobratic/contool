@@ -42,7 +42,7 @@ public abstract class CommandBase<TSettings> : AsyncCommand<TSettings>
         if (options.Count == 0)
         {
             table.AddRow(
-                new Text("Command does not have any options.", Styles.AlertAccent),
+                new Text("Command does not have any options.", Styles.Alert),
                 new Text(string.Empty),
                 new Text(string.Empty));
         }
@@ -125,11 +125,11 @@ public abstract class CommandBase<TSettings> : AsyncCommand<TSettings>
             .AddRow(
                 new Text("  Execution Time", Styles.Normal),
                 new Text(" : ", Styles.Dim),
-                new Text($"{profiledResult.FormattedElapsedTime}"))
+                new Text($"{profiledResult.FormattedElapsedTime}", Styles.Normal))
             .AddRow(
                 new Text("  Peak Memory Usage", Styles.Normal),
                 new Text(" : ", Styles.Dim),
-                new Text($"{profiledResult.FormatedMemoryUsage}"));
+                new Text($"{profiledResult.FormatedMemoryUsage}", Styles.Normal));
         
         AnsiConsole.WriteLine();
         AnsiConsole.Write(table);

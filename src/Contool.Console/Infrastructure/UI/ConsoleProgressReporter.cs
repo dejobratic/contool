@@ -7,7 +7,7 @@ namespace Contool.Console.Infrastructure.UI;
 public class ConsoleProgressReporter : IProgressReporter, IDisposable
 {
     // TODO: think of a better way
-    private static readonly Dictionary<Operation, string> _progressNames = new()
+    private static readonly Dictionary<Operation, string> ProgressNames = new()
     {
         [Operation.Download] = "Downloading",
         [Operation.Upload] = "Uploading",
@@ -25,7 +25,7 @@ public class ConsoleProgressReporter : IProgressReporter, IDisposable
     private Task? _renderLoopTask;
     private CancellationTokenSource? _cts;
 
-    private int _currentCount = 0;
+    private int _currentCount;
     private int? _targetTotal;
     private Func<int>? _getTotal;
 
@@ -34,7 +34,7 @@ public class ConsoleProgressReporter : IProgressReporter, IDisposable
         _cts = new CancellationTokenSource();
         _getTotal = getTotal;
 
-        if (!_progressNames.TryGetValue(operation, out var operationName))
+        if (!ProgressNames.TryGetValue(operation, out var operationName))
             operationName = operation.Name;
 
         _renderLoopTask = Task.Run(() =>

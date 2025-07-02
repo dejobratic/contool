@@ -40,7 +40,7 @@ public static class EntriesOperationTrackResultExtensions
                 new Text(" : ", Styles.Dim),
                 new Markup($"{totalProcessed}", Styles.Alert))
             .AddRow(
-                new Text("  Success Rate"),
+                new Text("  Success Rate", Styles.Normal),
                 new Text(" : ", Styles.Dim),
                 new Markup($"{successRate:F1}%", Styles.Alert));
 

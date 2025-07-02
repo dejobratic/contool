@@ -13,23 +13,23 @@ public class OperationTracker : IOperationTracker
     {
         _entryIds.Add(entryId);
         _successfulEntryIds.Add(entryId);
-        _operations.TryGetValue(operation, out var counts);
-
-        Increment(ref counts.SuccessCount);
-        _operations[operation] = counts;
+        _operations.AddOrUpdate(
+            operation,
+            addValue: (1, 0),
+            updateValueFactory: (key, oldValue) => (oldValue.SuccessCount + 1, oldValue.ErrorCount)
+        );
     }
 
     public void IncrementErrorCount(Operation operation, string entryId)
     {
         _entryIds.Add(entryId);
-        _operations.TryGetValue(operation, out var counts);
-
-        Increment(ref counts.ErrorCount);
-        _operations[operation] = counts;
+        _operations.AddOrUpdate(
+            operation,
+            addValue: (0, 1),
+            updateValueFactory: (key, oldValue) => (oldValue.SuccessCount, oldValue.ErrorCount + 1)
+        );
     }
 
-    private static void Increment(ref int count)
-        => Interlocked.Increment(ref count);
 
     public OperationTrackResult GetResult()
         => new()

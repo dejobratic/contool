@@ -28,7 +28,8 @@ public abstract class LoggedInCommandBase<TSettings>(
         {
             AnsiConsole.MarkupLine(
                 $"[{Styles.Alert.ToMarkup()}]DRY RUN MODE[/] - " +
-                $"[{Styles.Normal.ToMarkup()}] Use [{Styles.Highlight.ToMarkup()}]--apply|-a[/] to execute operations.[/]");
+                $"[{Styles.Normal.ToMarkup()}] Use [{Styles.Highlight.ToMarkup()}]--apply|-a[/] to execute operations.[/]",
+                Styles.Normal);
         }
 
         return await ExecuteLoggedInCommandAsync(context, settings);
