@@ -13,9 +13,9 @@
 - [Installation](#installation)
 - [Getting Started](#getting-started)
 - [Usage Guide](#usage-guide)
-  - [Authentication Commands](#authentication-commands)
-  - [Content Management Commands](#content-management-commands)
-  - [Content Type Management Commands](#content-type-management-commands)
+    - [Authentication Commands](#authentication-commands)
+    - [Content Management Commands](#content-management-commands)
+    - [Content Type Management Commands](#content-type-management-commands)
 - [Configuration](#configuration)
 - [Advanced Usage](#advanced-usage)
 - [Troubleshooting](#troubleshooting)
@@ -48,8 +48,14 @@ Contool simplifies Contentful management by automating common operations that wo
 # Install from source (current method)
 git clone https://github.com/yourusername/contool.git
 cd contool
+
+# Use the pack and install script (recommended for development)
+./scripts/pack_and_install.sh        # On Linux/macOS
+.\scripts\pack_and_install.ps1       # On Windows PowerShell
+
+# Or manually:
 dotnet pack src/Contool.Console/Contool.Console.csproj -c Release
-dotnet tool install --global --add-source ./src/Contool.Console/nupkg contool
+dotnet tool install --global --add-source ./src/Contool.Console/bin/Release contool
 ```
 
 ### Option 2: Build from Source
@@ -123,7 +129,7 @@ contool login [options]
 contool login
 
 # Login with token
-contool login --management-token CFPAT-abc123... --space-id myspace --environment-id master
+contool login --management-token CFPAT-abc123... --space-id myspace --environment-id production
 
 # Login with all tokens
 contool login \
@@ -131,12 +137,12 @@ contool login \
   --delivery-token abc123... \
   --preview-token abc123... \
   --space-id myspace \
-  --environment-id master
+  --environment-id production
 ```
 
 **Expected Output:**
 ```
-Secrets saved.
+You are logged in.
 ```
 
 #### `contool logout`
@@ -176,24 +182,19 @@ contool info
 
 **Expected Output:**
 ```
-Space Info
-  Name        : My Blog Space
-  ID          : myspace
-  Environment : master
+Contentful
+  Space    : My Blog Space (production)
+  Env      : production
+  User     : john.doe@example.com (7H3jFvrKlLS3kt2vyGlZ7C)
 
-User Info
-  Name  : John Doe
-  Email : john.doe@example.com
-
-Content Types (4)
-  blogPost : 45 entries
-  author   : 12 entries
-  category : 8 entries
-  tag      : 23 entries
+Content Types (3)
+  BlogPost             : blogPost (45)
+  Author               : author (12)
+  Category             : category (8)
 
 Locales (2)
-  en-US (default)
-  es-ES
+  English (United States) : en-US (default)
+  Spanish (Spain)         : es-ES
 ```
 
 ### Content Management Commands
@@ -227,23 +228,19 @@ contool content download -c author -o ./data -f CSV
 contool content download -c category -o ./backup -f JSON
 
 # Download from specific environment
-contool content download -c blogPost -o ./staging-data -f CSV --environment-id staging
+contool content download -c blogPost -o ./staging-data -f CSV --environment-id development
 ```
 
 **Expected Output:**
 ```
-Downloading...
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100%   Downloading
 
 Summary
   Total Processed : 45
   Success Rate    : 100.0%
 
 Operations
-  Download : 45 succeeded 0 failed
-
-45 blogPost entries downloaded.
-Execution Time: 00:00:12.3
-Peak Memory Usage: 32.1 MB
+  READ     : 45 succeeded 0 failed
 ```
 
 #### `contool content upload`
@@ -259,7 +256,7 @@ contool content upload -c <CONTENT_TYPE> -i <INPUT_PATH> [options]
 - `-i, --input-path <PATH>` - Input file path
 
 **Optional Options:**
-- `--publish` - Publish entries after upload
+- `--publish` - Upload entries as published (omit for draft)
 - `--apply` - Apply changes (omit for dry run)
 - `--space-id <ID>` - Override default space
 - `--environment-id <ID>` - Override default environment
@@ -282,23 +279,8 @@ contool content upload -c author -i ./authors.json --apply
 **Expected Output (Dry Run):**
 ```
 DRY RUN MODE - Use --apply|-a to execute operations.
-Uploading...
 
-Summary
-  Total Processed : 23
-  Success Rate    : 100.0%
-
-Operations
-  Upload : 23 succeeded 0 failed
-
-23 blogPost entries uploaded.
-Execution Time: 00:00:08.7
-Peak Memory Usage: 28.5 MB
-```
-
-**Expected Output (Apply):**
-```
-Uploading...
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100%   Uploading
 
 Summary
   Total Processed : 23
@@ -308,10 +290,22 @@ Operations
   Upload  : 18 succeeded 0 failed
   Upload  : 5 succeeded 0 failed
   Publish : 23 succeeded 0 failed
+```
 
-23 blogPost entries uploaded.
-Execution Time: 00:00:08.7
-Peak Memory Usage: 28.5 MB
+**Note:** Upload functionality is currently under development.
+
+**Expected Output (Apply):**
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100%   Uploading  
+
+Summary
+  Total Processed : 23
+  Success Rate    : 100.0%
+
+Operations
+  Upload  : 18 succeeded 0 failed
+  Upload  : 5 succeeded 0 failed
+  Publish : 23 succeeded 0 failed
 ```
 
 #### `contool content delete`
@@ -326,7 +320,7 @@ contool content delete -c <CONTENT_TYPE> [options]
 - `-c, --content-type-id <ID>` - Content type to delete
 
 **Optional Options:**
-- `--include-archived` - Include archived entries
+- `--include-archived` - Include archived entries (omit to exclude)
 - `--apply` - Apply changes (omit for dry run)
 - `--space-id <ID>` - Override default space
 - `--environment-id <ID>` - Override default environment
@@ -346,18 +340,17 @@ contool content delete -c oldContentType --include-archived --apply
 **Expected Output (Dry Run):**
 ```
 DRY RUN MODE - Use --apply|-a to execute operations.
-Deleting...
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100%   Deleting  
 
 Summary
-  Total Processed : 156
+  Total Processed : 45
   Success Rate    : 100.0%
 
 Operations
-  Delete : 156 succeeded 0 failed
-
-156 oldContentType entries deleted.
-Execution Time: 00:00:03.2
-Peak Memory Usage: 45.3 MB
+  READ      : 45 succeeded 0 failed
+  UNPUBLISH : 45 succeeded 0 failed
+  DELETE    : 45 succeeded 0 failed
 ```
 
 #### `contool content publish`
@@ -372,9 +365,9 @@ contool content publish -c <CONTENT_TYPE> [options]
 - `-c, --content-type-id <ID>` - Content type to publish
 
 **Optional Options:**
-- `--apply` - Apply changes (omit for dry run)
-- `--space-id <ID>` - Override default space
-- `--environment-id <ID>` - Override default environment
+- `-a, --apply` - Apply changes (omit for dry run)
+- `-s, --space-id <ID>` - Override default space
+- `-e, --environment-id <ID>` - Override default environment
 
 **Examples:**
 ```bash
@@ -385,20 +378,22 @@ contool content publish -c blogPost
 contool content publish -c blogPost --apply
 ```
 
-**Expected Output:**
+**Expected Output (Dry Run):**
 ```
-Publishing...
+DRY RUN MODE - Use --apply|-a to execute operations.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100%   Publishing  
 
 Summary
-  Total Processed : 12
+  Total Processed : 45
   Success Rate    : 100.0%
 
 Operations
-  Publish : 12 succeeded 0 failed
+  READ     : 45 succeeded 0 failed
 
-12 blogPost entries published.
-Execution Time: 00:00:03.2
-Peak Memory Usage: 18.7 MB
+Profiling
+  Execution Time    : 0h 0m 0s
+  Peak Memory Usage : 16.47 MB
 ```
 
 #### `contool content unpublish`
@@ -413,9 +408,9 @@ contool content unpublish -c <CONTENT_TYPE> [options]
 - `-c, --content-type-id <ID>` - Content type to unpublish
 
 **Optional Options:**
-- `--apply` - Apply changes (omit for dry run)
-- `--space-id <ID>` - Override default space
-- `--environment-id <ID>` - Override default environment
+- `-a, --apply` - Apply changes (omit for dry run)
+- `-s, --space-id <ID>` - Override default space
+- `-e, --environment-id <ID>` - Override default environment
 
 **Examples:**
 ```bash
@@ -424,6 +419,25 @@ contool content unpublish -c draftContent
 
 # Unpublish and apply
 contool content unpublish -c draftContent --apply
+```
+
+**Expected Output (Dry Run):**
+```
+DRY RUN MODE - Use --apply|-a to execute operations.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100%   Unpublishing  
+
+Summary
+  Total Processed : 45
+  Success Rate    : 100.0%
+
+Operations
+  READ      : 45 succeeded 0 failed
+  UNPUBLISH : 45 succeeded 0 failed
+
+Profiling
+  Execution Time    : 0h 0m 0s
+  Peak Memory Usage : 16.28 MB
 ```
 
 ### Content Type Management Commands
@@ -441,14 +455,14 @@ contool type clone -c <CONTENT_TYPE> -t <TARGET_ENVIRONMENT> [options]
 - `-t, --target-environment-id <ID>` - Destination environment
 
 **Optional Options:**
-- `--publish` - Publish cloned entries
-- `--apply` - Apply changes (omit for dry run)
-- `--space-id <ID>` - Override default space
-- `--environment-id <ID>` - Override source environment
+- `-p, --publish` - Publish cloned entries
+- `-a, --apply` - Apply changes (omit for dry run)
+- `-s, --space-id <ID>` - Override default space
+- `-e, --environment-id <ID>` - Override source environment
 
 **Examples:**
 ```bash
-# Dry run clone from master to staging
+# Dry run clone from production to staging
 contool type clone -c blogPost -t staging
 
 # Clone and apply changes
@@ -458,25 +472,15 @@ contool type clone -c blogPost -t staging --apply
 contool type clone -c blogPost -t production --publish --apply
 
 # Clone from specific source environment
-contool type clone -c blogPost -t production --environment-id staging --apply
+contool type clone -c blogPost -t production --environment-id development --apply
 ```
 
-**Expected Output:**
+**Expected Output (Dry Run):**
 ```
-Cloning...
-
-Summary
-  Total Processed : 45
-  Success Rate    : 100.0%
-
-Operations
-  Clone   : 45 succeeded 0 failed
-  Publish : 45 succeeded 0 failed
-
-45 blogPost entries cloned.
-Execution Time: 00:00:15.8
-Peak Memory Usage: 52.3 MB
+DRY RUN MODE - Use --apply|-a to execute operations.
 ```
+
+**Note:** This error occurs when the target environment doesn't exist. Ensure the target environment is created in Contentful before cloning.
 
 #### `contool type delete`
 Delete content type and all its entries.
@@ -504,21 +508,15 @@ contool type delete -c oldContentType
 contool type delete -c oldContentType --force --apply
 ```
 
-**Expected Output:**
+**Expected Output (Dry Run):**
 ```
-Deleting...
+DRY RUN MODE - Use --apply|-a to execute operations.
+```
 
-Summary
-  Total Processed : 156
-  Success Rate    : 100.0%
-
-Operations
-  Delete : 156 succeeded 0 failed
-
-156 oldContentType entries deleted.
-oldContentType content type deleted.
-Execution Time: 00:00:22.1
-Peak Memory Usage: 41.2 MB
+**Force Delete Example:**
+```bash
+# Force delete content type with entries
+contool type delete -c oldContentType --force --apply
 ```
 
 ## Configuration
@@ -539,7 +537,7 @@ For development, you can use .NET User Secrets:
 # Set user secrets
 dotnet user-secrets set "Contentful:ManagementToken" "CFPAT-your-token-here" --project src/Contool.Console
 dotnet user-secrets set "Contentful:SpaceId" "your-space-id" --project src/Contool.Console
-dotnet user-secrets set "Contentful:EnvironmentId" "master" --project src/Contool.Console
+dotnet user-secrets set "Contentful:EnvironmentId" "production" --project src/Contool.Console
 ```
 
 ### Environment Variables
@@ -548,7 +546,7 @@ You can also use environment variables:
 ```bash
 export CONTENTFUL_MANAGEMENT_TOKEN="CFPAT-your-token-here"
 export CONTENTFUL_SPACE_ID="your-space-id"
-export CONTENTFUL_ENVIRONMENT_ID="master"
+export CONTENTFUL_ENVIRONMENT_ID="production"
 ```
 
 ## Advanced Usage
@@ -610,7 +608,7 @@ entry2,Second Post,second-post,"More content here...",2024-01-16T14:22:00Z
 #### Environment Migration
 ```bash
 # Step 1: Download from production
-contool content download -c blogPost -o ./migration --environment-id master -f JSON
+contool content download -c blogPost -o ./migration --environment-id production -f JSON
 
 # Step 2: Upload to staging
 contool content upload -c blogPost -i ./migration/blogPost_*.json --environment-id staging --apply
@@ -660,7 +658,7 @@ Content type 'blogPost' not found in environment 'staging'
 
 ```bash
 # Check available content types
-contool info --environment-id staging
+contool info --environment-id development
 ```
 
 #### File Format Issues
@@ -711,6 +709,10 @@ dotnet build
 
 # Run tests
 dotnet test
+
+# Pack and install for local development
+./scripts/pack_and_install.sh        # Linux/macOS
+.\scripts\pack_and_install.ps1       # Windows PowerShell
 ```
 
 ### Project Structure
@@ -722,6 +724,9 @@ contool/
 │   └── Contool.Core/             # Core business logic and services
 ├── tests/
 │   └── Contool.Core.Tests.Unit/  # Unit tests
+├── scripts/
+│   ├── pack_and_install.sh       # Linux/macOS pack and install script
+│   └── pack_and_install.ps1      # Windows PowerShell pack and install script
 ├── README.md
 └── Contool.sln
 ```
@@ -777,8 +782,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Contact & Support
 
-- **GitHub Issues:** [Report bugs and request features](https://github.com/yourusername/contool/issues)
-- **Documentation:** [Full documentation](https://github.com/yourusername/contool/wiki)
+- **GitHub Issues:** [Report bugs and request features](https://github.com/dejobratic/contool/issues)
+- **Documentation:** [Full documentation](https://github.com/dejobratic/contool/wiki)
 - **Contentful Community:** [Get help with Contentful](https://www.contentfulcommunity.com/)
 
 ---
