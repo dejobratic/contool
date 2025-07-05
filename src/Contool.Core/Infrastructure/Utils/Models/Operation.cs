@@ -15,6 +15,6 @@ public record Operation
 
     public string Name { get; }
 
-    protected Operation(string name)
+    private Operation(string name)
         => Name = name;
 }

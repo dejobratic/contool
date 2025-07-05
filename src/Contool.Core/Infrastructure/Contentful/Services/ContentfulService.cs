@@ -97,11 +97,12 @@ public class ContentfulService(
             return (await existingEntriesLookupTask, await unpublishedReferencedEntriesLookupTask);
         }
 
-        var (existingEntriesLookup, unpublishedReferencedEntriesLookup) = await GetLookupsAsync(entries, cancellationToken);
+        var (existingEntriesLookup, unpublishedReferencedEntriesLookup) =
+            await GetLookupsAsync(entries, cancellationToken);
 
-        var tasks = entries.Select(async entry =>
-        {
-            try
+        await ExecuteAsync(
+            entries,
+            entryAction: async (entry, ct) =>
             {
                 var version = existingEntriesLookup.TryGetValue(entry.GetId(), out var existing)
                     ? existing.GetVersion()
@@ -110,61 +111,44 @@ public class ContentfulService(
                 var archived = existing?.IsArchived() == true;
 
                 // all referenced entries are published
-                var canPublish = unpublishedReferencedEntriesLookup.TryGetValue(entry.GetId(), out var unpublishedReferencedEntries)
+                var canPublish =
+                    unpublishedReferencedEntriesLookup.TryGetValue(entry.GetId(), out var unpublishedReferencedEntries)
                     && unpublishedReferencedEntries.Count == 0;
 
-                await entryOperationService.CreateOrUpdateEntryAsync(entry, version, archived, publish && canPublish, cancellationToken);
-            }
-            catch
-            {
-                // will be tracked by operation tracker
-            }
-        });
-
-        await Task.WhenAll(tasks);
+                await entryOperationService.CreateOrUpdateEntryAsync(entry, version, archived, publish && canPublish,
+                    cancellationToken);
+            },
+            cancellationToken);
     }
 
     public async Task PublishEntriesAsync(IEnumerable<Entry<dynamic>> entries, CancellationToken cancellationToken = default)
-    {
-        var tasks = entries.Select(async entry =>
-        {
-            try
-            {
-                await entryOperationService.PublishEntryAsync(entry, cancellationToken);
-            }
-            catch
-            {
-                // will be tracked by operation tracker
-            }
-        });
-
-        await Task.WhenAll(tasks);
-    }
+        => await ExecuteAsync(
+            entries,
+            entryAction: async (entry, ct) => await entryOperationService.PublishEntryAsync(entry, ct),
+            cancellationToken);
 
     public async Task UnpublishEntriesAsync(IEnumerable<Entry<dynamic>> entries, CancellationToken cancellationToken = default)
-    {
-        var tasks = entries.Select(async entry =>
-        {
-            try
-            {
-                await entryOperationService.UnpublishEntryAsync(entry, cancellationToken);
-            }
-            catch
-            {
-                // will be tracked by operation tracker
-            }
-        });
-
-        await Task.WhenAll(tasks);
-    }
+        => await ExecuteAsync(
+            entries,
+            entryAction: async (entry, ct) => await entryOperationService.UnpublishEntryAsync(entry, ct),
+            cancellationToken);
 
     public async Task DeleteEntriesAsync(IEnumerable<Entry<dynamic>> entries, CancellationToken cancellationToken = default)
+        => await ExecuteAsync(
+            entries,
+            entryAction: async (entry, ct) => await entryOperationService.DeleteEntryAsync(entry, ct),
+            cancellationToken);
+
+    private static async Task ExecuteAsync(
+        IEnumerable<Entry<dynamic>> entries,
+        Func<Entry<dynamic>, CancellationToken, Task> entryAction,
+        CancellationToken cancellationToken = default)
     {
         var tasks = entries.Select(async entry =>
         {
             try
             {
-                await entryOperationService.DeleteEntryAsync(entry, cancellationToken);
+                await entryAction(entry, cancellationToken);
             }
             catch
             {

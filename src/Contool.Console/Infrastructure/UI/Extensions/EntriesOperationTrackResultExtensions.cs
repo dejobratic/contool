@@ -31,10 +31,9 @@ public static class EntriesOperationTrackResultExtensions
 
         var table = new Table()
             .NoBorder()
-            .AddColumns(
-                new TableColumn(new Text("Summary", Styles.Normal)),
-                new TableColumn(new Text(string.Empty)),
-                new TableColumn(new Text(string.Empty)))
+            .AddColumns(new TableColumn(new Text("Summary", Styles.Normal)))
+            .AddEmptyColumn()
+            .AddEmptyColumn()
             .AddRow(
                 new Text("  Total Processed", Styles.Normal),
                 new Text(" : ", Styles.Dim),
@@ -47,14 +46,14 @@ public static class EntriesOperationTrackResultExtensions
         return table;
     }
 
-    private static Renderable ToOperationDetailsTable(this OperationTrackResult result)
+    private static Table ToOperationDetailsTable(this OperationTrackResult result)
     {
         var table = new Table()
             .NoBorder()
             .AddColumn(new TableColumn(new Markup("Operations", Styles.Normal)))
-            .AddColumn(new TableColumn(new Markup(string.Empty)))
-            .AddColumn(new TableColumn(new Markup(string.Empty)))
-            .AddColumn(new TableColumn(new Markup(string.Empty)));
+            .AddEmptyColumn()
+            .AddEmptyColumn()
+            .AddEmptyColumn();
 
         foreach (var operation in result.Operations)
         {

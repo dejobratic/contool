@@ -70,7 +70,7 @@ public class ContentDownloadCommandHandler(
             getTotal: () => entries.Total);
     }
 
-    public static async IAsyncEnumerable<dynamic> GetEntriesToSerialize(
+    private static async IAsyncEnumerable<dynamic> GetEntriesToSerialize(
         IAsyncEnumerable<Entry<dynamic>> entries,
         IContentEntrySerializer serializer)
     {

@@ -1,4 +1,5 @@
 ﻿using Contool.Console.Infrastructure.UI;
+using Contool.Console.Infrastructure.UI.Extensions;
 using Contool.Console.Infrastructure.Utils;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -118,10 +119,9 @@ public abstract class CommandBase<TSettings> : AsyncCommand<TSettings>
     {
         var table = new Table()
             .NoBorder()
-            .AddColumns(
-                new TableColumn(new Text("Profiling", Styles.Normal)),
-                new TableColumn(new Text(string.Empty)),
-                new TableColumn(new Text(string.Empty)))
+            .AddColumn(new TableColumn(new Text("Profiling", Styles.Normal)))
+            .AddEmptyColumn()
+            .AddEmptyColumn()
             .AddRow(
                 new Text("  Execution Time", Styles.Normal),
                 new Text(" : ", Styles.Dim),

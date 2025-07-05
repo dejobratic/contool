@@ -79,7 +79,7 @@ public class BatchProcessorTests
         var cts = new CancellationTokenSource();
 
         // Act & Assert
-        await Assert.ThrowsAsync<OperationCanceledException>(async () =>
+        await Assert.ThrowsAsync<TaskCanceledException>(async () =>
         {
             await _sut.ProcessAsync(
                 source: AsyncEnumerableFactory.From([1, 2, 3, 4, 5]),

@@ -9,7 +9,7 @@ public class OutputContentTests
     public void GivenValidInputs_WhenConstructorIsCalled_ThenPropertiesAreSetCorrectly()
     {
         // Arrange
-        var path = "C:\\Test";
+        var path = Path.Combine("C:", "Test");
         var name = "Output";
         var type = "CSV";
         var content = new MockAsyncEnumerableWithTotal<dynamic>();
@@ -18,7 +18,7 @@ public class OutputContentTests
         var actual = new OutputContent(path, name, type, content);
 
         // Assert
-        Assert.Equal("C:\\Test\\Output.csv", actual.FullPath);
+        Assert.Equal(Path.Combine("C:", "Test", "Output.csv"), actual.FullPath);
         Assert.Equal(DataSource.Csv, actual.DataSource);
         Assert.Equal(content, actual.Content);
     }
