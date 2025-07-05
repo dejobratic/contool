@@ -4,6 +4,7 @@ using Contool.Core.Infrastructure.Utils.Models;
 using Spectre.Console.Cli;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using Contool.Core.Infrastructure.IO.Models;
 
 namespace Contool.Console.Commands.Content;
 
@@ -18,7 +19,7 @@ public class ContentDownloadCommand(
         [CommandOption("-c|--content-type-id <ID>")]
         [Description("The Contentful content type ID.")]
         [Required]
-        public string ContentTypeId { get; init; } = default!;
+        public string ContentTypeId { get; init; } = null!;
 
         [CommandOption("-o|--output-path <PATH>")]
         [Description("The output folder path. If not specified, uses the current working directory.")]
@@ -26,13 +27,7 @@ public class ContentDownloadCommand(
 
         [CommandOption("-f|--output-format <FORMAT>")]
         [Description("The output file format (EXCEL, CSV, JSON).")]
-        [Required]
-        public string OutputFormat { get; init; } = default!;
-    }
-
-    public override Spectre.Console.ValidationResult Validate(CommandContext context, Settings settings)
-    {
-        return base.Validate(context, settings);
+        public string? OutputFormat { get; init; }
     }
 
     protected override async Task<int> ExecuteLoggedInCommandAsync(CommandContext context, Settings settings)
@@ -43,7 +38,7 @@ public class ContentDownloadCommand(
             EnvironmentId = settings.EnvironmentId,
             ContentTypeId = settings.ContentTypeId,
             OutputPath = settings.OutputPath ?? Environment.CurrentDirectory,
-            OutputFormat = settings.OutputFormat
+            OutputFormat = settings.OutputFormat ?? DataSource.Csv.Name,
         };
 
         await handler.HandleAsync(command);

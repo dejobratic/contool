@@ -8,7 +8,7 @@ public abstract class DataSource(string name)
     //public static readonly DataSource Database = new DatabaseDataSource("Database");
     private static readonly DataSource[] All = [Csv, Json, Excel];
 
-    protected string Name { get; } = name;
+    public string Name { get; } = name;
 
     public static DataSource From(string value)
     {
