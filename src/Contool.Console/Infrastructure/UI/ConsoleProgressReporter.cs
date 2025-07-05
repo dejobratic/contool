@@ -6,18 +6,6 @@ namespace Contool.Console.Infrastructure.UI;
 
 public class ConsoleProgressReporter : IProgressReporter, IDisposable
 {
-    // TODO: think of a better way
-    private static readonly Dictionary<Operation, string> ProgressNames = new()
-    {
-        [Operation.Download] = "Downloading",
-        [Operation.Upload] = "Uploading",
-        [Operation.Publish] = "Publishing",
-        [Operation.Unpublish] = "Unpublishing",
-        [Operation.Archive] = "Archiving",
-        [Operation.Unarchive] = "Unarchiving",
-        [Operation.Delete] = "Deleting",
-        [Operation.Clon] = "Cloning",
-    };
 
     private const double MaxProgress = 1.0;
 
@@ -25,6 +13,7 @@ public class ConsoleProgressReporter : IProgressReporter, IDisposable
     private Task? _renderLoopTask;
     private CancellationTokenSource? _cts;
 
+    private Operation? _operation;
     private int _currentCount;
     private int? _targetTotal;
     private Func<int>? _getTotal;
@@ -32,16 +21,14 @@ public class ConsoleProgressReporter : IProgressReporter, IDisposable
     public void Start(Operation operation, Func<int> getTotal)
     {
         _cts = new CancellationTokenSource();
+        _operation = operation;
         _getTotal = getTotal;
-
-        if (!ProgressNames.TryGetValue(operation, out var operationName))
-            operationName = operation.Name;
 
         _renderLoopTask = Task.Run(() =>
         {
             ProgressBar.GetInstance().Start(ctx =>
             {
-                _task = ctx.AddTask(operationName, maxValue: MaxProgress);
+                _task = ctx.AddTask(_operation.ActiveName, maxValue: MaxProgress);
                 RunRenderLoop(_cts.Token);
             });
         });
@@ -63,7 +50,10 @@ public class ConsoleProgressReporter : IProgressReporter, IDisposable
     public void Complete()
     {
         if (_task is not null)
+        {
             _task.Value = MaxProgress;
+            _task.Description = _operation!.CompletedName;
+        }
 
         ResetInternalState();
 

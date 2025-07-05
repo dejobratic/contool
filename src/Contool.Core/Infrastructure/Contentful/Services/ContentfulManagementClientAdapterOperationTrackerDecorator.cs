@@ -45,7 +45,16 @@ public class ContentfulManagementClientAdapterOperationTrackerDecorator(
         => inner.DeleteContentTypeAsync(contentTypeId, cancellationToken);
 
     public async Task<ContentfulCollection<Entry<dynamic>>> GetEntriesCollectionAsync(string queryString, CancellationToken cancellationToken)
-        => await inner.GetEntriesCollectionAsync(queryString, cancellationToken);
+    {
+        var result = await inner.GetEntriesCollectionAsync(queryString, cancellationToken);
+
+        foreach (var entry in result.Items)
+        {
+            operationTracker.IncrementSuccessCount(Operation.Read, entry.GetId());
+        }
+
+        return result;
+    }
 
     public Task<Entry<dynamic>> CreateOrUpdateEntryAsync(Entry<dynamic> entry, int version, CancellationToken cancellationToken)
         => ExecuteAsync(ct => inner.CreateOrUpdateEntryAsync(entry, version, ct), Operation.Upload, entry.GetId(), cancellationToken);
