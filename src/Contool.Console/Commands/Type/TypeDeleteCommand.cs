@@ -1,4 +1,6 @@
-﻿using Contool.Core.Features;
+﻿using Contool.Console.Infrastructure.UI;
+using Contool.Console.Infrastructure.Utils;
+using Contool.Core.Features;
 using Contool.Core.Infrastructure.Contentful.Services;
 using Contool.Core.Infrastructure.Utils.Models;
 using Spectre.Console.Cli;
@@ -8,10 +10,12 @@ using System.ComponentModel.DataAnnotations;
 namespace Contool.Console.Commands.Type;
 
 public class TypeDeleteCommand(
+    ICommandHandler<Core.Features.TypeDelete.TypeDeleteCommand> handler,
     IRuntimeContext runtimeContext,
     IContentfulLoginServiceBuilder contentfulServiceBuilder,
-    ICommandHandler<Core.Features.TypeDelete.TypeDeleteCommand> handler)
-    : LoggedInCommandBase<TypeDeleteCommand.Settings>(runtimeContext, contentfulServiceBuilder)
+    ICommandInfoDisplayService commandInfoDisplayService,
+    IErrorDisplayService errorDisplayService)
+    : LoggedInCommandBase<TypeDeleteCommand.Settings>(runtimeContext, contentfulServiceBuilder, commandInfoDisplayService, errorDisplayService)
 {
     public class Settings : WriteSettingsBase
     {
@@ -37,6 +41,6 @@ public class TypeDeleteCommand(
         };
 
         await handler.HandleAsync(command);
-        return 0;
+        return CommandResult.Success;
     }
 }

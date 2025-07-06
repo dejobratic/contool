@@ -24,17 +24,7 @@ public static class VersionChecker
                 return;
             }
 
-            if (response.Headers is null)
-            {
-                return;
-            }
-
-            if (response.Headers.Location is null)
-            {
-                return;
-            }
-
-            var latestVersion = response.Headers.Location.Segments.LastOrDefault();
+            var latestVersion = response.Headers.Location?.Segments.LastOrDefault();
 
             if (latestVersion is null)
             {

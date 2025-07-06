@@ -1,4 +1,5 @@
 ﻿using Contool.Console.Infrastructure.UI;
+using Contool.Console.Infrastructure.Utils;
 using Contool.Core.Infrastructure.Contentful.Services;
 using Contool.Core.Infrastructure.Utils.Models;
 using Spectre.Console;
@@ -8,7 +9,9 @@ namespace Contool.Console.Commands;
 
 public abstract class LoggedInCommandBase<TSettings>(
     IRuntimeContext runtimeContext,
-    IContentfulLoginServiceBuilder contentfulServiceBuilder) : CommandBase<TSettings>
+    IContentfulLoginServiceBuilder contentfulServiceBuilder,
+    ICommandInfoDisplayService commandInfoDisplayService,
+    IErrorDisplayService errorDisplayService) : CommandBase<TSettings>(commandInfoDisplayService, errorDisplayService)
     where TSettings : SettingsBase
 {
     protected override async Task<int> ExecuteCommandAsync(CommandContext context, TSettings settings)
@@ -19,7 +22,7 @@ public abstract class LoggedInCommandBase<TSettings>(
                 $"[{Styles.Alert.ToMarkup()}]Please log in before running this command. " +
                 $"Run '[{Styles.Highlight.ToMarkup()}]contool login[/]' and follow the instructions.[/]");
 
-            return 0;
+            return CommandResult.Success; // Not an error, just needs login
         }
 
         UpdateRuntimeContext(settings);

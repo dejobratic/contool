@@ -1,4 +1,6 @@
-﻿using Contool.Core.Features;
+﻿using Contool.Console.Infrastructure.UI;
+using Contool.Console.Infrastructure.Utils;
+using Contool.Core.Features;
 using Contool.Core.Infrastructure.Contentful.Services;
 using Contool.Core.Infrastructure.Utils.Models;
 using Spectre.Console.Cli;
@@ -8,10 +10,12 @@ using System.ComponentModel.DataAnnotations;
 namespace Contool.Console.Commands.Content;
 
 public class ContentUploadCommand(
+    ICommandHandler<Core.Features.ContentUpload.ContentUploadCommand> handler,
     IRuntimeContext runtimeContext,
     IContentfulLoginServiceBuilder contentfulServiceBuilder,
-    ICommandHandler<Core.Features.ContentUpload.ContentUploadCommand> handler)
-    : LoggedInCommandBase<ContentUploadCommand.Settings>(runtimeContext, contentfulServiceBuilder)
+    ICommandInfoDisplayService commandInfoDisplayService,
+    IErrorDisplayService errorDisplayService)
+    : LoggedInCommandBase<ContentUploadCommand.Settings>(runtimeContext, contentfulServiceBuilder, commandInfoDisplayService, errorDisplayService)
 {
     public class Settings : WriteSettingsBase
     {
@@ -43,6 +47,6 @@ public class ContentUploadCommand(
         };
 
         await handler.HandleAsync(command);
-        return 0;
+        return CommandResult.Success;
     }
 }

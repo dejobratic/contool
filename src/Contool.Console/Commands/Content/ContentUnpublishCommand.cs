@@ -1,4 +1,6 @@
-﻿using Contool.Core.Features;
+﻿using Contool.Console.Infrastructure.UI;
+using Contool.Console.Infrastructure.Utils;
+using Contool.Core.Features;
 using Contool.Core.Infrastructure.Contentful.Services;
 using Contool.Core.Infrastructure.Utils.Models;
 using Spectre.Console.Cli;
@@ -8,10 +10,12 @@ using System.ComponentModel.DataAnnotations;
 namespace Contool.Console.Commands.Content;
 
 public class ContentUnpublishCommand(
+    ICommandHandler<Core.Features.ContentUnpublish.ContentUnpublishCommand> handler,
     IRuntimeContext runtimeContext,
     IContentfulLoginServiceBuilder contentfulServiceBuilder,
-    ICommandHandler<Core.Features.ContentUnpublish.ContentUnpublishCommand> handler)
-    : LoggedInCommandBase<ContentUnpublishCommand.Settings>(runtimeContext, contentfulServiceBuilder)
+    ICommandInfoDisplayService commandInfoDisplayService,
+    IErrorDisplayService errorDisplayService)
+    : LoggedInCommandBase<ContentUnpublishCommand.Settings>(runtimeContext, contentfulServiceBuilder, commandInfoDisplayService, errorDisplayService)
 {
     public class Settings : WriteSettingsBase
     {
@@ -32,6 +36,6 @@ public class ContentUnpublishCommand(
         };
 
         await handler.HandleAsync(command);
-        return 0;
+        return CommandResult.Success;
     }
 }

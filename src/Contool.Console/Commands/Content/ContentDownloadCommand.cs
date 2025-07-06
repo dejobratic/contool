@@ -1,4 +1,6 @@
-﻿using Contool.Core.Features;
+﻿using Contool.Console.Infrastructure.UI;
+using Contool.Console.Infrastructure.Utils;
+using Contool.Core.Features;
 using Contool.Core.Infrastructure.Contentful.Services;
 using Contool.Core.Infrastructure.Utils.Models;
 using Spectre.Console.Cli;
@@ -9,10 +11,12 @@ using Contool.Core.Infrastructure.IO.Models;
 namespace Contool.Console.Commands.Content;
 
 public class ContentDownloadCommand(
+    ICommandHandler<Core.Features.ContentDownload.ContentDownloadCommand> handler,
     IRuntimeContext runtimeContext,
     IContentfulLoginServiceBuilder contentfulServiceBuilder,
-    ICommandHandler<Core.Features.ContentDownload.ContentDownloadCommand> handler)
-    : LoggedInCommandBase<ContentDownloadCommand.Settings>(runtimeContext, contentfulServiceBuilder)
+    ICommandInfoDisplayService commandInfoDisplayService,
+    IErrorDisplayService errorDisplayService)
+    : LoggedInCommandBase<ContentDownloadCommand.Settings>(runtimeContext, contentfulServiceBuilder, commandInfoDisplayService, errorDisplayService)
 {
     public class Settings : SettingsBase
     {
@@ -42,6 +46,6 @@ public class ContentDownloadCommand(
         };
 
         await handler.HandleAsync(command);
-        return 0;
+        return CommandResult.Success;
     }
 }

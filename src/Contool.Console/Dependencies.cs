@@ -37,6 +37,9 @@ public static class Dependencies
             // UI
             .AddSingleton<IProgressReporter, ConsoleProgressReporter>()
             .Decorate<IProgressReporter, ConsoleProgressReporterLogingDecorator>()
+            .AddSingleton<ICommandInfoDisplayService, ConsoleCommandInfoDisplayService>()
+            .AddSingleton<IContentfulInfoDisplayService, ConsoleContentfulInfoDisplayService>()
+            .AddSingleton<IErrorDisplayService, ConsoleErrorDisplayService>()
 
             // Logging
             .AddLogging(builder =>

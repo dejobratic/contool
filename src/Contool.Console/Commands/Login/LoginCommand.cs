@@ -14,7 +14,9 @@ namespace Contool.Console.Commands.Login;
 public class LoginCommand(
     IDataProtector dataProtector,
     IHttpClientFactory httpClientFactory,
-    IOptions<ContentfulOptions> contentfulOptions) : CommandBase<LoginCommand.Settings>
+    IOptions<ContentfulOptions> contentfulOptions,
+    ICommandInfoDisplayService commandInfoDisplayService,
+    IErrorDisplayService errorDisplayService) : CommandBase<LoginCommand.Settings>(commandInfoDisplayService, errorDisplayService)
 {
     public class Settings : SettingsBase
     {
@@ -48,7 +50,7 @@ public class LoginCommand(
 
         var secrets = new ContentfulOptions
         {
-            ManagementApiKey = settings.ContentManagementToken ?? PromptForManagementToken()
+            ManagementApiKey = settings.ContentManagementToken ?? PromptForManagementToken(),
         };
 
         if (!string.IsNullOrWhiteSpace(secrets.ManagementApiKey))
@@ -68,7 +70,7 @@ public class LoginCommand(
         AnsiConsole.MarkupLine($"[{Styles.Alert.ToMarkup()}]You are logged in.[/]");
         AnsiConsole.WriteLine();
 
-        return 0;
+        return CommandResult.Success;
     }
 
     private string PromptForManagementToken()

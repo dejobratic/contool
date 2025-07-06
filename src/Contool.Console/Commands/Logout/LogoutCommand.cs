@@ -1,11 +1,14 @@
 ﻿using Contool.Console.Infrastructure.Secrets;
 using Contool.Console.Infrastructure.UI;
+using Contool.Console.Infrastructure.Utils;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
 namespace Contool.Console.Commands.Logout;
 
-public class LogoutCommand : CommandBase<LogoutCommand.Settings>
+public class LogoutCommand(
+    ICommandInfoDisplayService commandInfoDisplayService,
+    IErrorDisplayService errorDisplayService) : CommandBase<LogoutCommand.Settings>(commandInfoDisplayService, errorDisplayService)
 {
     public class Settings : CommandSettings { }
 
@@ -15,6 +18,6 @@ public class LogoutCommand : CommandBase<LogoutCommand.Settings>
 
         AnsiConsole.MarkupLine($"[{Styles.Alert.ToMarkup()}]You are logged out.[/]");
 
-        return Task.FromResult(0);
+        return Task.FromResult(CommandResult.Success);
     }
 }
