@@ -12,6 +12,7 @@
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [Getting Started](#getting-started)
+- [Command Output Format](#command-output-format)
 - [Usage Guide](#usage-guide)
     - [Authentication Commands](#authentication-commands)
     - [Content Management Commands](#content-management-commands)
@@ -103,6 +104,40 @@ dotnet tool install --global contool
    # Apply the upload
    contool content upload -c blogPost -i ./data.csv --apply
    ```
+
+## Command Output Format
+
+### Standard Output
+All commands display their options and provide profiling information:
+
+```
+Command          : command name
+Options                  
+  --option-name : value
+  --another-option : value
+
+[Command output content]
+
+Profiling
+  Execution Time    : 0h 0m 1s
+  Peak Memory Usage : 15.88 MB
+```
+
+### Dry Run Mode
+All write commands (content: upload, delete, publish, unpublish and type: clone, delete) support dry run mode by default. To actually execute the operation, use the `--apply` or `-a` flag:
+
+```bash
+# Preview changes (safe)
+contool content delete -c blogPost
+
+# Execute the operation
+contool content delete -c blogPost --apply
+```
+
+When in dry run mode, commands display:
+```
+DRY RUN MODE - Use --apply|-a to execute operations.
+```
 
 ## Usage Guide
 
@@ -213,8 +248,8 @@ contool content download -c <CONTENT_TYPE> -o <OUTPUT_PATH> -f <FORMAT> [options
 - `-f, --output-format <FORMAT>` - Output format (EXCEL, CSV, JSON)
 
 **Optional Options:**
-- `--space-id <ID>` - Override default space
-- `--environment-id <ID>` - Override default environment
+- `-s, --space-id <ID>` - Override default space
+- `-e, --environment-id <ID>` - Override default environment
 
 **Examples:**
 ```bash
@@ -228,10 +263,10 @@ contool content download -c author -o ./data -f CSV
 contool content download -c category -o ./backup -f JSON
 
 # Download from specific environment
-contool content download -c blogPost -o ./staging-data -f CSV --environment-id development
+contool content download -c blogPost -o ./staging-data -f CSV -e development
 ```
 
-**Expected Output:**
+**Output:**
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100%   Downloading
 
@@ -256,57 +291,27 @@ contool content upload -c <CONTENT_TYPE> -i <INPUT_PATH> [options]
 - `-i, --input-path <PATH>` - Input file path
 
 **Optional Options:**
-- `--publish` - Upload entries as published (omit for draft)
-- `--apply` - Apply changes (omit for dry run)
-- `--space-id <ID>` - Override default space
-- `--environment-id <ID>` - Override default environment
+- `-p, --publish` - Upload entries as published (omit for draft)
+- `-a, --apply` - Apply changes (omit for dry run)
+- `-s, --space-id <ID>` - Override default space
+- `-e, --environment-id <ID>` - Override default environment
 
 **Examples:**
 ```bash
-# Dry run upload (safe preview)
+# Preview upload (dry run)
 contool content upload -c blogPost -i ./data.csv
 
 # Upload and apply changes
-contool content upload -c blogPost -i ./data.csv --apply
+contool content upload -c blogPost -i ./data.csv -a
 
 # Upload, apply, and publish
-contool content upload -c blogPost -i ./data.xlsx --apply --publish
+contool content upload -c blogPost -i ./data.xlsx -a -p
 
 # Upload from JSON
-contool content upload -c author -i ./authors.json --apply
-```
-
-**Expected Output (Dry Run):**
-```
-DRY RUN MODE - Use --apply|-a to execute operations.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100%   Uploading
-
-Summary
-  Total Processed : 23
-  Success Rate    : 100.0%
-
-Operations
-  Upload  : 18 succeeded 0 failed
-  Upload  : 5 succeeded 0 failed
-  Publish : 23 succeeded 0 failed
+contool content upload -c author -i ./authors.json -a
 ```
 
 **Note:** Upload functionality is currently under development.
-
-**Expected Output (Apply):**
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100%   Uploading  
-
-Summary
-  Total Processed : 23
-  Success Rate    : 100.0%
-
-Operations
-  Upload  : 18 succeeded 0 failed
-  Upload  : 5 succeeded 0 failed
-  Publish : 23 succeeded 0 failed
-```
 
 #### `contool content delete`
 Delete all entries of a specific content type.
@@ -320,28 +325,26 @@ contool content delete -c <CONTENT_TYPE> [options]
 - `-c, --content-type-id <ID>` - Content type to delete
 
 **Optional Options:**
-- `--include-archived` - Include archived entries (omit to exclude)
-- `--apply` - Apply changes (omit for dry run)
-- `--space-id <ID>` - Override default space
-- `--environment-id <ID>` - Override default environment
+- `-i, --include-archived` - Include archived entries (omit to exclude)
+- `-a, --apply` - Apply changes (omit for dry run)
+- `-s, --space-id <ID>` - Override default space
+- `-e, --environment-id <ID>` - Override default environment
 
 **Examples:**
 ```bash
-# Dry run delete
-contool content delete -c oldContentType
+# Preview delete (dry run)
+contool content delete -c blogPost
 
 # Delete and apply changes
-contool content delete -c oldContentType --apply
+contool content delete -c blogPost -a
 
 # Delete including archived entries
-contool content delete -c oldContentType --include-archived --apply
+contool content delete -c blogPost -i -a
 ```
 
-**Expected Output (Dry Run):**
+**Output:**
 ```
-DRY RUN MODE - Use --apply|-a to execute operations.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100%   Deleting  
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100%   Deleting
 
 Summary
   Total Processed : 45
@@ -371,29 +374,23 @@ contool content publish -c <CONTENT_TYPE> [options]
 
 **Examples:**
 ```bash
-# Dry run publish
+# Preview publish (dry run)
 contool content publish -c blogPost
 
 # Publish and apply
-contool content publish -c blogPost --apply
+contool content publish -c blogPost -a
 ```
 
-**Expected Output (Dry Run):**
+**Output:**
 ```
-DRY RUN MODE - Use --apply|-a to execute operations.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100%   Publishing  
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100%   Publishing
 
 Summary
   Total Processed : 45
   Success Rate    : 100.0%
 
 Operations
-  READ     : 45 succeeded 0 failed
-
-Profiling
-  Execution Time    : 0h 0m 0s
-  Peak Memory Usage : 16.47 MB
+  PUBLISH  : 45 succeeded 0 failed
 ```
 
 #### `contool content unpublish`
@@ -414,18 +411,16 @@ contool content unpublish -c <CONTENT_TYPE> [options]
 
 **Examples:**
 ```bash
-# Dry run unpublish
-contool content unpublish -c draftContent
+# Preview unpublish (dry run)
+contool content unpublish -c author
 
 # Unpublish and apply
-contool content unpublish -c draftContent --apply
+contool content unpublish -c author -a
 ```
 
-**Expected Output (Dry Run):**
+**Output:**
 ```
-DRY RUN MODE - Use --apply|-a to execute operations.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100%   Unpublishing  
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100%   Unpublishing
 
 Summary
   Total Processed : 45
@@ -434,10 +429,6 @@ Summary
 Operations
   READ      : 45 succeeded 0 failed
   UNPUBLISH : 45 succeeded 0 failed
-
-Profiling
-  Execution Time    : 0h 0m 0s
-  Peak Memory Usage : 16.28 MB
 ```
 
 ### Content Type Management Commands
@@ -466,13 +457,13 @@ contool type clone -c <CONTENT_TYPE> -t <TARGET_ENVIRONMENT> [options]
 contool type clone -c blogPost -t staging
 
 # Clone and apply changes
-contool type clone -c blogPost -t staging --apply
+contool type clone -c blogPost -t staging -a
 
 # Clone, apply, and publish
-contool type clone -c blogPost -t production --publish --apply
+contool type clone -c blogPost -t production -p -a
 
 # Clone from specific source environment
-contool type clone -c blogPost -t production --environment-id development --apply
+contool type clone -c blogPost -t production -e development -a
 ```
 
 **Expected Output (Dry Run):**
@@ -494,29 +485,38 @@ contool type delete -c <CONTENT_TYPE> [options]
 - `-c, --content-type <ID>` - Content type to delete
 
 **Optional Options:**
-- `--force` - Force deletion even with existing entries
-- `--apply` - Apply changes (omit for dry run)
-- `--space-id <ID>` - Override default space
-- `--environment-id <ID>` - Override default environment
+- `-f, --force` - Force deletion even if content type contains entries
+- `-a, --apply` - Apply changes (omit for dry run)
+- `-s, --space-id <ID>` - Override default space
+- `-e, --environment-id <ID>` - Override default environment
 
 **Examples:**
 ```bash
-# Dry run delete (will show validation errors if entries exist)
-contool type delete -c oldContentType
+# Preview delete (shows validation errors if entries exist)
+contool type delete -c category
 
 # Force delete with all entries
-contool type delete -c oldContentType --force --apply
+contool type delete -c category -f -a
 ```
 
-**Expected Output (Dry Run):**
+**Output (when content type has entries):**
 ```
-DRY RUN MODE - Use --apply|-a to execute operations.
+Error: Content type with ID 'category' cannot be deleted because it contains 
+entries. Use the force option to delete it anyway.
 ```
 
-**Force Delete Example:**
-```bash
-# Force delete content type with entries
-contool type delete -c oldContentType --force --apply
+**Output (successful deletion):**
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100%   Deleting
+
+Summary
+  Total Processed : 25
+  Success Rate    : 100.0%
+
+Operations
+  DELETE : 25 succeeded 0 failed
+
+Content type 'category' deleted.
 ```
 
 ## Configuration
@@ -608,24 +608,24 @@ entry2,Second Post,second-post,"More content here...",2024-01-16T14:22:00Z
 #### Environment Migration
 ```bash
 # Step 1: Download from production
-contool content download -c blogPost -o ./migration --environment-id production -f JSON
+contool content download -c blogPost -o ./migration -e production -f JSON
 
 # Step 2: Upload to staging
-contool content upload -c blogPost -i ./migration/blogPost_*.json --environment-id staging --apply
+contool content upload -c blogPost -i ./migration/blogPost_*.json -e staging -a
 
 # Step 3: Verify and publish
-contool info --environment-id staging
-contool content publish -c blogPost --environment-id staging --apply
+contool info -e staging
+contool content publish -c blogPost -e staging -a
 ```
 
 #### Content Type Cloning with Selective Publishing
 ```bash
 # Clone content type structure and entries
-contool type clone -c blogPost -t staging --apply
+contool type clone -c blogPost -t staging -a
 
 # Selectively publish specific entries (manual process)
 # Then bulk publish remaining drafts
-contool content publish -c blogPost --environment-id staging --apply
+contool content publish -c blogPost -e staging -a
 ```
 
 ## Troubleshooting
@@ -658,7 +658,7 @@ Content type 'blogPost' not found in environment 'staging'
 
 ```bash
 # Check available content types
-contool info --environment-id development
+contool info -e development
 ```
 
 #### File Format Issues
