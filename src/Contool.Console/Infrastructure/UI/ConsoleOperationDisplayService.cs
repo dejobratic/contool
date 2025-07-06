@@ -1,16 +1,16 @@
-﻿using Contool.Core.Infrastructure.Utils.Models;
+using Contool.Console.Infrastructure.UI.Extensions;
+using Contool.Core.Infrastructure.Utils.Models;
 using Spectre.Console;
-using Spectre.Console.Rendering;
-using Table = Spectre.Console.Table;
-using Text = Spectre.Console.Text;
 
-namespace Contool.Console.Infrastructure.UI.Extensions;
+namespace Contool.Console.Infrastructure.UI;
 
-public static class EntriesOperationTrackResultExtensions
+public class ConsoleOperationDisplayService : IOperationsDisplayService
 {
-    public static void DrawTable(this OperationTrackResult result)
+    public void DisplayOperations(OperationTrackResult result)
     {
-        AnsiConsole.Write(result.ToOperationSummaryTable());
+        var summary = CreateOperationSummaryTable(result);
+        
+        AnsiConsole.Write(summary);
         AnsiConsole.WriteLine();
 
         if (result.Operations.Count == 0)
@@ -19,11 +19,13 @@ public static class EntriesOperationTrackResultExtensions
             AnsiConsole.WriteLine();
             return;
         }
+
+        var details = CreateOperationDetailsTable(result);
         
-        AnsiConsole.Write(result.ToOperationDetailsTable());
+        AnsiConsole.Write(details);
     }
 
-    private static Table ToOperationSummaryTable(this OperationTrackResult result)
+    private static Table CreateOperationSummaryTable(OperationTrackResult result)
     {
         var totalProcessed = result.TotalEntries;
         var totalSucceeded = result.SuccessfulEntries;
@@ -46,7 +48,7 @@ public static class EntriesOperationTrackResultExtensions
         return table;
     }
 
-    private static Table ToOperationDetailsTable(this OperationTrackResult result)
+    private static Table CreateOperationDetailsTable(OperationTrackResult result)
     {
         var table = new Table()
             .NoBorder()

@@ -36,10 +36,11 @@ public static class Dependencies
         return services
             // UI
             .AddSingleton<IProgressReporter, ConsoleProgressReporter>()
-            .Decorate<IProgressReporter, ConsoleProgressReporterLogingDecorator>()
+            .Decorate<IProgressReporter, ConsoleProgressReporterLoggingDecorator>()
             .AddSingleton<ICommandInfoDisplayService, ConsoleCommandInfoDisplayService>()
             .AddSingleton<IContentfulInfoDisplayService, ConsoleContentfulInfoDisplayService>()
             .AddSingleton<IErrorDisplayService, ConsoleErrorDisplayService>()
+            .AddSingleton<IOperationsDisplayService, ConsoleOperationDisplayService>()
 
             // Logging
             .AddLogging(builder =>

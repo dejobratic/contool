@@ -1,12 +1,12 @@
-﻿using Contool.Console.Infrastructure.UI.Extensions;
-using Contool.Core.Infrastructure.Utils.Models;
+﻿using Contool.Core.Infrastructure.Utils.Models;
 using Contool.Core.Infrastructure.Utils.Services;
 
 namespace Contool.Console.Infrastructure.UI;
 
-public class ConsoleProgressReporterLogingDecorator(
+public class ConsoleProgressReporterLoggingDecorator(
     IProgressReporter inner,
-    IOperationTracker operationTracker) : IProgressReporter
+    IOperationTracker operationTracker,
+    IOperationsDisplayService operationsDisplayService) : IProgressReporter
 {
     private Operation _operation = null!;
 
@@ -24,6 +24,6 @@ public class ConsoleProgressReporterLogingDecorator(
         inner.Complete();
 
         var result = operationTracker.GetResult();
-        result.DrawTable();
+        operationsDisplayService.DisplayOperations(result);
     }
 }
