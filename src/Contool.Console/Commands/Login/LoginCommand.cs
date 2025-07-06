@@ -65,7 +65,7 @@ public class LoginCommand(
         SecretWriter.Save(secrets, dataProtector);
 
         AnsiConsole.WriteLine();
-        AnsiConsole.MarkupLine("[italic Orange1]Secrets saved.[/]");
+        AnsiConsole.MarkupLine($"[{Styles.Alert.ToMarkup()}]You are logged in.[/]");
         AnsiConsole.WriteLine();
 
         return 0;

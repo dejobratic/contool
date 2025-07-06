@@ -26,7 +26,7 @@ public class ContentUploadCommand(
         public string InputPath { get; init; } = default!;
 
         [CommandOption("-p|--publish")]
-        [Description("Whether to publish the entries after upload (omit for draft).")]
+        [Description("Upload Contentful entries as published (omit for draft).")]
         public bool Publish { get; init; }
     }
 
