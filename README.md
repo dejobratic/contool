@@ -47,7 +47,7 @@ Contool simplifies Contentful management by automating common operations that wo
 
 ```bash
 # Install from source (current method)
-git clone https://github.com/yourusername/contool.git
+git clone https://github.com/dejobratic/contool.git
 cd contool
 
 # Use the pack and install script (recommended for development)
@@ -63,7 +63,7 @@ dotnet tool install --global --add-source ./src/Contool.Console/bin/Release cont
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/contool.git
+git clone https://github.com/dejobratic/contool.git
 cd contool
 
 # Build the solution
@@ -466,9 +466,28 @@ contool type clone -c blogPost -t production -p -a
 contool type clone -c blogPost -t production -e development -a
 ```
 
-**Expected Output (Dry Run):**
+**Output (when locales differ between environments):**
 ```
-DRY RUN MODE - Use --apply|-a to execute operations.
+Error: Locales in source and target environments are not equivalent.
+```
+
+**Output (when content types differ between environments):**
+```
+Error: Content types 'category' in source and target environments are not equivalent.
+```
+
+**Output (successful cloning):**
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100%   Cloning
+
+Summary
+  Total Processed : 25
+  Success Rate    : 100.0%
+
+Operations
+  DELETE : 25 succeeded 0 failed
+
+Content type 'category' deleted.
 ```
 
 **Note:** This error occurs when the target environment doesn't exist. Ensure the target environment is created in Contentful before cloning.
@@ -530,39 +549,7 @@ Contool securely stores your API credentials using ASP.NET Core Data Protection:
 
 Credentials are encrypted and tied to your user account for security.
 
-### User Secrets (Development)
-For development, you can use .NET User Secrets:
-
-```bash
-# Set user secrets
-dotnet user-secrets set "Contentful:ManagementToken" "CFPAT-your-token-here" --project src/Contool.Console
-dotnet user-secrets set "Contentful:SpaceId" "your-space-id" --project src/Contool.Console
-dotnet user-secrets set "Contentful:EnvironmentId" "production" --project src/Contool.Console
-```
-
-### Environment Variables
-You can also use environment variables:
-
-```bash
-export CONTENTFUL_MANAGEMENT_TOKEN="CFPAT-your-token-here"
-export CONTENTFUL_SPACE_ID="your-space-id"
-export CONTENTFUL_ENVIRONMENT_ID="production"
-```
-
 ## Advanced Usage
-
-### Dry Run Mode
-All write operations support dry run mode for safe testing:
-
-```bash
-# Preview changes without applying them
-contool content upload -c blogPost -i ./data.csv
-contool content delete -c oldContent
-contool type clone -c blogPost -t staging
-
-# Apply changes after reviewing
-contool content upload -c blogPost -i ./data.csv --apply
-```
 
 ### Batch Processing
 Contool automatically handles large datasets with efficient batch processing:
