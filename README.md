@@ -485,9 +485,7 @@ Summary
   Success Rate    : 100.0%
 
 Operations
-  DELETE : 25 succeeded 0 failed
-
-Content type 'category' deleted.
+  CLONE : 25 succeeded 0 failed
 ```
 
 **Note:** This error occurs when the target environment doesn't exist. Ensure the target environment is created in Contentful before cloning.
@@ -534,8 +532,6 @@ Summary
 
 Operations
   DELETE : 25 succeeded 0 failed
-
-Content type 'category' deleted.
 ```
 
 ## Configuration
@@ -739,22 +735,6 @@ dotnet test
 .\scripts\pack_and_install.ps1       # Windows PowerShell
 ```
 
-### Project Structure
-
-```
-contool/
-├── src/
-│   ├── Contool.Console/          # CLI interface and commands
-│   └── Contool.Core/             # Core business logic and services
-├── tests/
-│   └── Contool.Core.Tests.Unit/  # Unit tests
-├── scripts/
-│   ├── pack_and_install.sh       # Linux/macOS pack and install script
-│   └── pack_and_install.ps1      # Windows PowerShell pack and install script
-├── README.md
-└── Contool.sln
-```
-
 ### Running Tests
 
 ```bash
@@ -767,36 +747,6 @@ dotnet test --collect:"XPlat Code Coverage"
 # Run specific test project
 dotnet test tests/Contool.Core.Tests.Unit/
 ```
-
-### Contributing Guidelines
-
-1. **Fork** the repository
-2. **Create** a feature branch: `git checkout -b feature/amazing-feature`
-3. **Write tests** for your changes
-4. **Ensure** all tests pass: `dotnet test`
-5. **Commit** your changes: `git commit -m 'Add amazing feature'`
-6. **Push** to the branch: `git push origin feature/amazing-feature`
-7. **Open** a Pull Request
-
-### Code Style
-- Follow C# coding conventions
-- Use nullable reference types
-- Ensure warnings are treated as errors
-- Write comprehensive unit tests
-- Document public APIs
-
-### Architecture Notes
-The project follows Clean Architecture principles:
-
-- **Console Layer:** CLI commands and user interface
-- **Core Layer:** Business logic, domain models, and services
-- **Infrastructure:** External integrations (Contentful API, file I/O)
-
-Key patterns used:
-- Command Pattern for CLI operations
-- Dependency Injection for IoC
-- Decorator Pattern for cross-cutting concerns
-- Factory Pattern for service creation
 
 ## License
 
