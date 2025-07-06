@@ -5,10 +5,10 @@ namespace Contool.Core.Infrastructure.Contentful.Models;
 
 internal class SysIdField() : SysField("sys.Id")
 {
-    public override object? Extract(SystemProperties sys)
+    protected override object? Extract(SystemProperties sys)
         => sys.Id;
 
-    public override void Apply(SystemProperties sys, object? value)
+    protected override void Apply(SystemProperties sys, object? value)
     {
         sys.Id = value?.ToString();
 

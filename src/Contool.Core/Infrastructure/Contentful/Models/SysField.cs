@@ -4,9 +4,9 @@ namespace Contool.Core.Infrastructure.Contentful.Models;
 
 public abstract class SysField(string name)
 {
-    public string Name { get; } = name;
+    private string Name { get; } = name;
 
-    public static readonly SysField[] All =
+    private static readonly SysField[] All =
     [
         new SysIdField(),
         new SysTypeField(),
@@ -39,7 +39,7 @@ public abstract class SysField(string name)
         field?.Apply(sys, value);
     }
 
-    public abstract object? Extract(SystemProperties sys);
+    protected abstract object? Extract(SystemProperties sys);
 
-    public abstract void Apply(SystemProperties sys, object? value);
+    protected abstract void Apply(SystemProperties sys, object? value);
 }

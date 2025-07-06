@@ -4,10 +4,10 @@ namespace Contool.Core.Infrastructure.Contentful.Models;
 
 internal class SysArchivedAtField() : SysField("sys.ArchivedAt")
 {
-    public override object? Extract(SystemProperties sys)
+    protected override object? Extract(SystemProperties sys)
         => sys.ArchivedAt;
 
-    public override void Apply(SystemProperties sys, object? value)
+    protected override void Apply(SystemProperties sys, object? value)
     {
         if (DateTime.TryParse(value?.ToString(), out var v))
             sys.ArchivedAt = v;

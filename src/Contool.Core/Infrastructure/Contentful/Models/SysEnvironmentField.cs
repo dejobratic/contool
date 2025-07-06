@@ -4,9 +4,9 @@ namespace Contool.Core.Infrastructure.Contentful.Models;
 
 internal class SysEnvironmentField() : SysField("sys.Environment")
 {
-    public override object? Extract(SystemProperties sys)
+    protected override object? Extract(SystemProperties sys)
         => sys.Environment?.SystemProperties.Id;
 
-    public override void Apply(SystemProperties sys, object? value)
+    protected override void Apply(SystemProperties sys, object? value)
         => sys.Environment.SystemProperties.Id = value?.ToString();
 }

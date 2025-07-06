@@ -573,35 +573,72 @@ Contool automatically handles large datasets with efficient batch processing:
 - **Memory efficient:** Streams large files without loading everything into memory
 
 ### File Format Support
-Support for multiple data formats:
+Contool supports multiple data formats with a specific field naming convention for localized content and system fields.
+
+#### Field Naming Convention
+- **Content fields**: `fieldId.locale` (e.g., `title.en-US`, `body.es-ES`)
+- **Array fields**: `fieldId.locale[]` (e.g., `tags.en-US[]`, `categories.de-DE[]`)
+- **System fields**: `sys.FieldName` (e.g., `sys.Id`, `sys.CreatedAt`)
+
+#### System Fields (auto-populated on download)
+All entries include Contentful system metadata:
+- `sys.Id` - Entry ID
+- `sys.Type` - Entry type ("Entry")
+- `sys.ContentType` - Content type ID
+- `sys.Space` - Space ID
+- `sys.Environment` - Environment ID
+- `sys.Version` - Entry version
+- `sys.PublishedVersion` - Published version
+- `sys.ArchivedVersion` - Archived version
+- `sys.CreatedAt` - Creation timestamp
+- `sys.UpdatedAt` - Last update timestamp
+- `sys.PublishedAt` - Publication timestamp
+- `sys.FirstPublishedAt` - First publication timestamp
+- `sys.ArchivedAt` - Archival timestamp
 
 #### CSV Format
 ```csv
-id,title,slug,body,publishedAt
-entry1,My First Post,my-first-post,"This is the content...",2024-01-15T10:30:00Z
-entry2,Second Post,second-post,"More content here...",2024-01-16T14:22:00Z
+sys.Id,title.en-US,slug.en-US,body.en-US,publishedAt.en-US,tags.en-US[],sys.CreatedAt
+entry1,My First Post,my-first-post,"This is the content...",2024-01-15T10:30:00Z,"tech|blog|contentful",2024-01-10T08:30:00Z
+entry2,Second Post,second-post,"More content here...",2024-01-16T14:22:00Z,"tutorial|guide",2024-01-12T10:15:00Z
 ```
 
+**Array Handling**: Use pipe `|` or comma `,` to separate array values. For reference arrays, use the entry IDs.
+
 #### Excel Format
-- Supports `.xlsx` files
-- First row contains field names
-- Automatic data type detection
+- Supports `.xlsx` files with the same column naming convention
+- First row must contain field names (e.g., `title.en-US`, `sys.Id`)
+- Automatic data type detection based on Contentful field types
+- Array fields use pipe `|` separation
 - Handles rich text and references
 
 #### JSON Format
 ```json
 [
   {
-    "id": "entry1",
-    "fields": {
-      "title": {"en-US": "My First Post"},
-      "slug": {"en-US": "my-first-post"},
-      "body": {"en-US": "This is the content..."},
-      "publishedAt": {"en-US": "2024-01-15T10:30:00Z"}
-    }
+    "sys.Id": "entry1",
+    "sys.Type": "Entry", 
+    "sys.ContentType": "blogPost",
+    "sys.CreatedAt": "2024-01-10T08:30:00Z",
+    "sys.UpdatedAt": "2024-01-15T10:30:00Z",
+    "title.en-US": "My First Post",
+    "slug.en-US": "my-first-post", 
+    "body.en-US": "This is the content...",
+    "publishedAt.en-US": "2024-01-15T10:30:00Z",
+    "tags.en-US[]": "tech|blog|contentful"
   }
 ]
 ```
+
+#### Supported Field Types
+- **Symbol/Text**: Plain text values
+- **RichText**: Rich text (stored as structured data)
+- **Integer/Number**: Numeric values
+- **Date**: ISO 8601 formatted dates
+- **Boolean**: true/false values
+- **Link**: References to other entries or assets (by ID)
+- **Array**: Multiple values using pipe `|` or comma `,` separation
+- **Object**: Complex structured data
 
 ### Complex Workflows
 

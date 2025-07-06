@@ -4,9 +4,9 @@ namespace Contool.Core.Infrastructure.Contentful.Models;
 
 internal class SysSpaceField() : SysField("sys.Space")
 {
-    public override object? Extract(SystemProperties sys)
+    protected override object? Extract(SystemProperties sys)
         => sys.Space?.SystemProperties.Id;
 
-    public override void Apply(SystemProperties sys, object? value)
+    protected override void Apply(SystemProperties sys, object? value)
         => sys.Space.SystemProperties.Id = value?.ToString();
 }
