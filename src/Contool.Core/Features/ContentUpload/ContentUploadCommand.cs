@@ -8,13 +8,15 @@ using System.Runtime.CompilerServices;
 
 namespace Contool.Core.Features.ContentUpload;
 
-public class ContentUploadCommand : WriteCommandBase
+public class ContentUploadCommand : CommandBase
 {
-    public string ContentTypeId { get; init; } = default!;
+    public string ContentTypeId { get; init; } = null!;
 
-    public string InputPath { get; init; } = default!;
+    public string InputPath { get; init; } = null!;
 
-    public bool ShouldPublish { get; init; }
+    public bool UploadOnlyValid { get; init; }
+
+    public bool PublishUploaded { get; init; }
 }
 
 public class ContentUploadCommandHandler(
@@ -48,7 +50,7 @@ public class ContentUploadCommandHandler(
         return DataSource.From(fileExtension);
     }
 
-    public async Task UploadEntriesAsync(
+    private async Task UploadEntriesAsync(
         ContentUploadCommand command,
         IAsyncEnumerableWithTotal<dynamic> content,
         IContentfulService contentfulService,
@@ -58,8 +60,10 @@ public class ContentUploadCommandHandler(
         var entriesForUploading = GetEntriesForUploading(
             content, deserializer, cancellationToken);
 
-        await contentUploader.UploadAsync(
-            command.ContentTypeId, entriesForUploading, contentfulService, command.ShouldPublish, cancellationToken);
+        var input = CreateContentUploaderInput(
+            command, contentfulService, entriesForUploading);
+
+        await contentUploader.UploadAsync(input, cancellationToken);
     }
 
     private static AsyncEnumerableWithTotal<Entry<dynamic>> GetEntriesForUploading(
@@ -68,16 +72,31 @@ public class ContentUploadCommandHandler(
         CancellationToken cancellationToken)
     {
         return new AsyncEnumerableWithTotal<Entry<dynamic>>(
-            GetDeserializedentries(content, deserializer, cancellationToken),
+            GetDeserializedEntries(content, deserializer, cancellationToken),
             getTotal: () => content.Total);
     }
 
-    private static async IAsyncEnumerable<Entry<dynamic>> GetDeserializedentries(
+    private static async IAsyncEnumerable<Entry<dynamic>> GetDeserializedEntries(
         IAsyncEnumerableWithTotal<dynamic> content,
         IContentEntryDeserializer deserializer,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         await foreach (var row in content.WithCancellation(cancellationToken))
             yield return deserializer.Deserialize(row);
+    }
+    
+    private static ContentUploaderInput CreateContentUploaderInput(
+        ContentUploadCommand command, 
+        IContentfulService contentfulService,
+        AsyncEnumerableWithTotal<Entry<dynamic>> entriesForUploading)
+    {
+        return new ContentUploaderInput
+        {
+            ContentTypeId = command.ContentTypeId,
+            ContentfulService = contentfulService,
+            Entries = entriesForUploading,
+            PublishEntries = command.PublishUploaded,
+            UploadOnlyValidEntries = command.UploadOnlyValid,
+        };
     }
 }

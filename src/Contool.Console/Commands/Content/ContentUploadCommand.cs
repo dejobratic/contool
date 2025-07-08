@@ -22,16 +22,21 @@ public class ContentUploadCommand(
         [CommandOption("-c|--content-type-id <ID>")]
         [Description("The Contentful content type ID.")]
         [Required]
-        public string ContentTypeId { get; init; } = default!;
+        public string ContentTypeId { get; init; } = null!;
 
         [CommandOption("-i|--input-path <PATH>")]
         [Description("The input file path (EXCEL, CSV, JSON).")]
         [Required]
-        public string InputPath { get; init; } = default!;
+        public string InputPath { get; init; } = null!;
 
         [CommandOption("-p|--publish")]
         [Description("Upload Contentful entries as published (omit for draft).")]
         public bool Publish { get; init; }
+
+
+        [CommandOption("--upload-only-valid")]
+        [Description("Upload only valid entries, skipping invalid ones. If false, stops upload if any validation errors exist.")]
+        public bool UploadOnlyValid { get; init; }
     }
 
     protected override async Task<int> ExecuteLoggedInCommandAsync(CommandContext context, Settings settings)
@@ -42,8 +47,8 @@ public class ContentUploadCommand(
             EnvironmentId = settings.EnvironmentId,
             ContentTypeId = settings.ContentTypeId,
             InputPath = settings.InputPath,
-            ShouldPublish = settings.Publish,
-            ApplyChanges = settings.Apply,
+            PublishUploaded = settings.Publish,
+            UploadOnlyValid = settings.UploadOnlyValid,
         };
 
         await handler.HandleAsync(command);

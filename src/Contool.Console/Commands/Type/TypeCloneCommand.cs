@@ -22,12 +22,12 @@ public class TypeCloneCommand(
         [CommandOption("-t|--target-environment-id <ID>")]
         [Description("Target environment ID where the type will be cloned. See [italic LightGoldenrod2]https://www.contentful.com/help/spaces-and-organizations/[/]")]
         [Required]
-        public string TargetEnvironmentId { get; init; } = default!;
+        public string TargetEnvironmentId { get; init; } = null!;
 
         [CommandOption("-c|--content-type-id <ID>")]
         [Description("The Contentful content type ID.")]
         [Required]
-        public string ContentTypeId { get; init; } = default!;
+        public string ContentTypeId { get; init; } = null!;
 
         [CommandOption("-p|--publish")]
         [Description("Whether to publish the cloned type entries (omit for draft).")]
@@ -43,7 +43,6 @@ public class TypeCloneCommand(
             TargetEnvironmentId = settings.TargetEnvironmentId,
             ContentTypeId = settings.ContentTypeId,
             ShouldPublish = settings.Publish,
-            ApplyChanges = settings.Apply,
         };
 
         await handler.HandleAsync(command);

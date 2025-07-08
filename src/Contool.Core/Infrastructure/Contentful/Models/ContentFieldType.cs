@@ -24,8 +24,16 @@ public abstract class ContentFieldType(string name)
 
     public static ContentFieldType FromName(string name)
     {
-        return All.FirstOrDefault(t => t.Name.Equals(name, StringComparison.OrdinalIgnoreCase))
-            ?? throw new ArgumentException($"Unsupported FieldType: {name}");
+        if (TryFromName(name, out var result))
+            return result!;
+        
+        throw new ArgumentException($"Unsupported FieldType: {name}");
+    }
+
+    public static bool TryFromName(string name, out ContentFieldType? fieldType)
+    {
+        fieldType = All.FirstOrDefault(t => t.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        return fieldType is not null;
     }
 
     public override string ToString() => Name;

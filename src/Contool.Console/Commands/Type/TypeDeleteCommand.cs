@@ -37,7 +37,6 @@ public class TypeDeleteCommand(
             EnvironmentId = settings.EnvironmentId,
             ContentTypeId = settings.ContentTypeId,
             Force = settings.Force,
-            ApplyChanges = settings.Apply,
         };
 
         await handler.HandleAsync(command);

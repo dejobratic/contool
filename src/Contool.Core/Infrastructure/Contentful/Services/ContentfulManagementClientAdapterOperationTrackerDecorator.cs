@@ -50,14 +50,14 @@ public class ContentfulManagementClientAdapterOperationTrackerDecorator(
 
         foreach (var entry in result.Items)
         {
-            operationTracker.IncrementSuccessCount(Operation.Read, entry.GetId());
+            operationTracker.IncrementSuccessCount(Operation.Read, entry.GetId()!);
         }
 
         return result;
     }
 
     public Task<Entry<dynamic>> CreateOrUpdateEntryAsync(Entry<dynamic> entry, int version, CancellationToken cancellationToken)
-        => ExecuteAsync(ct => inner.CreateOrUpdateEntryAsync(entry, version, ct), Operation.Upload, entry.GetId(), cancellationToken);
+        => ExecuteAsync(ct => inner.CreateOrUpdateEntryAsync(entry, version, ct), Operation.Upload, entry.GetId()!, cancellationToken);
 
     public Task<Entry<dynamic>> PublishEntryAsync(string entryId, int version, CancellationToken cancellationToken)
         => ExecuteAsync(ct => inner.PublishEntryAsync(entryId, version, ct), Operation.Publish, entryId, cancellationToken);

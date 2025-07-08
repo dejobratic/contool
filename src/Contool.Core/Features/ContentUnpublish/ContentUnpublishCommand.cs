@@ -3,9 +3,9 @@ using Contool.Core.Infrastructure.Contentful.Services;
 
 namespace Contool.Core.Features.ContentUnpublish;
 
-public class ContentUnpublishCommand : WriteCommandBase
+public class ContentUnpublishCommand : CommandBase
 {
-    public string ContentTypeId { get; init; } = default!;
+    public string ContentTypeId { get; init; } =  null!;
 }
 
 public class ContentUnpublishCommandHandler(

@@ -40,7 +40,7 @@ public class ContentfulService(
     public async Task<ContentType> CreateContentTypeAsync(ContentType contentType, CancellationToken cancellationToken = default)
     {
         var existingContentType = await GetContentTypeAsync(
-            contentType.GetId(),
+            contentType.GetId()!,
             cancellationToken);
 
         if (existingContentType is not null)
@@ -51,7 +51,7 @@ public class ContentfulService(
             cancellationToken: cancellationToken);
 
         created = await client.ActivateContentTypeAsync(
-            contentTypeId: created.GetId(),
+            contentTypeId: created.GetId()!,
             version: created.GetVersion(),
             cancellationToken: cancellationToken);
 
@@ -90,7 +90,7 @@ public class ContentfulService(
         async Task<(Dictionary<string, Entry<dynamic>>, Dictionary<string, HashSet<string>>)> GetLookupsAsync(
             IEnumerable<Entry<dynamic>> entries, CancellationToken cancellationToken)
         {
-            var existingEntriesLookupTask = client.GetExistingEntriesLookupByIdAsync(entries.Select(e => e.GetId()), cancellationToken);
+            var existingEntriesLookupTask = client.GetExistingEntriesLookupByIdAsync(entries.Select(e => e.GetId()!), cancellationToken);
             var unpublishedReferencedEntriesLookupTask = client.GetUnpublishedOrMissingReferencedEntriesIdsLookup(entries, cancellationToken);
             await Task.WhenAll(existingEntriesLookupTask, unpublishedReferencedEntriesLookupTask);
 
@@ -104,7 +104,7 @@ public class ContentfulService(
             entries,
             entryAction: async (entry, ct) =>
             {
-                var version = existingEntriesLookup.TryGetValue(entry.GetId(), out var existing)
+                var version = existingEntriesLookup.TryGetValue(entry.GetId()!, out var existing)
                     ? existing.GetVersion()
                     : entry.GetVersion();
 
@@ -112,7 +112,7 @@ public class ContentfulService(
 
                 // all referenced entries are published
                 var canPublish =
-                    unpublishedReferencedEntriesLookup.TryGetValue(entry.GetId(), out var unpublishedReferencedEntries)
+                    unpublishedReferencedEntriesLookup.TryGetValue(entry.GetId()!, out var unpublishedReferencedEntries)
                     && unpublishedReferencedEntries.Count == 0;
 
                 await entryOperationService.CreateOrUpdateEntryAsync(entry, version, archived, publish && canPublish,

@@ -5,6 +5,7 @@ using Contool.Core.Features.ContentDownload;
 using Contool.Core.Features.ContentPublish;
 using Contool.Core.Features.ContentUnpublish;
 using Contool.Core.Features.ContentUpload;
+using Contool.Core.Features.ContentUpload.Validation;
 using Contool.Core.Features.TypeClone;
 using Contool.Core.Features.TypeDelete;
 using Contool.Core.Infrastructure.Contentful.Options;
@@ -19,7 +20,8 @@ namespace Contool.Core;
 
 public static class Dependencies
 {
-    public static IServiceCollection AddContoolDependencies(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddContoolDependencies(this IServiceCollection services,
+        IConfiguration configuration)
     {
         return services
             .AddInfrastructure(configuration)
@@ -46,6 +48,10 @@ public static class Dependencies
             .AddSingleton<IContentUnpublisher, ContentUnpublisher>()
             .AddSingleton<IContentDeleter, ContentDeleter>()
             .AddSingleton<IContentCloner, ContentCloner>()
+            
+            // Validation
+            .Decorate<IContentUploader, ContentUploaderValidationDecorator>()
+            .AddSingleton<IContentUploadEntryValidator, ContentUploadEntryValidator>()
 
             // Serialization/Deserialization
             .AddSingleton<IContentEntrySerializerFactory, ContentEntrySerializerFactory>()

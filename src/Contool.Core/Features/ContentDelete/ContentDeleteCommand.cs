@@ -3,9 +3,9 @@ using Contool.Core.Infrastructure.Contentful.Services;
 
 namespace Contool.Core.Features.ContentDelete;
 
-public class ContentDeleteCommand : WriteCommandBase
+public class ContentDeleteCommand : CommandBase
 {
-    public string ContentTypeId { get; init; } = default!;
+    public string ContentTypeId { get; init; } = null!;
 
     public bool IncludeArchived { get; init; }
 }

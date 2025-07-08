@@ -1,6 +1,4 @@
-﻿using Contentful.Core.Models;
-using Contool.Core.Infrastructure.Contentful.Services;
-using Contool.Core.Infrastructure.Utils.Models;
+﻿using Contool.Core.Infrastructure.Utils.Models;
 using Contool.Core.Infrastructure.Utils.Services;
 
 namespace Contool.Core.Features.ContentUpload;
@@ -11,14 +9,14 @@ public class ContentUploader(
 {
     private const int DefaultBatchSize = 50;
 
-    public async Task UploadAsync(string contentTypeId, IAsyncEnumerableWithTotal<Entry<dynamic>> entries, IContentfulService contentfulService, bool publish, CancellationToken cancellationToken)
+    public async Task UploadAsync(ContentUploaderInput input, CancellationToken cancellationToken)
     {
-        progressReporter.Start(Operation.Upload, getTotal: () => entries.Total);
+        progressReporter.Start(Operation.Upload, getTotal: () => input.Entries.Total);
 
         await batchProcessor.ProcessAsync(
-            source: entries,
+            source: input.Entries,
             batchSize: DefaultBatchSize,
-            batchActionAsync: (batch, ct) => contentfulService.CreateOrUpdateEntriesAsync(batch, publish, ct),
+            batchActionAsync: (batch, ct) => input.ContentfulService.CreateOrUpdateEntriesAsync(batch, input.PublishEntries, ct),
             cancellationToken: cancellationToken);
 
         progressReporter.Complete();

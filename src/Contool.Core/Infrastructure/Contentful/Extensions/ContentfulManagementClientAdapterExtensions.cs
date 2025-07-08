@@ -18,7 +18,7 @@ public static class ContentfulManagementClientAdapterExtensions
         return (await client.GetEntriesCollectionAsync(
             queryString: queryString,
             cancellationToken: cancellationToken))
-            .ToDictionary(e => e.GetId());
+            .ToDictionary(e => e.GetId()!);
     }
 
     public static async Task<Dictionary<string, HashSet<string>>> GetUnpublishedOrMissingReferencedEntriesIdsLookup(
@@ -27,7 +27,7 @@ public static class ContentfulManagementClientAdapterExtensions
         CancellationToken cancellationToken)
     {
         var referencedEntryIdsPerEntry = entries.ToDictionary(
-            entry => entry.GetId(),
+            entry => entry.GetId()!,
             entry => entry.GetReferencedEntryIds().ToHashSet());
 
         var allReferencedEntryIds = referencedEntryIdsPerEntry
@@ -42,7 +42,7 @@ public static class ContentfulManagementClientAdapterExtensions
             queryString: queryString,
             cancellationToken: cancellationToken))
             .Where(e => e.IsPublished())
-            .Select(e => e.GetId())
+            .Select(e => e.GetId()!)
             .ToHashSet();
 
         var unresolvedReferencedEntryIds = allReferencedEntryIds

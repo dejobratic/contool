@@ -4,11 +4,11 @@ using Contool.Core.Infrastructure.Contentful.Services;
 
 namespace Contool.Core.Features.TypeClone;
 
-public class TypeCloneCommand : WriteCommandBase
+public class TypeCloneCommand : CommandBase
 {
-    public string ContentTypeId { get; init; } = default!;
+    public string ContentTypeId { get; init; } = null!;
 
-    public string TargetEnvironmentId { get; init; } = default!;
+    public string TargetEnvironmentId { get; init; } = null!;
 
     public bool ShouldPublish { get; init; } // TODO: clone all or only published entries?
 }

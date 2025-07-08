@@ -3,9 +3,9 @@ using Contool.Core.Infrastructure.Contentful.Services;
 
 namespace Contool.Core.Features.ContentPublish;
 
-public class ContentPublishCommand : WriteCommandBase
+public class ContentPublishCommand : CommandBase
 {
-    public string ContentTypeId { get; init; } = default!;
+    public string ContentTypeId { get; init; } = null!;
 }
 
 public class ContentPublishCommandHandler(

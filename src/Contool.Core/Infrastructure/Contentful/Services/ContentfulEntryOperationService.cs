@@ -14,7 +14,7 @@ public class ContentfulEntryOperationService(
         bool publish,
         CancellationToken cancellationToken = default)
     {
-        var entryId = entry.GetId();
+        var entryId = entry.GetId()!;
 
         try
         {
@@ -36,7 +36,7 @@ public class ContentfulEntryOperationService(
             if (publish)
             {
                 await client.PublishEntryAsync(
-                    entryId: upserted.GetId(),
+                    entryId: entryId,
                     version: upserted.GetVersion(),
                     cancellationToken: cancellationToken);
             }
@@ -53,7 +53,7 @@ public class ContentfulEntryOperationService(
         Entry<dynamic> entry,
         CancellationToken cancellationToken = default)
     {
-        var entryId = entry.GetId();
+        var entryId = entry.GetId()!;
 
         try
         {
@@ -79,7 +79,7 @@ public class ContentfulEntryOperationService(
         Entry<dynamic> entry,
         CancellationToken cancellationToken = default)
     {
-        var entryId = entry.GetId();
+        var entryId = entry.GetId()!;
 
         try
         {
@@ -105,7 +105,7 @@ public class ContentfulEntryOperationService(
         Entry<dynamic> entry,
         CancellationToken cancellationToken = default)
     {
-        var entryId = entry.GetId();
+        var entryId = entry.GetId()!;
 
         try
         {

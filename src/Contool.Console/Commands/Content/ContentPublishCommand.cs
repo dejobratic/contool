@@ -22,7 +22,7 @@ public class ContentPublishCommand(
         [CommandOption("-c|--content-type-id <ID>")]
         [Description("The Contentful content type ID.")]
         [Required]
-        public string ContentTypeId { get; init; } = default!;
+        public string ContentTypeId { get; init; } = null!;
     }
 
     protected override async Task<int> ExecuteLoggedInCommandAsync(CommandContext context, Settings settings)
@@ -32,7 +32,6 @@ public class ContentPublishCommand(
             SpaceId = settings.SpaceId,
             EnvironmentId = settings.EnvironmentId,
             ContentTypeId = settings.ContentTypeId,
-            ApplyChanges = settings.Apply,
         };
 
         await handler.HandleAsync(command);

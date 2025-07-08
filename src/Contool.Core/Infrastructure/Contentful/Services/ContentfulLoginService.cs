@@ -37,7 +37,7 @@ public class ContentfulLoginService(
             .ToDictionary(type => type, type =>
             {
                 var queryString = new EntryQueryBuilder()
-                    .WithContentTypeId(type.GetId())
+                    .WithContentTypeId(type.GetId()!)
                     .Limit(0)
                     .Skip(0)
                     .Build();

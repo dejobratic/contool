@@ -22,7 +22,7 @@ public class ContentDeleteCommand(
         [CommandOption("-c|--content-type-id <ID>")]
         [Description("The Contentful content type ID.")]
         [Required]
-        public string ContentTypeId { get; init; } = default!;
+        public string ContentTypeId { get; init; } = null!;
 
         [CommandOption("-i|--include-archived")]
         [Description("Whether to include archived entries in the deletion process.")]
@@ -36,7 +36,6 @@ public class ContentDeleteCommand(
             SpaceId = settings.SpaceId,
             EnvironmentId = settings.EnvironmentId,
             ContentTypeId = settings.ContentTypeId,
-            ApplyChanges = settings.Apply
         };
 
         await handler.HandleAsync(command);

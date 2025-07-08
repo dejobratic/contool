@@ -30,7 +30,6 @@ public class OperationTracker : IOperationTracker
         );
     }
 
-
     public OperationTrackResult GetResult()
         => new()
         {
