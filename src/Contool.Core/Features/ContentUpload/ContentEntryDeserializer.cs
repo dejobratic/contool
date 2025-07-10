@@ -8,9 +8,9 @@ namespace Contool.Core.Features.ContentUpload;
 public class ContentEntryDeserializer(ContentType contentType, ContentLocales locales) : IContentEntryDeserializer
 {
     private readonly Dictionary<string, ContentField> _fields = contentType.Fields
-        .Select(f => new ContentField(f, locales))
-        .SelectMany(f => f.FieldNames.Select(name => (name, field: f)))
-        .ToDictionary(t => t.name, t => t.field);
+        .Select(field => new ContentField(field, locales))
+        .SelectMany(field => field.FieldNames.Select(name => (name, field)))
+        .ToDictionary(tuple => tuple.name, tuple => tuple.field);
 
     public Entry<dynamic> Deserialize(dynamic row)
     {
@@ -27,11 +27,7 @@ public class ContentEntryDeserializer(ContentType contentType, ContentLocales lo
             }
             else if (_fields.TryGetValue(heading, out var field))
             {
-                // TODO: refactor this
-                var locale = heading.ToString()
-                    .Split('.')
-                    .LastOrDefault()
-                    ?.Replace("[]", "")
+                var locale = new ContentFieldName(heading).Locale 
                     ?? locales.DefaultLocale;
 
                 field.Deserialize(entry.Fields, locale, data[heading]);

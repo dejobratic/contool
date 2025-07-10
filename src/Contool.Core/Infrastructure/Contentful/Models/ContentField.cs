@@ -37,7 +37,7 @@ public class ContentField(Field field, ContentLocales locales)
             return;
 
         var container = fields[Id] as JObject ?? [];
-        container[localeCode] = token is JToken jt ? jt : JToken.FromObject(token!);
+        container[localeCode] = token as JToken ?? JToken.FromObject(token);
         fields[Id] = container;
     }
 }

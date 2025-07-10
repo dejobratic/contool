@@ -19,7 +19,31 @@ public class ContentDeleteCommandHandler(
         var contentfulService = contentfulServiceBuilder.Build(
             command.SpaceId, command.EnvironmentId);
 
+        await DeleteContentAsync(
+            command, contentfulService, cancellationToken);
+    }
+    
+    private async Task DeleteContentAsync(
+        ContentDeleteCommand command,
+        IContentfulService contentfulService,
+        CancellationToken cancellationToken)
+    {
+        var input = CreateContentDeleterInput(
+            command, contentfulService);
+        
         await contentDeleter.DeleteAsync(
-            command.ContentTypeId, contentfulService, command.IncludeArchived, cancellationToken);
+            input, cancellationToken);
+    }
+
+    private static ContentDeleterInput CreateContentDeleterInput(
+        ContentDeleteCommand command,
+        IContentfulService contentfulService)
+    {
+        return new ContentDeleterInput
+        {
+            ContentTypeId = command.ContentTypeId,
+            ContentfulService = contentfulService,
+            IncludeArchived = command.IncludeArchived,
+        };
     }
 }

@@ -11,13 +11,13 @@ public class ContentUnpublisher(
 {
     private const int DefaultBatchSize = 50;
 
-    public async Task UnpublishAsync(string contentTypeId, IContentfulService contentfulService, CancellationToken cancellationToken = default)
+    public async Task UnpublishAsync(ContentUnpublisherInput input, CancellationToken cancellationToken = default)
     {
-        var entries = contentfulService.GetEntriesAsync(
-            contentTypeId, DefaultBatchSize, cancellationToken: cancellationToken);
+        var entries = input.ContentfulService.GetEntriesAsync(
+            input.ContentTypeId, DefaultBatchSize, cancellationToken: cancellationToken);
 
         await UnpublishEntriesAsync(
-            entries, contentfulService, cancellationToken);
+            entries, input.ContentfulService, cancellationToken);
     }
 
     private async Task UnpublishEntriesAsync(

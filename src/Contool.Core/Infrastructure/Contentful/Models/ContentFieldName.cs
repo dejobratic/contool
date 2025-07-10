@@ -4,7 +4,7 @@ public class ContentFieldName
 {
     public string Value { get; }
 
-    public string Locale { get; set; }
+    public string Locale { get; }
 
     public ContentFieldName(string fieldId, ContentFieldType fieldType, string locale)
     {

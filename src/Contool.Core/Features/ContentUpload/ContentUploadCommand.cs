@@ -46,7 +46,7 @@ public class ContentUploadCommandHandler(
     private static DataSource GetFileSource(
         ContentUploadCommand command)
     {
-        var fileExtension = Path.GetExtension(command.InputPath) ?? string.Empty;
+        var fileExtension = Path.GetExtension(command.InputPath);
         return DataSource.From(fileExtension);
     }
 

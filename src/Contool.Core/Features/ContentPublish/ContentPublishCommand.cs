@@ -17,7 +17,29 @@ public class ContentPublishCommandHandler(
         var contentfulService = contentfulServiceBuilder.Build(
             command.SpaceId, command.EnvironmentId);
 
+        await PublishContentAsync(command, contentfulService, cancellationToken);
+    }
+
+    private async Task PublishContentAsync(
+        ContentPublishCommand command,
+        IContentfulService contentfulService,
+        CancellationToken cancellationToken)
+    {
+        var input = CreateContentPublisherInput(
+            command, contentfulService);
+        
         await contentPublisher.PublishAsync(
-            command.ContentTypeId, contentfulService, cancellationToken);
+            input, cancellationToken);
+    }
+
+    private static ContentPublisherInput CreateContentPublisherInput(
+        ContentPublishCommand command,
+        IContentfulService contentfulService)
+    {
+        return new ContentPublisherInput
+        {
+            ContentTypeId = command.ContentTypeId,
+            ContentfulService = contentfulService,
+        };
     }
 }

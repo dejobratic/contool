@@ -26,11 +26,8 @@ public class TypeDeleteCommandHandler(
         await ThrowIfDeleteNotForcedWithExistingEntriesAsync(
             command.ContentTypeId, command.Force, contentfulService, cancellationToken);
 
-        await contentDeleter.DeleteAsync(
-            command.ContentTypeId, contentfulService, includeArchived: true, cancellationToken);
-
-        await contentfulService.DeleteContentTypeAsync(
-            command.ContentTypeId, cancellationToken);
+        await DeleteTypeWithContentAsync(
+            command, contentfulService, cancellationToken);
     }
 
     private static async Task ThrowIfContentTypeDoesNotExistAsync(
@@ -64,5 +61,32 @@ public class TypeDeleteCommandHandler(
                 cancellationToken: cancellationToken);
 
         return entries.Count > 0;
+    }
+    
+    private async Task DeleteTypeWithContentAsync(
+        TypeDeleteCommand command,
+        IContentfulService contentfulService,
+        CancellationToken cancellationToken)
+    {
+        var input = CreateContentDeleterInput(
+            command, contentfulService);
+        
+        await contentDeleter.DeleteAsync(
+            input, cancellationToken);
+        
+        await contentfulService.DeleteContentTypeAsync(
+            input.ContentTypeId, cancellationToken);
+    }
+
+    private static ContentDeleterInput CreateContentDeleterInput(
+        TypeDeleteCommand command,
+        IContentfulService contentfulService)
+    {
+        return new ContentDeleterInput
+        {
+            ContentTypeId = command.ContentTypeId,
+            ContentfulService = contentfulService,
+            IncludeArchived = true,
+        };
     }
 }

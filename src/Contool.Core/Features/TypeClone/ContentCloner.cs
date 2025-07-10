@@ -12,18 +12,18 @@ public class ContentCloner(
 {
     private const int DefaultBatchSize = 50;
 
-    public async Task CloneAsync(string contentTypeId, IContentfulService sourceContentfulService, IContentfulService targetContentfulService, bool publish, CancellationToken cancellationToken = default)
+    public async Task CloneAsync(ContentClonerInput input, CancellationToken cancellationToken = default)
     {
         var entriesForCloning = GetEntriesForCloning(
-            contentTypeId, sourceContentfulService, cancellationToken);
+            input.ContentTypeId, input.SourceContentfulService, cancellationToken);
 
-        await CloneEntries(
-            entriesForCloning, targetContentfulService, publish, cancellationToken);
+        await CloneEntriesAsync(
+            entriesForCloning, input.TargetContentfulService, input.PublishEntries, cancellationToken);
     }
 
-    private async Task CloneEntries(AsyncEnumerableWithTotal<Entry<dynamic>> entries, IContentfulService contentfulService, bool publish, CancellationToken cancellationToken)
+    private async Task CloneEntriesAsync(AsyncEnumerableWithTotal<Entry<dynamic>> entries, IContentfulService contentfulService, bool publish, CancellationToken cancellationToken)
     {
-        progressReporter.Start(Operation.Clon, getTotal: () => entries.Total);
+        progressReporter.Start(Operation.Clone, getTotal: () => entries.Total);
 
         await batchProcessor.ProcessAsync(
             source: entries,

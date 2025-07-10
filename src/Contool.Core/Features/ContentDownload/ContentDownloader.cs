@@ -1,6 +1,4 @@
-﻿using Contool.Core.Infrastructure.IO.Models;
-using Contool.Core.Infrastructure.IO.Services;
-using Contool.Core.Infrastructure.Utils.Models;
+﻿using Contool.Core.Infrastructure.Utils.Models;
 using Contool.Core.Infrastructure.Utils.Services;
 
 namespace Contool.Core.Features.ContentDownload;
@@ -8,12 +6,12 @@ namespace Contool.Core.Features.ContentDownload;
 public class ContentDownloader(
     IProgressReporter progressReporter) : IContentDownloader
 {
-    public async Task DownloadAsync(string contentTypeId, OutputContent output, IOutputWriter outputWriter, CancellationToken cancellationToken)
+    public async Task DownloadAsync(ContentDownloaderInput input, CancellationToken cancellationToken)
     {
-        var entries = GetEntriesToDownload(output.Content);
+        var entries = GetEntriesToDownload(input.Output.Content);
 
-        await outputWriter.SaveAsync(
-            output.FullPath, entries, cancellationToken);
+        await input.OutputWriter.SaveAsync(
+            input.Output.FullPath, entries, cancellationToken);
     }
 
     private AsyncEnumerableWithTotal<dynamic> GetEntriesToDownload(

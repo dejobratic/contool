@@ -17,7 +17,30 @@ public class ContentUnpublishCommandHandler(
         var contentfulService = contentfulServiceBuilder.Build(
             command.SpaceId, command.EnvironmentId);
 
+        await UnpublishContentAsync(
+            command, contentfulService, cancellationToken);
+    }
+
+    private async Task UnpublishContentAsync(
+        ContentUnpublishCommand command,
+        IContentfulService contentfulService,
+        CancellationToken cancellationToken)
+    {
+        var input = CreateContentUnpublisherInput(
+            command, contentfulService);
+        
         await contentPublisher.UnpublishAsync(
-            command.ContentTypeId, contentfulService, cancellationToken);
+            input, cancellationToken);
+    }
+
+    private static ContentUnpublisherInput CreateContentUnpublisherInput(
+        ContentUnpublishCommand command,
+        IContentfulService contentfulService)
+    {
+        return new ContentUnpublisherInput
+        {
+            ContentTypeId = command.ContentTypeId,
+            ContentfulService = contentfulService,
+        };
     }
 }

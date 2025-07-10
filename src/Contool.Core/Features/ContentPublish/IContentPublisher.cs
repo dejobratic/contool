@@ -1,8 +1,6 @@
-﻿using Contool.Core.Infrastructure.Contentful.Services;
-
-namespace Contool.Core.Features.ContentPublish;
+﻿namespace Contool.Core.Features.ContentPublish;
 
 public interface IContentPublisher
 {
-    Task PublishAsync(string contentTypeId, IContentfulService contentfulService, CancellationToken cancellationToken = default);
+    Task PublishAsync(ContentPublisherInput input, CancellationToken cancellationToken = default);
 }

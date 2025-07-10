@@ -1,5 +1,4 @@
-﻿using Contentful.Core.Models;
-using Contool.Core.Infrastructure.Contentful.Extensions;
+﻿using Contool.Core.Infrastructure.Contentful.Extensions;
 using Contool.Core.Infrastructure.Contentful.Services;
 using Contool.Core.Infrastructure.IO.Models;
 using Contool.Core.Infrastructure.IO.Services;
@@ -9,11 +8,11 @@ namespace Contool.Core.Features.ContentDownload;
 
 public class ContentDownloadCommand : CommandBase
 {
-    public string ContentTypeId { get; init; } = default!;
+    public string ContentTypeId { get; init; } = null!;
 
-    public string OutputPath { get; init; } = default!;
+    public string OutputPath { get; init; } = null!;
 
-    public string OutputFormat { get; init; } = default!;
+    public string OutputFormat { get; init; } = null!;
 }
 
 public class ContentDownloadCommandHandler(
@@ -36,11 +35,11 @@ public class ContentDownloadCommandHandler(
         var outputWriter = outputWriterFactory.Create(
             output.DataSource);
 
-        await contentDownloader.DownloadAsync(
-            command.ContentTypeId, output, outputWriter, cancellationToken);
+        await DownloadAsync(
+            command, output, outputWriter, cancellationToken);
     }
 
-    public static OutputContent GetEntriesForDownload(
+    private static OutputContent GetEntriesForDownload(
         ContentDownloadCommand command,
         IContentfulService contentfulService,
         IContentEntrySerializer serializer,
@@ -66,16 +65,34 @@ public class ContentDownloadCommandHandler(
             contentTypeId, cancellationToken: cancellationToken);
 
         return new AsyncEnumerableWithTotal<dynamic>(
-            source: GetEntriesToSerialize(entries, serializer),
+            source: entries.Select(entry => serializer.Serialize(entry)),
             getTotal: () => entries.Total);
     }
 
-    private static async IAsyncEnumerable<dynamic> GetEntriesToSerialize(
-        IAsyncEnumerable<Entry<dynamic>> entries,
-        IContentEntrySerializer serializer)
+    private async Task DownloadAsync(
+        ContentDownloadCommand command,
+        OutputContent output,
+        IOutputWriter outputWriter,
+        CancellationToken cancellationToken)
     {
-        await foreach (var entry in entries)
-            yield return serializer.Serialize(entry);
+        var input = CreateContentDownloaderInput(
+            command, output, outputWriter);
+        
+        await contentDownloader.DownloadAsync(
+            input, cancellationToken);
+    }
+
+    private static ContentDownloaderInput CreateContentDownloaderInput(
+        ContentDownloadCommand command,
+        OutputContent output,
+        IOutputWriter outputWriter)
+    {
+        return new ContentDownloaderInput
+        {
+            ContentTypeId = command.ContentTypeId,
+            Output = output,
+            OutputWriter = outputWriter,
+        };
     }
 }
 

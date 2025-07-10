@@ -1,6 +1,6 @@
 ﻿namespace Contool.Core.Infrastructure.Utils.Models;
 
-public record Operation
+public class Operation
 {
     public static readonly Operation Read = new("READ", "Reading", "Read");
     public static readonly Operation Download = new("DOWNLOAD", "Downloading", "Downloaded");
@@ -10,9 +10,7 @@ public record Operation
     public static readonly Operation Archive = new("ARCHIVE", "Archiving", "Archived");
     public static readonly Operation Unarchive = new("UNARCHIVE", "Unarchiving", "Unarchived");
     public static readonly Operation Delete = new("DELETE", "Deleting", "Deleted");
-
-    // Had to name it 'Clon' instead of 'Clone' to avoid conflicts with records' Clone method
-    public static readonly Operation Clon = new("CLONE", "Cloning", "Cloned");
+    public static readonly Operation Clone = new("CLONE", "Cloning", "Cloned");
 
     public string Name { get; }
     public string ActiveName { get; }

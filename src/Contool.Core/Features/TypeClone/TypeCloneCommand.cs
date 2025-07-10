@@ -31,8 +31,8 @@ public class TypeCloneCommandHandler(
         await ThrowIfContentTypeDefinitionsDifferBetweenEnvironmentsAsync(
             command, sourceContentfulService, targetContentfulService, cancellationToken);
 
-        await contentCloner.CloneAsync(
-            command.ContentTypeId, sourceContentfulService, targetContentfulService, command.ShouldPublish, cancellationToken);
+        await CloneContentAsync(
+            command, sourceContentfulService, targetContentfulService, cancellationToken);
     }
 
     private static async Task ThrowIfLocalesDifferBetweenEnvironmentsAsync(
@@ -89,6 +89,33 @@ public class TypeCloneCommandHandler(
     {
         return await contentfulService.CreateContentTypeAsync(
             contentType.Clone(), cancellationToken);
+    }
+    
+    private async Task CloneContentAsync(
+        TypeCloneCommand command,
+        IContentfulService sourceContentfulService,
+        IContentfulService targetContentfulService,
+        CancellationToken cancellationToken)
+    {
+        var contentClonerInput = CreateContentClonerInput(
+            command, sourceContentfulService, targetContentfulService);
+
+        await contentCloner.CloneAsync(
+            contentClonerInput, cancellationToken);
+    }
+    
+    private static ContentClonerInput CreateContentClonerInput(
+        TypeCloneCommand command,
+        IContentfulService sourceContentfulService,
+        IContentfulService targetContentfulService)
+    {
+        return new ContentClonerInput
+        {
+            ContentTypeId = command.ContentTypeId,
+            SourceContentfulService = sourceContentfulService,
+            TargetContentfulService = targetContentfulService,
+            PublishEntries = command.ShouldPublish,
+        };
     }
 }
 

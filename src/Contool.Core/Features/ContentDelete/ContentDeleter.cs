@@ -13,13 +13,13 @@ public class ContentDeleter(
 {
     private const int DefaultBatchSize = 50;
 
-    public async Task DeleteAsync(string contentTypeId, IContentfulService contentfulService, bool includeArchived, CancellationToken cancellationToken = default)
+    public async Task DeleteAsync(ContentDeleterInput input, CancellationToken cancellationToken = default)
     {
-        var entries = contentfulService.GetEntriesAsync(
-            contentTypeId, DefaultBatchSize, PagingMode.RestartFromBeginning, cancellationToken);
+        var entries = input.ContentfulService.GetEntriesAsync(
+            input.ContentTypeId, DefaultBatchSize, PagingMode.RestartFromBeginning, cancellationToken);
 
         await DeleteEntriesAsync(
-            entries, contentfulService, includeArchived, cancellationToken);
+            entries, input.ContentfulService, input.IncludeArchived, cancellationToken);
     }
 
     private async Task DeleteEntriesAsync(
