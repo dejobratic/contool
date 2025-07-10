@@ -1,4 +1,5 @@
 using Contool.Console.Infrastructure.UI.Extensions;
+using Contool.Console.Infrastructure.Utils.Extensions;
 using Contool.Core.Infrastructure.Validation;
 using Spectre.Console;
 
@@ -64,7 +65,7 @@ public class ConsoleValidationSummaryDisplayService : IValidationSummaryDisplayS
         foreach (var errorGroup in errors.GroupBy(e => e.Type))
         {
             table.AddRow(
-                new Markup($"    {errorGroup.Key}", Styles.Soft),
+                new Markup($"    {errorGroup.Key.ToScreamingSnakeCase()}", Styles.Soft),
                 new Markup(" : ", Styles.Dim),
                 new Markup($"[{Styles.Alert.ToMarkup()}]{errorGroup.Count()}[/] errors", Styles.Dim));
         }
@@ -83,7 +84,7 @@ public class ConsoleValidationSummaryDisplayService : IValidationSummaryDisplayS
         foreach (var warningGroup in warnings.GroupBy(w => w.Type))
         {
             table.AddRow(
-                new Markup($"    {warningGroup.Key}", Styles.Soft),
+                new Markup($"    {warningGroup.Key.ToScreamingSnakeCase()}", Styles.Soft),
                 new Markup(" : ", Styles.Dim),
                 new Markup($"[{Styles.Alert.ToMarkup()}]{warningGroup.Count()}[/] warnings", Styles.Dim));
         }
