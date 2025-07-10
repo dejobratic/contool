@@ -1,6 +1,7 @@
 using Contool.Console.Infrastructure.Utils;
+using Contool.Console.Infrastructure.Utils.Models;
 
-namespace Contool.Console.Infrastructure.UI;
+namespace Contool.Console.Infrastructure.UI.Services;
 
 public interface ICommandInfoDisplayService
 {

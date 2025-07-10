@@ -1,7 +1,8 @@
 ﻿using Contool.Console.Infrastructure.Logging;
 using Contool.Console.Infrastructure.Secrets;
-using Contool.Console.Infrastructure.UI;
+using Contool.Console.Infrastructure.UI.Services;
 using Contool.Core;
+using Contool.Core.Features.ContentUpload.Validation;
 using Contool.Core.Infrastructure.Utils.Services;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Configuration;
@@ -28,7 +29,10 @@ public static class Dependencies
         return new ServiceCollection()
             .AddContoolDependencies(configuration)
             .AddConsoleDependencies()
-            .AddSingleton(protector);
+            .AddSingleton(protector)
+            
+            // Core decorators
+            .Decorate<IContentUploadEntryValidator, ContentUploadEntryValidatorConsoleDecorator>();
     }
 
     private static IServiceCollection AddConsoleDependencies(this IServiceCollection services)
@@ -41,6 +45,7 @@ public static class Dependencies
             .AddSingleton<IContentfulInfoDisplayService, ConsoleContentfulInfoDisplayService>()
             .AddSingleton<IErrorDisplayService, ConsoleErrorDisplayService>()
             .AddSingleton<IOperationsDisplayService, ConsoleOperationDisplayService>()
+            .AddSingleton<IValidationSummaryDisplayService, ConsoleValidationSummaryDisplayService>()
 
             // Logging
             .AddLogging(builder =>

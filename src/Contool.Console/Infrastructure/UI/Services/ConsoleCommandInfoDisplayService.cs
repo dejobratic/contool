@@ -1,9 +1,9 @@
 using Contool.Console.Infrastructure.UI.Extensions;
 using Contool.Console.Infrastructure.Utils;
+using Contool.Console.Infrastructure.Utils.Models;
 using Spectre.Console;
-using Spectre.Console.Rendering;
 
-namespace Contool.Console.Infrastructure.UI;
+namespace Contool.Console.Infrastructure.UI.Services;
 
 public class ConsoleCommandInfoDisplayService : ICommandInfoDisplayService
 {

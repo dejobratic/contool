@@ -7,5 +7,6 @@ public enum ValidationErrorType
     RequiredFieldMissing,
     InvalidField,
     InvalidFieldType,
-    InvalidFieldValue
+    InvalidFieldValue,
+    InvalidLocale
 }

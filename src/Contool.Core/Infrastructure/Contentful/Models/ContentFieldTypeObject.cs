@@ -15,5 +15,5 @@ internal class ContentFieldTypeObject() : ContentFieldType("Object")
         => (raw as string)?.DeserializeFromJsonString<JToken>();
 
     public override bool IsValidRawValue(object? value)
-        => value is string || value is JObject;
+        => value is string or JObject;
 }

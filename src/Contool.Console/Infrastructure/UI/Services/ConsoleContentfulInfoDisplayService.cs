@@ -4,12 +4,11 @@ using Contool.Core.Infrastructure.Contentful.Extensions;
 using Contool.Core.Infrastructure.Contentful.Models;
 using Contool.Core.Infrastructure.Contentful.Services;
 using Spectre.Console;
-
 using Environment = Contentful.Core.Models.Management.ContentfulEnvironment;
 using Table = Spectre.Console.Table;
 using Text = Spectre.Console.Text;
 
-namespace Contool.Console.Infrastructure.UI;
+namespace Contool.Console.Infrastructure.UI.Services;
 
 public class ConsoleContentfulInfoDisplayService : IContentfulInfoDisplayService
 {

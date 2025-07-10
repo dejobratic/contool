@@ -1,4 +1,4 @@
-namespace Contool.Console.Infrastructure.Utils;
+namespace Contool.Console.Infrastructure.Utils.Models;
 
 public static class CommandResult
 {

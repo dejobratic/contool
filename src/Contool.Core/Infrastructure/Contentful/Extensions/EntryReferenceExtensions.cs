@@ -16,15 +16,11 @@ public static class EntryReferenceExtensions
 
         foreach (var field in entry.Fields)
         {
-            if (field.Value is JObject localizedObject)
-            {
-                foreach (var localeProperty in localizedObject.Properties())
-                {
-                    var localeValue = localeProperty.Value;
-
-                    ExtractReferences(referencedIds, localeValue);
-                }
-            }
+            if (field.Value is not JObject localizedObject)
+                continue;
+            
+            foreach (var localeProperty in localizedObject.Properties())
+                ExtractReferences(referencedIds, localeProperty.Value);
         }
 
         return referencedIds;

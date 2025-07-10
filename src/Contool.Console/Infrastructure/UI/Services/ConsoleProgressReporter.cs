@@ -1,8 +1,9 @@
-﻿using Contool.Core.Infrastructure.Utils.Models;
+﻿using Contool.Console.Infrastructure.UI.Models;
+using Contool.Core.Infrastructure.Utils.Models;
 using Contool.Core.Infrastructure.Utils.Services;
 using Spectre.Console;
 
-namespace Contool.Console.Infrastructure.UI;
+namespace Contool.Console.Infrastructure.UI.Services;
 
 public class ConsoleProgressReporter : IProgressReporter, IDisposable
 {

@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console.Cli;
 
-namespace Contool.Console.Infrastructure.Utils;
+namespace Contool.Console.Infrastructure.Utils.Services;
 
 public sealed class TypeRegistrar(IServiceCollection builder) : ITypeRegistrar
 {

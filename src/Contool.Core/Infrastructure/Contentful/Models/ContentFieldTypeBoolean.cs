@@ -6,7 +6,7 @@ internal class ContentFieldTypeBoolean() : ContentFieldType("Boolean")
 {
     public override Type DotnetType => typeof(bool);
 
-    public override object? GetValue(object prop, Schema? _)
+    public override object GetValue(object prop, Schema? _)
         => Convert.ToBoolean(prop);
 
     public override object? Deserialize(object? raw, Schema? _)

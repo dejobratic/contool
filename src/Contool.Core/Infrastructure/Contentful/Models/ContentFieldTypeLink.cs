@@ -15,5 +15,5 @@ internal class ContentFieldTypeLink() : ContentFieldType("Link")
         => raw?.ToLink(schema?.LinkType);
 
     public override bool IsValidRawValue(object? value)
-        => value is string || value is JObject;
+        => value is string or JObject;
 }

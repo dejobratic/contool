@@ -9,7 +9,7 @@ using Spectre.Console.Cli;
 using System.Runtime.InteropServices;
 using System.Text;
 
-using TypeRegistrar = Contool.Console.Infrastructure.Utils.TypeRegistrar;
+using TypeRegistrar = Contool.Console.Infrastructure.Utils.Services.TypeRegistrar;
 
 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 {

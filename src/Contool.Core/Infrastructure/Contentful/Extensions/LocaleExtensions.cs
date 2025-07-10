@@ -7,7 +7,7 @@ public static class LocaleExtensions
 {
     private static readonly LocaleEqualityComparer LocaleComparer = new();
 
-    public static bool IsEquivalentTo(this IEnumerable<Locale> source, IEnumerable<Locale> target)
+    public static bool IsEquivalentTo(this IEnumerable<Locale>? source, IEnumerable<Locale>? target)
     {
         if (ReferenceEquals(source, target))
             return true;

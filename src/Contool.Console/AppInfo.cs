@@ -1,6 +1,6 @@
-﻿using Contool.Console.Infrastructure.Utils;
+﻿using Contool.Console.Infrastructure.Utils.Services;
 
-namespace Contool.Console.Infrastructure;
+namespace Contool.Console;
 
 public static class AppInfo
 {

@@ -2,7 +2,7 @@ using Contool.Console.Infrastructure.UI.Extensions;
 using Contool.Core.Infrastructure.Utils.Models;
 using Spectre.Console;
 
-namespace Contool.Console.Infrastructure.UI;
+namespace Contool.Console.Infrastructure.UI.Services;
 
 public class ConsoleOperationDisplayService : IOperationsDisplayService
 {

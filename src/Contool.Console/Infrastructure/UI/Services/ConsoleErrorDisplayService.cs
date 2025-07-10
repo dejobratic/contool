@@ -1,6 +1,6 @@
 using Spectre.Console;
 
-namespace Contool.Console.Infrastructure.UI;
+namespace Contool.Console.Infrastructure.UI.Services;
 
 public class ConsoleErrorDisplayService : IErrorDisplayService
 {

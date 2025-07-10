@@ -1,7 +1,7 @@
 ﻿using Contool.Core.Infrastructure.Utils.Models;
 using Contool.Core.Infrastructure.Utils.Services;
 
-namespace Contool.Console.Infrastructure.UI;
+namespace Contool.Console.Infrastructure.UI.Services;
 
 public class ConsoleProgressReporterLoggingDecorator(
     IProgressReporter inner,

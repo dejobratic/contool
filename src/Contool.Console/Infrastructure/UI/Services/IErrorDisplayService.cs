@@ -1,4 +1,4 @@
-namespace Contool.Console.Infrastructure.UI;
+namespace Contool.Console.Infrastructure.UI.Services;
 
 public interface IErrorDisplayService
 {

@@ -6,7 +6,7 @@ internal class ContentFieldTypeText() : ContentFieldType("Text")
 {
     public override Type DotnetType => typeof(string);
 
-    public override object? GetValue(object prop, Schema? _)
+    public override object? GetValue(object? prop, Schema? _)
         => prop?.ToString();
 
     public override object? Deserialize(object? raw, Schema? _)

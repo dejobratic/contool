@@ -1,7 +1,7 @@
 ﻿using Spectre.Console;
 using Spectre.Console.Rendering;
 
-namespace Contool.Console.Infrastructure.UI;
+namespace Contool.Console.Infrastructure.UI.Models;
 
 public sealed class ProgressBarRemainingTimeColumn : ProgressColumn
 {

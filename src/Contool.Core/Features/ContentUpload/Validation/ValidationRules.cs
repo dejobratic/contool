@@ -1,4 +1,5 @@
 using Contentful.Core.Models;
+using Contentful.Core.Models.Management;
 using Contool.Core.Infrastructure.Contentful.Extensions;
 using Contool.Core.Infrastructure.Contentful.Models;
 using Contool.Core.Infrastructure.Utils.Models;
@@ -16,7 +17,7 @@ public static class ValidationRules
         int entryIndex,
         ConcurrentHashSet<string> duplicateIds,
         List<ValidationError> errors,
-        ILogger logger)
+        List<ValidationWarning> warnings)
     {
         var entryId = entry.GetId();
         var entryContentTypeId = entry.GetContentTypeId();
@@ -24,9 +25,13 @@ public static class ValidationRules
         // Validate sys.id
         if (string.IsNullOrWhiteSpace(entryId))
         {
-            logger.LogInformation(
-                "Entry #{EntryIndex}: Missing 'sys.id' - ID will be auto-generated",
-                entryIndex + 1);
+            var warning = new ValidationWarning(
+                entryIndex,
+                "sys.id",
+                "Missing 'sys.id' - ID will be auto-generated",
+                ValidationErrorType.RequiredFieldMissing);
+
+            warnings.Add(warning);
         }
         else if (!duplicateIds.Add(entryId))
         {
@@ -37,18 +42,18 @@ public static class ValidationRules
                 ValidationErrorType.DuplicateId);
 
             errors.Add(error);
-
-            logger.LogWarning(
-                "Entry #{EntryIndex}: Duplicate ID '{EntryId}' detected",
-                entryIndex + 1, entryId);
         }
 
         // Validate sys.contentType
         if (string.IsNullOrWhiteSpace(entryContentTypeId))
         {
-            logger.LogInformation(
-                "Entry #{EntryIndex}: Missing 'sys.contentType' - will be set to '{ExpectedType}'",
-                entryIndex + 1, contentType.SystemProperties.Id);
+            var warning = new ValidationWarning(
+                entryIndex,
+                "sys.contentType",
+                $"Missing 'sys.contentType' - will be set to '{contentType.SystemProperties.Id}'",
+                ValidationErrorType.RequiredFieldMissing);
+
+            warnings.Add(warning);
         }
         else if (!string.Equals(entryContentTypeId, contentType.SystemProperties.Id, StringComparison.OrdinalIgnoreCase))
         {
@@ -59,10 +64,6 @@ public static class ValidationRules
                 ValidationErrorType.ContentTypeMismatch);
 
             errors.Add(error);
-
-            logger.LogWarning(
-                "Entry #{EntryIndex}: Content type mismatch - expected '{ExpectedType}', got '{ActualType}'",
-                entryIndex + 1, contentType.SystemProperties.Id, entryContentTypeId);
         }
     }
 
@@ -70,8 +71,7 @@ public static class ValidationRules
         Entry<dynamic> entry,
         ContentType contentType,
         int entryIndex,
-        List<ValidationError> errors,
-        ILogger logger)
+        List<ValidationError> errors)
     {
         var requiredFields = contentType.Fields?.Where(f => f.Required) ?? [];
         var entryFields = entry.Fields as JObject ?? new JObject();
@@ -79,8 +79,7 @@ public static class ValidationRules
         foreach (var field in requiredFields)
         {
             if (entryFields.TryGetValue(field.Id, out var value)
-                && value is not null
-                && (value is not JToken str || !string.IsNullOrWhiteSpace(str.ToString())))
+                && !string.IsNullOrWhiteSpace(value.ToString()))
             {
                 continue;
             }
@@ -92,10 +91,6 @@ public static class ValidationRules
                 ValidationErrorType.RequiredFieldMissing);
 
             errors.Add(error);
-
-            logger.LogWarning(
-                "Entry #{EntryIndex}: Required field '{FieldName}' ({FieldId}) is missing or empty",
-                entryIndex + 1, field.Name, field.Id);
         }
     }
 
@@ -103,8 +98,7 @@ public static class ValidationRules
         Entry<dynamic> entry,
         ContentType contentType,
         int entryIndex,
-        List<ValidationError> errors,
-        ILogger logger)
+        List<ValidationError> errors)
     {
         var entryFields = entry.Fields as IDictionary<string, object?> ?? new Dictionary<string, object?>();
         var validFieldIds = new HashSet<string>(contentType.Fields?.Select(f => f.Id) ?? []);
@@ -121,10 +115,6 @@ public static class ValidationRules
                 ValidationErrorType.InvalidField);
 
             errors.Add(error);
-
-            logger.LogWarning(
-                "Entry #{EntryIndex}: Field '{FieldId}' does not exist in content type '{ContentTypeId}'",
-                entryIndex + 1, entryField.Key, contentType.SystemProperties.Id);
         }
     }
 
@@ -132,8 +122,7 @@ public static class ValidationRules
         Entry<dynamic> entry,
         ContentType contentType,
         int entryIndex,
-        List<ValidationError> errors,
-        ILogger logger)
+        List<ValidationError> errors)
     {
         var entryFields = entry.Fields as IDictionary<string, object?> ?? new Dictionary<string, object?>();
         var fieldMap = contentType.Fields?.ToDictionary(f => f.Id) ?? new Dictionary<string, Field>();
@@ -148,7 +137,7 @@ public static class ValidationRules
 
             var isValid = ContentFieldType.TryFromName(fieldDefinition.Type, out var contentFieldType)
                 && contentFieldType!.IsValidRawValue(fieldValue);
-
+            
             if (isValid)
                 continue;
 
@@ -159,11 +148,36 @@ public static class ValidationRules
                 ValidationErrorType.InvalidFieldType);
 
             errors.Add(error);
+        }
+    }
 
-            logger.LogWarning(
-                "Entry #{EntryIndex}: Field '{FieldName}' ({FieldId}) has invalid type. Expected: {ExpectedType}, Got: {ActualType}",
-                entryIndex + 1, fieldDefinition.Name, fieldId, fieldDefinition.Type,
-                fieldValue.GetType().Name);
+    public static void ValidateLocales(
+        Entry<dynamic> entry,
+        IReadOnlyList<Locale> locales,
+        int entryIndex,
+        List<ValidationError> errors)
+    {
+        var entryFields = entry.Fields as IDictionary<string, object?> ?? new Dictionary<string, object?>();
+        var validLocales = new HashSet<string>(locales.Select(l => l.Code));
+
+        foreach (var fieldName in entryFields.Keys)
+        {
+            if (!fieldName.Contains('.'))
+                continue; // Not a localized field
+
+            var contentFieldName = new ContentFieldName(fieldName);
+            var locale = contentFieldName.Locale;
+
+            if (!validLocales.Contains(locale))
+            {
+                var error = new ValidationError(
+                    entryIndex,
+                    fieldName,
+                    $"Field '{fieldName}' uses invalid locale '{locale}'. Valid locales are: {string.Join(", ", validLocales)}",
+                    ValidationErrorType.InvalidLocale);
+
+                errors.Add(error);
+            }
         }
     }
 }

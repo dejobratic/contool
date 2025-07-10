@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace Contool.Console.Infrastructure.Utils;
+namespace Contool.Console.Infrastructure.Utils.Services;
 
 public static class VersionChecker
 {

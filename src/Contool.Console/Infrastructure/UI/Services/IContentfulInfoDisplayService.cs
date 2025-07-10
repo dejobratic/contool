@@ -1,6 +1,6 @@
 using Contool.Core.Infrastructure.Contentful.Services;
 
-namespace Contool.Console.Infrastructure.UI;
+namespace Contool.Console.Infrastructure.UI.Services;
 
 public interface IContentfulInfoDisplayService
 {

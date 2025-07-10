@@ -32,7 +32,8 @@ public static class ContentfulManagementClientAdapterExtensions
 
         var allReferencedEntryIds = referencedEntryIdsPerEntry
             .SelectMany(kvp => kvp.Value)
-            .Distinct();
+            .Distinct()
+            .ToList();
 
         var queryString = QueryBuilder<Entry<dynamic>>.New
             .FieldIncludes("sys.id", allReferencedEntryIds)

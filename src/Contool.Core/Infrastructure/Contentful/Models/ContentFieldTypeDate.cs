@@ -7,7 +7,7 @@ internal class ContentFieldTypeDate() : ContentFieldType("Date")
 {
     public override Type DotnetType => typeof(DateTime);
 
-    public override object? GetValue(object prop, Schema? _)
+    public override object GetValue(object prop, Schema? _)
         => DateTime.Parse(prop.ToString()!);
 
     public override object? Deserialize(object? raw, Schema? _)
@@ -24,7 +24,7 @@ internal class ContentFieldTypeDate() : ContentFieldType("Date")
 
         if (date == DateTime.MinValue) return null;
 
-        // Contentful doesn't support milliseconds although it states it is ISO 8601 compliant :(
+        // Contentful doesn't support milliseconds, although it states it is ISO 8601 compliant :(
         return StripMilliseconds(date);
     }
 

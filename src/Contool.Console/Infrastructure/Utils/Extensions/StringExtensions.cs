@@ -1,4 +1,4 @@
-﻿namespace Contool.Console.Infrastructure.Extensions;
+﻿namespace Contool.Console.Infrastructure.Utils.Extensions;
 
 public static class StringExtensions
 {

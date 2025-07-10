@@ -1,4 +1,5 @@
 using Contentful.Core.Models;
+using Contentful.Core.Models.Management;
 using Contool.Core.Infrastructure.Utils.Models;
 using Contool.Core.Infrastructure.Validation;
 using Microsoft.Extensions.Logging;
@@ -17,6 +18,10 @@ public class ContentUploadEntryValidator(
         
         var contentType = await input.ContentfulService
             .GetContentTypeAsync(input.ContentTypeId, cancellationToken);
+        
+        var locales = (await input.ContentfulService
+            .GetLocalesAsync(cancellationToken))
+            .ToList();
 
         if (contentType == null)
         {
@@ -24,13 +29,11 @@ public class ContentUploadEntryValidator(
             return summary;
         }
 
-        logger.LogInformation("Starting validation for content type '{ContentTypeId}'", input.ContentTypeId);
-
         var index = 0;
 
         await foreach (var entry in input.Entries.WithCancellation(cancellationToken))
         {
-            var result = ValidateEntry(entry, contentType, index, duplicateIds);
+            var result = ValidateEntry(entry, contentType, locales, index, duplicateIds, summary.Warnings);
             
             if (result.IsValid)
             {
@@ -44,42 +47,25 @@ public class ContentUploadEntryValidator(
             index++;
         }
 
-        LogValidationSummary(summary, index);
         return summary;
     }
 
-    private EntryValidationResult ValidateEntry(
+    private static EntryValidationResult ValidateEntry(
         Entry<dynamic> entry,
         ContentType contentType,
+        IReadOnlyList<Locale> locales,
         int index,
-        ConcurrentHashSet<string> duplicateIds)
+        ConcurrentHashSet<string> duplicateIds,
+        List<ValidationWarning> warnings)
     {
         var errors = new List<ValidationError>();
 
-        ValidationRules.ValidateSystemFields(entry, contentType, index, duplicateIds, errors, logger);
-        ValidationRules.ValidateRequiredFields(entry, contentType, index, errors, logger);
-        ValidationRules.ValidateFieldsExist(entry, contentType, index, errors, logger);
-        ValidationRules.ValidateFieldTypes(entry, contentType, index, errors, logger);
+        ValidationRules.ValidateSystemFields(entry, contentType, index, duplicateIds, errors, warnings);
+        ValidationRules.ValidateRequiredFields(entry, contentType, index, errors);
+        ValidationRules.ValidateFieldsExist(entry, contentType, index, errors);
+        ValidationRules.ValidateFieldTypes(entry, contentType, index, errors);
+        ValidationRules.ValidateLocales(entry, locales, index, errors);
 
         return new EntryValidationResult(errors.Count == 0, errors);
-    }
-
-    private void LogValidationSummary(EntryValidationSummary summary, int total)
-    {
-        if (summary.Errors.Count == 0)
-        {
-            logger.LogInformation("Validation completed successfully - {ValidCount}/{TotalCount} entries are valid",
-                summary.ValidEntries.Count, total);
-        }
-        else
-        {
-            logger.LogWarning("Validation completed with {ErrorCount} errors - {ValidCount}/{TotalCount} entries are valid.",
-                summary.Errors.Count, summary.ValidEntries.Count, total);
-
-            foreach (var errorGroup in summary.Errors.GroupBy(e => e.Type))
-            {
-                logger.LogWarning("  - {ErrorType}: {Count} errors", errorGroup.Key, errorGroup.Count());
-            }
-        }
     }
 }
