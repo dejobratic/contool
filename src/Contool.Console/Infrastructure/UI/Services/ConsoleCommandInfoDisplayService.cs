@@ -29,7 +29,7 @@ public class ConsoleCommandInfoDisplayService : ICommandInfoDisplayService
     {
         var table = new Table()
             .NoBorder()
-            .AddColumn(new TableColumn(new Text("Command", Styles.Normal)))
+            .AddColumn(new TableColumn(new Text("Command", Styles.Heading)))
             .AddColumn(new TableColumn(new Text(" : ", Styles.Dim)))
             .AddColumn(new TableColumn(new Markup(command, Styles.Alert)));
 
@@ -43,7 +43,7 @@ public class ConsoleCommandInfoDisplayService : ICommandInfoDisplayService
         else
         {
             table.AddRow(
-                new Text("Options", Styles.Normal),
+                new Text("Options", Styles.Heading),
                 new Text(string.Empty),
                 new Text(string.Empty));
 
@@ -74,16 +74,16 @@ public class ConsoleCommandInfoDisplayService : ICommandInfoDisplayService
     {
         return new Table()
             .NoBorder()
-            .AddColumn(new TableColumn(new Text("Profiling", Styles.Normal)))
+            .AddColumn(new TableColumn(new Text("Profiling", Styles.Heading)))
             .AddEmptyColumn()
             .AddEmptyColumn()
             .AddRow(
-                new Text("  Execution Time", Styles.Normal),
+                new Text("  Execution Time", Styles.Soft),
                 new Text(" : ", Styles.Dim),
-                new Text($"{result.FormattedElapsedTime}", Styles.Normal))
+                new Text($"{result.FormattedElapsedTime}", Styles.Alert))
             .AddRow(
-                new Text("  Peak Memory Usage", Styles.Normal),
+                new Text("  Peak Memory Usage", Styles.Soft),
                 new Text(" : ", Styles.Dim),
-                new Text($"{result.FormatedMemoryUsage}", Styles.Normal));
+                new Text($"{result.FormatedMemoryUsage}", Styles.Alert));
     }
 }

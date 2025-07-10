@@ -4,7 +4,6 @@ using Contool.Core.Infrastructure.Contentful.Extensions;
 using Contool.Core.Infrastructure.Contentful.Models;
 using Contool.Core.Infrastructure.Utils.Models;
 using Contool.Core.Infrastructure.Validation;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 
 namespace Contool.Core.Features.ContentUpload.Validation;

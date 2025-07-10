@@ -14,7 +14,8 @@ public class ContentUploadEntryValidatorConsoleDecorator(
     {
         var summary = await validator.ValidateAsync(input, cancellationToken);
         
-        var totalEntries = summary.ValidEntries.Count + summary.Errors.Select(e => e.EntryIndex).Distinct().Count();
+        var totalEntries = summary.ValidEntries.Count + summary.Errors.DistinctBy(e => e.EntryIndex).Count();
+        
         displayService.DisplayValidationSummary(summary, totalEntries);
         
         return summary;

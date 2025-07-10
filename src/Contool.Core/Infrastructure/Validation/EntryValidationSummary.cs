@@ -1,5 +1,4 @@
 using Contentful.Core.Models;
-using Contool.Core.Features.ContentUpload.Validation;
 
 namespace Contool.Core.Infrastructure.Validation;
 

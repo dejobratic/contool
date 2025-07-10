@@ -6,8 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Contool.Core.Features.ContentUpload.Validation;
 
-public class ContentUploadEntryValidator(
-    ILogger<ContentUploadEntryValidator> logger) : IContentUploadEntryValidator
+public class ContentUploadEntryValidator : IContentUploadEntryValidator
 {
     public async Task<EntryValidationSummary> ValidateAsync(
         ContentUploaderInput input,
@@ -16,18 +15,12 @@ public class ContentUploadEntryValidator(
         var summary = new EntryValidationSummary();
         var duplicateIds = new ConcurrentHashSet<string>();
         
-        var contentType = await input.ContentfulService
-            .GetContentTypeAsync(input.ContentTypeId, cancellationToken);
+        var contentType = (await input.ContentfulService
+            .GetContentTypeAsync(input.ContentTypeId, cancellationToken))!;
         
         var locales = (await input.ContentfulService
             .GetLocalesAsync(cancellationToken))
             .ToList();
-
-        if (contentType == null)
-        {
-            logger.LogError("Content type '{ContentTypeId}' not found. Cannot validate entries.", input.ContentTypeId);
-            return summary;
-        }
 
         var index = 0;
 

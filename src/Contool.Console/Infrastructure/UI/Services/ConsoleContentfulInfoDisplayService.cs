@@ -52,19 +52,19 @@ public class ConsoleContentfulInfoDisplayService : IContentfulInfoDisplayService
         return new Table()
             .NoBorder()
             .AddColumns(
-                new TableColumn(new Text("Contentful", Styles.Normal)),
+                new TableColumn(new Text("Contentful", Styles.Heading)),
                 new TableColumn(new Text(string.Empty)),
                 new TableColumn(new Text(string.Empty)))
             .AddRow(
-                new Text("  Space"),
+                new Text("  Space", Styles.Soft),
                 new Text(" : ", Styles.Dim),
                 new Markup($"{space.GetId()} [{Styles.Dim.ToMarkup()}]({space.Name})[/]", Styles.Alert))
             .AddRow(
-                new Text("  Env"),
+                new Text("  Environment", Styles.Soft),
                 new Text(" : ", Styles.Dim),
                 new Markup($"{environment.GetId()}", Styles.Alert))
             .AddRow(
-                new Text("  User"),
+                new Text("  User", Styles.Soft),
                 new Text(" : ", Styles.Dim),
                 new Markup($"{user.Email} [{Styles.Dim.ToMarkup()}]({user.GetId()})[/]", Styles.Normal));
     }
@@ -73,14 +73,14 @@ public class ConsoleContentfulInfoDisplayService : IContentfulInfoDisplayService
     {
         var table = new Table()
             .NoBorder()
-            .AddColumn(new TableColumn(new Markup($"Content Types [{Styles.Dim.ToMarkup()}]({contentTypes.Count})[/]", Styles.Normal)))
+            .AddColumn(new TableColumn(new Markup($"Content Types [{Styles.Dim.ToMarkup()}]({contentTypes.Count})[/]", Styles.Heading)))
             .AddColumn(string.Empty)
             .AddColumn(string.Empty);
 
         foreach (var type in contentTypes)
         {
             table.AddRow(
-                new Markup($"  {type.Name.Trim()}", Styles.Normal),
+                new Markup($"  {type.Name.Trim()}", Styles.Soft),
                 new Markup(" : ", Styles.Dim),
                 new Markup($"{type.GetId()} [{Styles.Dim.ToMarkup()}]({type.TotalEntries})[/]", Styles.Alert));
         }
@@ -92,7 +92,7 @@ public class ConsoleContentfulInfoDisplayService : IContentfulInfoDisplayService
     {
         var table = new Table()
             .NoBorder()
-            .AddColumn(new TableColumn(new Markup($"Locales [{Styles.Dim.ToMarkup()}]({locales.Count})[/]", Styles.Normal)))
+            .AddColumn(new TableColumn(new Markup($"Locales [{Styles.Dim.ToMarkup()}]({locales.Count})[/]", Styles.Heading)))
             .AddColumn(string.Empty)
             .AddColumn(string.Empty);
 
