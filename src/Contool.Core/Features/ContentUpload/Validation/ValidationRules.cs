@@ -99,18 +99,18 @@ public static class ValidationRules
         int entryIndex,
         List<ValidationError> errors)
     {
-        var entryFields = entry.Fields as IDictionary<string, object?> ?? new Dictionary<string, object?>();
+        var entryFields = entry.Fields as JObject ?? new JObject();
         var validFieldIds = new HashSet<string>(contentType.Fields?.Select(f => f.Id) ?? []);
 
-        foreach (var entryField in entryFields)
+        foreach (var (fieldId, _) in entryFields)
         {
-            if (validFieldIds.Contains(entryField.Key))
+            if (validFieldIds.Contains(fieldId))
                 continue;
 
             var error = new ValidationError(
                 entryIndex,
-                entryField.Key,
-                $"Field '{entryField.Key}' does not exist in content type '{contentType.SystemProperties.Id}'",
+                fieldId,
+                $"Field '{fieldId}' does not exist in content type '{contentType.SystemProperties.Id}'",
                 ValidationErrorType.InvalidField);
 
             errors.Add(error);
@@ -123,7 +123,7 @@ public static class ValidationRules
         int entryIndex,
         List<ValidationError> errors)
     {
-        var entryFields = entry.Fields as IDictionary<string, object?> ?? new Dictionary<string, object?>();
+        var entryFields = entry.Fields as JObject ?? new JObject();
         var fieldMap = contentType.Fields?.ToDictionary(f => f.Id) ?? new Dictionary<string, Field>();
 
         foreach (var (fieldId, fieldValue) in entryFields)
@@ -156,27 +156,27 @@ public static class ValidationRules
         int entryIndex,
         List<ValidationError> errors)
     {
-        var entryFields = entry.Fields as IDictionary<string, object?> ?? new Dictionary<string, object?>();
+        var entryFields = entry.Fields as JObject ?? new JObject();
         var validLocales = new HashSet<string>(locales.Select(l => l.Code));
 
-        foreach (var fieldName in entryFields.Keys)
+        foreach (var (fieldId, _) in entryFields)
         {
-            if (!fieldName.Contains('.'))
+            if (!fieldId.Contains('.'))
                 continue; // Not a localized field
 
-            var contentFieldName = new ContentFieldName(fieldName);
+            var contentFieldName = new ContentFieldName(fieldId);
             var locale = contentFieldName.Locale;
 
-            if (!validLocales.Contains(locale))
-            {
-                var error = new ValidationError(
-                    entryIndex,
-                    fieldName,
-                    $"Field '{fieldName}' uses invalid locale '{locale}'. Valid locales are: {string.Join(", ", validLocales)}",
-                    ValidationErrorType.InvalidLocale);
+            if (validLocales.Contains(locale))
+                continue;
+            
+            var error = new ValidationError(
+                entryIndex,
+                fieldId,
+                $"Field '{fieldId}' uses invalid locale '{locale}'. Valid locales are: {string.Join(", ", validLocales)}",
+                ValidationErrorType.InvalidLocale);
 
-                errors.Add(error);
-            }
+            errors.Add(error);
         }
     }
 }

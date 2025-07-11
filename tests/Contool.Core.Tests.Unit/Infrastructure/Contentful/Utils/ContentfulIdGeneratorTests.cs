@@ -9,7 +9,7 @@ public class ContentfulIdGeneratorTests
     public void GivenNewId_WhenCalled_ThenIdStartsWithPrefix()
     {
         // Arrange
-        var expectedPrefix = "contool-";
+        const string expectedPrefix = "contool-";
 
         // Act
         var actual = ContentfulIdGenerator.NewId();
@@ -22,7 +22,7 @@ public class ContentfulIdGeneratorTests
     public void GivenNewId_WhenCalled_ThenIdHasCorrectLength()
     {
         // Arrange
-        var expectedLength = 30; // "contool-" (8 chars) + 22 chars
+        const int expectedLength = 30; // "contool-" (8 chars) + 22 chars
 
         // Act
         var actual = ContentfulIdGenerator.NewId();
@@ -39,7 +39,7 @@ public class ContentfulIdGeneratorTests
         var regex = new Regex($"^[{Regex.Escape(validCharSet)}]+$");
 
         // Act
-        var actual = ContentfulIdGenerator.NewId().Substring(8); // Exclude "contool-"
+        var actual = ContentfulIdGenerator.NewId()[8..]; // Exclude "contool-"
 
         // Assert
         Assert.Matches(regex, actual);

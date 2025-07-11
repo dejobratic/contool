@@ -13,5 +13,5 @@ internal class ContentFieldTypeText() : ContentFieldType("Text")
         => raw?.ToString();
 
     public override bool IsValidRawValue(object? value)
-        => value is string;
+        => value is string || (value != null && value.ToString() is not null);
 }

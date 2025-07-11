@@ -10,8 +10,8 @@ public class OutputContentTests
     {
         // Arrange
         var path = Path.Combine("C:", "Test");
-        var name = "Output";
-        var type = "CSV";
+        const string name = "Output";
+        const string type = "CSV";
         var content = new MockAsyncEnumerableWithTotal<dynamic>();
 
         // Act
@@ -27,9 +27,9 @@ public class OutputContentTests
     public void GivenInvalidType_WhenConstructorIsCalled_ThenArgumentExceptionIsThrown()
     {
         // Arrange
-        var path = "C:\\Test";
-        var name = "Output";
-        var type = "Unsupported";
+        const string path = "C:\\Test";
+        const string name = "Output";
+        const string type = "Unsupported";
         var content = new MockAsyncEnumerableWithTotal<dynamic>();
 
         // Act & Assert

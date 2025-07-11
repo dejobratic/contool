@@ -110,7 +110,7 @@ public class BatchProcessorTests
             await _sut.ProcessAsync(
                 source: AsyncEnumerableFactory.From([1, 2, 3]),
                 batchSize: 2,
-                batchActionAsync: (batch, _) => throw expectedException);
+                batchActionAsync: (_, _) => throw expectedException);
         });
 
         Assert.Same(expectedException, actualException);

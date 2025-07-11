@@ -2,5 +2,5 @@
 
 public interface IContentfulManagementClientAdapterFactory
 {
-    IContentfulManagementClientAdapter Create(string spaceId, string environmentId, bool usePreviewApi);
+    IContentfulManagementClientAdapter Create(string? spaceId, string? environmentId, bool usePreviewApi);
 }

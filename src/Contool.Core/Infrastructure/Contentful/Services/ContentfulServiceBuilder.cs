@@ -9,7 +9,7 @@ public class ContentfulServiceBuilder(
 {
     private string? _spaceId;
     private string? _environmentId;
-    private bool _usePreviewApi = false;
+    private bool _usePreviewApi;
 
     public IContentfulServiceBuilder WithSpaceId(string? spaceId)
     {
@@ -31,7 +31,7 @@ public class ContentfulServiceBuilder(
 
     public IContentfulService Build()
     {
-        var adapter = adapterFactory.Create(_spaceId!, _environmentId!, _usePreviewApi);
+        var adapter = adapterFactory.Create(_spaceId, _environmentId, _usePreviewApi);
         var operationService = operationServiceFactory.Create(adapter);
 
         var service = new ContentfulService(adapter, operationService);

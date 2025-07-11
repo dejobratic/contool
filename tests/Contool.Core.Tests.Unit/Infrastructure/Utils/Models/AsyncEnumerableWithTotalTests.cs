@@ -53,6 +53,6 @@ public class AsyncEnumerableWithTotalTests
 
         // Assert
         Assert.Equal(3, progressReporter.IncrementCount);
-        Assert.True(progressReporter.IsComplete);
+        Assert.True(progressReporter.CompleteWasCalled);
     }
 }

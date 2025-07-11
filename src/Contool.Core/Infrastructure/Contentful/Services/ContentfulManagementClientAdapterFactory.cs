@@ -16,7 +16,7 @@ public class ContentfulManagementClientAdapterFactory(
 {
     private readonly ContentfulOptions _contentfulOptions = options.Value;
 
-    public IContentfulManagementClientAdapter Create(string spaceId, string environmentId, bool usePreviewApi)
+    public IContentfulManagementClientAdapter Create(string? spaceId, string? environmentId, bool usePreviewApi)
     {
         IContentfulManagementClientAdapter adapter = CreateBaseAdapter(spaceId, environmentId, usePreviewApi);
         adapter = DecorateWithResiliency(adapter);
@@ -28,14 +28,14 @@ public class ContentfulManagementClientAdapterFactory(
     }
 
     private ContentfulManagementClientAdapter CreateBaseAdapter(
-        string spaceId, string environmentId, bool usePreviewApi)
+        string? spaceId, string? environmentId, bool usePreviewApi)
     {
         var client = CreateContentfulClient(spaceId, environmentId, usePreviewApi);
         return new ContentfulManagementClientAdapter(client);
     }
 
     private ContentfulManagementClient CreateContentfulClient(
-        string spaceId, string environmentId, bool usePreviewApi)
+        string? spaceId, string? environmentId, bool usePreviewApi)
         => new(
             httpClientFactory.CreateClient(),
             new ContentfulOptions

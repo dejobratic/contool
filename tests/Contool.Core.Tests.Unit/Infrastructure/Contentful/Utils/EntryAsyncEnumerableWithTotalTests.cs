@@ -65,8 +65,8 @@ public class EntryAsyncEnumerableWithTotalTests
         {
             Items =
             [
-                new() { Fields = "Entry1" },
-                new() { Fields = "Entry2" }
+                new Entry<string> { Fields = "Entry1" },
+                new Entry<string> { Fields = "Entry2" }
             ],
             Total = 4
         };
@@ -75,8 +75,8 @@ public class EntryAsyncEnumerableWithTotalTests
         {
             Items =
             [
-                new() { Fields = "Entry3" },
-                new() { Fields = "Entry4" }
+                new Entry<string> { Fields = "Entry3" },
+                new Entry<string> { Fields = "Entry4" }
             ],
             Total = 4
         };
