@@ -9,6 +9,7 @@ public class MockContentfulServiceBuilder : IContentfulServiceBuilder
     public string? LastEnvironmentId { get; private set; }
     
     private IContentfulService? _service;
+    private Exception? _exceptionToThrow;
 
     public void SetupService(IContentfulService service)
     {
@@ -35,6 +36,15 @@ public class MockContentfulServiceBuilder : IContentfulServiceBuilder
     public IContentfulService Build()
     {
         BuildWasCalled = true;
+        
+        if (_exceptionToThrow != null)
+            throw _exceptionToThrow;
+            
         return _service ?? throw new InvalidOperationException("Service not set up");
+    }
+
+    public void SetupToThrow(Exception exception)
+    {
+        _exceptionToThrow = exception;
     }
 }

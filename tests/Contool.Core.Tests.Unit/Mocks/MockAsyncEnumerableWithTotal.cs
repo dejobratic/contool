@@ -12,6 +12,12 @@ public class MockAsyncEnumerableWithTotal<T> : IAsyncEnumerableWithTotal<T>
         Total = _items.Count();
     }
 
+    public MockAsyncEnumerableWithTotal(IEnumerable<T> items, int total)
+    {
+        _items = items.ToList();
+        Total = total;
+    }
+
     public int Total { get; }
 
     public async IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)

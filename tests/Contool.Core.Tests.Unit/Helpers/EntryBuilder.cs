@@ -9,6 +9,7 @@ public class EntryBuilder
     private string? _id;
     private string? _contentTypeId;
     private Dictionary<string, object> _fields = [];
+    private DateTime? _archivedAt;
 
     public EntryBuilder WithId(string id)
     {
@@ -41,6 +42,18 @@ public class EntryBuilder
         return this;
     }
 
+    public EntryBuilder WithArchivedAt(DateTime archivedAt)
+    {
+        _archivedAt = archivedAt;
+        return this;
+    }
+
+    public EntryBuilder AsArchived()
+    {
+        _archivedAt = DateTime.UtcNow;
+        return this;
+    }
+
     public Entry<dynamic> Build()
     {
         var entry = new Entry<dynamic>
@@ -48,7 +61,8 @@ public class EntryBuilder
             SystemProperties = new SystemProperties
             {
                 Id = _id,
-                Type = "Entry"
+                Type = "Entry",
+                ArchivedAt = _archivedAt
             },
             Fields = JObject.FromObject(_fields)
         };
@@ -127,5 +141,26 @@ public class EntryBuilder
             .WithId(id ?? ContentfulIdGenerator.NewId())
             .WithField("title", "Test Title")
             .WithField("body", "Test Body")
+            .Build();
+
+    public static Entry<dynamic> CreateArchivedBlogPost(string? id = null, string contentTypeId = "blogPost") =>
+        new EntryBuilder()
+            .WithId(id ?? ContentfulIdGenerator.NewId())
+            .WithContentTypeId(contentTypeId)
+            .WithField("title", "Archived Blog Post")
+            .WithField("body", "This is an archived blog post content")
+            .WithField("author", "Test Author")
+            .AsArchived()
+            .Build();
+
+    public static Entry<dynamic> CreateArchivedProduct(string? id = null, string contentTypeId = "product") =>
+        new EntryBuilder()
+            .WithId(id ?? ContentfulIdGenerator.NewId())
+            .WithContentTypeId(contentTypeId)
+            .WithField("name", "Archived Product")
+            .WithField("price", 19.99)
+            .WithField("description", "An archived product")
+            .WithField("inStock", false)
+            .AsArchived()
             .Build();
 }

@@ -11,6 +11,7 @@ public class MockContentfulService : IContentfulService
 {
     private ContentType? _contentType;
     private List<Locale> _locales = [];
+    private IAsyncEnumerableWithTotal<Entry<dynamic>>? _entries;
 
     public void SetupContentType(ContentType contentType)
     {
@@ -20,6 +21,11 @@ public class MockContentfulService : IContentfulService
     public void SetupLocales(params Locale[] locales)
     {
         _locales = locales.ToList();
+    }
+
+    public void SetupEntries(IAsyncEnumerableWithTotal<Entry<dynamic>> entries)
+    {
+        _entries = entries;
     }
 
     public Task<ContentType?> GetContentTypeAsync(string contentTypeId, CancellationToken cancellationToken = default)
@@ -49,8 +55,10 @@ public class MockContentfulService : IContentfulService
     public Task DeleteContentTypeAsync(string contentTypeId, CancellationToken cancellationToken = default) =>
         throw new NotImplementedException();
 
-    public IAsyncEnumerableWithTotal<Entry<dynamic>> GetEntriesAsync(string contentTypeId, int? pageSize = null, PagingMode pagingMode = PagingMode.SkipForward, CancellationToken cancellationToken = default) =>
-        throw new NotImplementedException();
+    public IAsyncEnumerableWithTotal<Entry<dynamic>> GetEntriesAsync(string contentTypeId, int? pageSize = null, PagingMode pagingMode = PagingMode.SkipForward, CancellationToken cancellationToken = default)
+    {
+        return _entries ?? throw new InvalidOperationException("Entries not set up. Call SetupEntries() first.");
+    }
 
     public Task CreateOrUpdateEntriesAsync(IEnumerable<Entry<dynamic>> entries, bool publish = false, CancellationToken cancellationToken = default)
     {

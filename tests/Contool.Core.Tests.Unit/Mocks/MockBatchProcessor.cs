@@ -14,6 +14,10 @@ public class MockBatchProcessor(int batchSize = 50) : IBatchProcessor
     
     public bool ShouldThrowException { get; set; }
     
+    public Exception? ExceptionToThrow { get; private set; }
+    
+    public Func<IReadOnlyList<object>, CancellationToken, Task>? LastBatchAction { get; private set; }
+    
     public async Task ProcessAsync<T>(
         IAsyncEnumerable<T> source,
         int batchSize,
@@ -23,7 +27,13 @@ public class MockBatchProcessor(int batchSize = 50) : IBatchProcessor
     {
         ProcessAsyncWasCalled = true;
         LastBatchSize = batchSize;
+        LastBatchAction = (batch, ct) => batchActionAsync((IReadOnlyList<T>)batch, ct);
 
+        if (ExceptionToThrow != null)
+        {
+            throw ExceptionToThrow;
+        }
+        
         if (ShouldThrowException)
         {
             throw new InvalidOperationException("Mock batch processor exception");
@@ -60,5 +70,10 @@ public class MockBatchProcessor(int batchSize = 50) : IBatchProcessor
 
         await batchActionAsync(batch, cancellationToken);
         batch.Clear();
+    }
+
+    public void SetupToThrow(Exception exception)
+    {
+        ExceptionToThrow = exception;
     }
 }
