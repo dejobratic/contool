@@ -1,3 +1,4 @@
+using Contentful.Core.Models;
 using Contentful.Core.Models.Management;
 
 namespace Contool.Core.Tests.Unit.Helpers;
@@ -30,6 +31,12 @@ public class LocaleBuilder
     {
         return new Locale
         {
+            SystemProperties = new SystemProperties
+            {
+                Id = _code,
+                Type = "Locale",
+                Version = 1
+            },
             Code = _code,
             Name = _name,
             Default = _default

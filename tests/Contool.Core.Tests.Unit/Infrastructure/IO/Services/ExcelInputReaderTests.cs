@@ -6,13 +6,13 @@ namespace Contool.Core.Tests.Unit.Infrastructure.IO.Services;
 
 public class ExcelInputReaderTests
 {
-    private readonly ExcelInputReader _reader = new();
+    private readonly ExcelInputReader _sut = new();
 
     [Fact]
     public void GivenExcelInputReader_WhenInstantiated_ThenDataSourceIsCorrect()
     {
         // Act
-        var dataSource = _reader.DataSource;
+        var dataSource = _sut.DataSource;
 
         // Assert
         Assert.Equal(DataSource.Excel, dataSource);
@@ -42,7 +42,7 @@ public class ExcelInputReaderTests
         try
         {
             // Act
-            var result = _reader.ReadAsync(filePath, CancellationToken.None);
+            var result = _sut.ReadAsync(filePath, CancellationToken.None);
 
             // Assert
             Assert.Equal(2, result.Total);
@@ -86,7 +86,7 @@ public class ExcelInputReaderTests
         try
         {
             // Act
-            var result = _reader.ReadAsync(filePath, CancellationToken.None);
+            var result = _sut.ReadAsync(filePath, CancellationToken.None);
 
             // Assert
             var records = await result.ToListAsync();
@@ -128,7 +128,7 @@ public class ExcelInputReaderTests
         try
         {
             // Act
-            var result = _reader.ReadAsync(filePath, CancellationToken.None);
+            var result = _sut.ReadAsync(filePath, CancellationToken.None);
 
             // Assert
             var records = await result.ToListAsync();
@@ -168,7 +168,7 @@ public class ExcelInputReaderTests
         try
         {
             // Act
-            var result = _reader.ReadAsync(filePath, CancellationToken.None);
+            var result = _sut.ReadAsync(filePath, CancellationToken.None);
 
             // Assert
             var records = await result.ToListAsync();
@@ -201,7 +201,7 @@ public class ExcelInputReaderTests
         try
         {
             // Act
-            var result = _reader.ReadAsync(filePath, CancellationToken.None);
+            var result = _sut.ReadAsync(filePath, CancellationToken.None);
 
             // Assert
             Assert.Equal(0, result.Total);
@@ -238,7 +238,7 @@ public class ExcelInputReaderTests
         try
         {
             // Act
-            var result = _reader.ReadAsync(filePath, CancellationToken.None);
+            var result = _sut.ReadAsync(filePath, CancellationToken.None);
 
             // Assert
             Assert.Equal(recordCount, result.Total);
@@ -278,7 +278,7 @@ public class ExcelInputReaderTests
         try
         {
             // Act & Assert
-            var result = _reader.ReadAsync(filePath, cts.Token);
+            var result = _sut.ReadAsync(filePath, cts.Token);
             await Assert.ThrowsAsync<OperationCanceledException>(async () =>
             {
                 await foreach (var record in result)
@@ -310,7 +310,7 @@ public class ExcelInputReaderTests
         try
         {
             // Act
-            var result = _reader.ReadAsync(filePath, CancellationToken.None);
+            var result = _sut.ReadAsync(filePath, CancellationToken.None);
 
             // Assert
             var records = await result.ToListAsync();
@@ -344,7 +344,7 @@ public class ExcelInputReaderTests
         try
         {
             // Act
-            var result = _reader.ReadAsync(filePath, CancellationToken.None);
+            var result = _sut.ReadAsync(filePath, CancellationToken.None);
 
             // Assert
             var records = await result.ToListAsync();
@@ -376,7 +376,7 @@ public class ExcelInputReaderTests
         try
         {
             // Act & Assert
-            var result = _reader.ReadAsync(filePath, CancellationToken.None);
+            var result = _sut.ReadAsync(filePath, CancellationToken.None);
             
             await Assert.ThrowsAnyAsync<Exception>(async () =>
             {
@@ -411,7 +411,7 @@ public class ExcelInputReaderTests
         try
         {
             // Act & Assert
-            var result = _reader.ReadAsync(filePath, CancellationToken.None);
+            var result = _sut.ReadAsync(filePath, CancellationToken.None);
             
             // This should either handle duplicates gracefully or throw an exception
             // The exact behavior depends on the implementation

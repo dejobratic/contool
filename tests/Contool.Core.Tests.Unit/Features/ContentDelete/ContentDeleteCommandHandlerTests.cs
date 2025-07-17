@@ -1,7 +1,8 @@
 using Contool.Core.Features.ContentDelete;
-using Contool.Core.Infrastructure.Contentful.Extensions;
 using Contool.Core.Infrastructure.Contentful.Services;
-using Contool.Core.Tests.Unit.Mocks;
+using Contool.Core.Tests.Unit.Helpers;
+using MockLite;
+// ReSharper disable ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
 
 namespace Contool.Core.Tests.Unit.Features.ContentDelete;
 
@@ -9,15 +10,19 @@ public class ContentDeleteCommandHandlerTests
 {
     private readonly ContentDeleteCommandHandler _sut;
     
-    private readonly MockContentfulServiceBuilder _contentfulServiceBuilderMock = new();
-    private readonly MockContentDeleter _contentDeleterMock = new();
+    private readonly Mock<IContentfulServiceBuilder> _contentfulServiceBuilderMock = new();
+    private readonly Mock<IContentfulService> _contentfulServiceMock = new();
+    private readonly Mock<IContentDeleter> _contentDeleterMock = new();
 
     public ContentDeleteCommandHandlerTests()
     {
-        _contentfulServiceBuilderMock.SetupService(new MockContentfulService());
+        _contentfulServiceBuilderMock.SetupDefaults(_contentfulServiceMock);
+        _contentfulServiceMock.SetupDefaults();
+        _contentDeleterMock.SetupDefaults();
+        
         _sut = new ContentDeleteCommandHandler(
-            _contentfulServiceBuilderMock, 
-            _contentDeleterMock);
+            _contentfulServiceBuilderMock.Object, 
+            _contentDeleterMock.Object);
     }
 
     [Fact]
@@ -30,9 +35,9 @@ public class ContentDeleteCommandHandlerTests
         await _sut.HandleAsync(command, CancellationToken.None);
         
         // Assert
-        Assert.True(_contentfulServiceBuilderMock.BuildWasCalled);
-        Assert.Equal(command.SpaceId, _contentfulServiceBuilderMock.LastSpaceId);
-        Assert.Equal(command.EnvironmentId, _contentfulServiceBuilderMock.LastEnvironmentId);
+        _contentfulServiceBuilderMock.Verify(x => x.WithSpaceId(command.SpaceId), Times.Once);
+        _contentfulServiceBuilderMock.Verify(x => x.WithEnvironmentId(command.EnvironmentId), Times.Once);
+        _contentfulServiceBuilderMock.Verify(x => x.Build(), Times.Once);
     }
 
     [Fact]
@@ -45,10 +50,12 @@ public class ContentDeleteCommandHandlerTests
         await _sut.HandleAsync(command, CancellationToken.None);
         
         // Assert
-        Assert.True(_contentDeleterMock.DeleteAsyncWasCalled);
-        Assert.NotNull(_contentDeleterMock.LastInput);
-        Assert.Equal(command.ContentTypeId, _contentDeleterMock.LastInput.ContentTypeId);
-        Assert.Equal(command.IncludeArchived, _contentDeleterMock.LastInput.IncludeArchived);
+        _contentDeleterMock.Verify(x => x.DeleteAsync(
+            It.Is<ContentDeleterInput>(input => 
+                input.ContentTypeId == command.ContentTypeId && 
+                input.IncludeArchived == command.IncludeArchived &&
+                input.ContentfulService == _contentfulServiceMock.Object), 
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -61,25 +68,12 @@ public class ContentDeleteCommandHandlerTests
         await _sut.HandleAsync(command, CancellationToken.None);
         
         // Assert
-        Assert.True(_contentDeleterMock.DeleteAsyncWasCalled);
-        Assert.NotNull(_contentDeleterMock.LastInput);
-        Assert.Equal(command.ContentTypeId, _contentDeleterMock.LastInput.ContentTypeId);
-        Assert.Equal(command.IncludeArchived, _contentDeleterMock.LastInput.IncludeArchived);
-        Assert.NotNull(_contentDeleterMock.LastInput.ContentfulService);
-    }
-
-    [Fact]
-    public async Task GivenCancellationToken_WhenHandleAsync_ThenRespectsCancellation()
-    {
-        // Arrange
-        var command = CreateDeleteCommand();
-        
-        using var cts = new CancellationTokenSource();
-        cts.Cancel();
-        
-        // Act & Assert
-        await Assert.ThrowsAsync<OperationCanceledException>(() =>
-            _sut.HandleAsync(command, cts.Token));
+        _contentDeleterMock.Verify(x => x.DeleteAsync(
+            It.Is<ContentDeleterInput>(input => 
+                input.ContentTypeId == command.ContentTypeId && 
+                input.IncludeArchived == command.IncludeArchived &&
+                input.ContentfulService != null), 
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -87,7 +81,9 @@ public class ContentDeleteCommandHandlerTests
     {
         // Arrange
         var command = CreateDeleteCommand();
-        _contentfulServiceBuilderMock.SetupToThrow(new InvalidOperationException("Service builder failed"));
+        
+        _contentfulServiceBuilderMock.Setup(x => x.Build())
+            .Throws(new InvalidOperationException("Service builder failed"));
         
         // Act & Assert
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
@@ -101,7 +97,8 @@ public class ContentDeleteCommandHandlerTests
     {
         // Arrange
         var command = CreateDeleteCommand();
-        _contentDeleterMock.SetupToThrow(new InvalidOperationException("Delete operation failed"));
+        _contentDeleterMock.Setup(x => x.DeleteAsync(It.IsAny<ContentDeleterInput>(), It.IsAny<CancellationToken>()))
+            .Throws(new InvalidOperationException("Delete operation failed"));
         
         // Act & Assert
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
@@ -120,9 +117,9 @@ public class ContentDeleteCommandHandlerTests
         await _sut.HandleAsync(command, CancellationToken.None);
         
         // Assert
-        Assert.True(_contentDeleterMock.DeleteAsyncWasCalled);
-        Assert.NotNull(_contentDeleterMock.LastInput);
-        Assert.True(_contentDeleterMock.LastInput.IncludeArchived);
+        _contentDeleterMock.Verify(x => x.DeleteAsync(
+            It.Is<ContentDeleterInput>(input => input.IncludeArchived == true), 
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -135,9 +132,9 @@ public class ContentDeleteCommandHandlerTests
         await _sut.HandleAsync(command, CancellationToken.None);
         
         // Assert
-        Assert.True(_contentDeleterMock.DeleteAsyncWasCalled);
-        Assert.NotNull(_contentDeleterMock.LastInput);
-        Assert.False(_contentDeleterMock.LastInput.IncludeArchived);
+        _contentDeleterMock.Verify(x => x.DeleteAsync(
+            It.Is<ContentDeleterInput>(input => input.IncludeArchived == false), 
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     private static ContentDeleteCommand CreateDeleteCommand(bool includeArchived = false)

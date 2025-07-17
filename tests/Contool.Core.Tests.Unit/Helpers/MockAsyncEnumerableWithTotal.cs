@@ -1,6 +1,6 @@
 using Contool.Core.Infrastructure.Utils.Models;
 
-namespace Contool.Core.Tests.Unit.Mocks;
+namespace Contool.Core.Tests.Unit.Helpers;
 
 public class MockAsyncEnumerableWithTotal<T> : IAsyncEnumerableWithTotal<T>
 {
@@ -10,12 +10,6 @@ public class MockAsyncEnumerableWithTotal<T> : IAsyncEnumerableWithTotal<T>
     {
         _items = items.ToList();
         Total = _items.Count();
-    }
-
-    public MockAsyncEnumerableWithTotal(IEnumerable<T> items, int total)
-    {
-        _items = items.ToList();
-        Total = total;
     }
 
     public int Total { get; }

@@ -6,13 +6,13 @@ namespace Contool.Core.Tests.Unit.Infrastructure.IO.Services;
 
 public class JsonInputReaderTests
 {
-    private readonly JsonInputReader _reader = new();
+    private readonly JsonInputReader _sut = new();
 
     [Fact]
     public void GivenJsonInputReader_WhenInstantiated_ThenDataSourceIsCorrect()
     {
         // Act
-        var dataSource = _reader.DataSource;
+        var dataSource = _sut.DataSource;
 
         // Assert
         Assert.Equal(DataSource.Json, dataSource);
@@ -33,7 +33,7 @@ public class JsonInputReaderTests
         try
         {
             // Act
-            var result = _reader.ReadAsync(jsonPath, CancellationToken.None);
+            var result = _sut.ReadAsync(jsonPath, CancellationToken.None);
             
             // Assert
             Assert.Equal(2, result.Total);
@@ -62,7 +62,7 @@ public class JsonInputReaderTests
     public void GivenJsonInputReader_WhenCheckingInterface_ThenImplementsIInputReader()
     {
         // Arrange & Act
-        var implementsInterface = _reader is IInputReader;
+        var implementsInterface = _sut is IInputReader;
 
         // Assert
         Assert.True(implementsInterface);

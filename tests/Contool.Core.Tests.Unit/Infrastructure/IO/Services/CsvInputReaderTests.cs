@@ -6,12 +6,12 @@ namespace Contool.Core.Tests.Unit.Infrastructure.IO.Services;
 
 public class CsvInputReaderTests : IDisposable
 {
-    private readonly CsvInputReader _reader;
+    private readonly CsvInputReader _sut;
     private readonly string _tempDirectory;
 
     public CsvInputReaderTests()
     {
-        _reader = new CsvInputReader();
+        _sut = new CsvInputReader();
         _tempDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
         Directory.CreateDirectory(_tempDirectory);
     }
@@ -20,7 +20,7 @@ public class CsvInputReaderTests : IDisposable
     public void GivenCsvInputReader_WhenInstantiated_ThenDataSourceIsCorrect()
     {
         // Act
-        var dataSource = _reader.DataSource;
+        var dataSource = _sut.DataSource;
 
         // Assert
         Assert.Equal(DataSource.Csv, dataSource);
@@ -34,7 +34,7 @@ public class CsvInputReaderTests : IDisposable
         var filePath = CreateTempCsvFile("valid.csv", csvContent);
 
         // Act
-        var result = _reader.ReadAsync(filePath, CancellationToken.None);
+        var result = _sut.ReadAsync(filePath, CancellationToken.None);
 
         // Assert
         Assert.Equal(3, result.Total);
@@ -58,7 +58,7 @@ public class CsvInputReaderTests : IDisposable
         var filePath = CreateTempCsvFile("empty.csv", csvContent);
 
         // Act
-        var result = _reader.ReadAsync(filePath, CancellationToken.None);
+        var result = _sut.ReadAsync(filePath, CancellationToken.None);
 
         // Assert
         Assert.Equal(0, result.Total);
@@ -75,7 +75,7 @@ public class CsvInputReaderTests : IDisposable
         var filePath = CreateTempCsvFile("special.csv", csvContent);
 
         // Act
-        var result = _reader.ReadAsync(filePath, CancellationToken.None);
+        var result = _sut.ReadAsync(filePath, CancellationToken.None);
 
         // Assert
         Assert.Equal(2, result.Total);
@@ -97,7 +97,7 @@ public class CsvInputReaderTests : IDisposable
         var filePath = CreateTempCsvFile("missing.csv", csvContent);
 
         // Act
-        var result = _reader.ReadAsync(filePath, CancellationToken.None);
+        var result = _sut.ReadAsync(filePath, CancellationToken.None);
 
         // Assert
         var records = await result.ToListAsync();
@@ -126,7 +126,7 @@ public class CsvInputReaderTests : IDisposable
         var filePath = CreateTempCsvFile("large.csv", csvBuilder.ToString());
 
         // Act
-        var result = _reader.ReadAsync(filePath, CancellationToken.None);
+        var result = _sut.ReadAsync(filePath, CancellationToken.None);
 
         // Assert
         Assert.Equal(recordCount, result.Total);
@@ -154,7 +154,7 @@ public class CsvInputReaderTests : IDisposable
         await cts.CancelAsync();
 
         // Act & Assert
-        var result = _reader.ReadAsync(filePath, cts.Token);
+        var result = _sut.ReadAsync(filePath, cts.Token);
         await Assert.ThrowsAsync<OperationCanceledException>(async () =>
         {
             await foreach (var _ in result)
@@ -172,7 +172,7 @@ public class CsvInputReaderTests : IDisposable
         var filePath = CreateTempCsvFile("utf8.csv", csvContent);
 
         // Act
-        var result = _reader.ReadAsync(filePath, CancellationToken.None);
+        var result = _sut.ReadAsync(filePath, CancellationToken.None);
 
         // Assert
         var records = await result.ToListAsync();
@@ -194,7 +194,7 @@ public class CsvInputReaderTests : IDisposable
         // Act & Assert
         await Assert.ThrowsAnyAsync<Exception>(async () =>
         {
-            var result = _reader.ReadAsync(nonExistentPath, CancellationToken.None);
+            var result = _sut.ReadAsync(nonExistentPath, CancellationToken.None);
             
             await foreach (var _ in result)
             {

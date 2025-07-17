@@ -1,10 +1,12 @@
 using Contentful.Core.Models;
 using Contool.Core.Features.ContentDownload;
 using Contool.Core.Infrastructure.Contentful.Services;
+using Contool.Core.Infrastructure.Contentful.Utils;
+using Contool.Core.Infrastructure.IO.Models;
 using Contool.Core.Infrastructure.IO.Services;
 using Contool.Core.Infrastructure.Utils.Models;
 using Contool.Core.Tests.Unit.Helpers;
-using Contool.Core.Tests.Unit.Mocks;
+using MockLite;
 
 namespace Contool.Core.Tests.Unit.Features.ContentDownload;
 
@@ -12,18 +14,22 @@ public class ContentDownloadCommandHandlerTests
 {
     private readonly ContentDownloadCommandHandler _sut;
     
-    private readonly MockContentEntrySerializerFactory _serializerFactoryMock = new();
-    private readonly MockContentfulServiceBuilder _serviceBuilderMock = new();
-    private readonly MockOutputWriterFactory _outputWriterFactoryMock = new();
-    private readonly MockContentDownloader _contentDownloaderMock = new();
+    private readonly Mock<IContentEntrySerializerFactory> _serializerFactoryMock = new();
+    private readonly Mock<IContentfulServiceBuilder> _serviceBuilderMock = new();
+    private readonly Mock<IOutputWriterFactory> _outputWriterFactoryMock = new();
+    private readonly Mock<IContentDownloader> _contentDownloaderMock = new();
+    private readonly Mock<IContentfulService> _contentfulServiceMock = new();
 
     public ContentDownloadCommandHandlerTests()
     {
+        _contentfulServiceMock.SetupDefaults();
+        _serviceBuilderMock.SetupDefaults(_contentfulServiceMock);
+        
         _sut = new ContentDownloadCommandHandler(
-            _serializerFactoryMock,
-            _serviceBuilderMock,
-            _outputWriterFactoryMock,
-            _contentDownloaderMock);
+            _serializerFactoryMock.Object,
+            _serviceBuilderMock.Object,
+            _outputWriterFactoryMock.Object,
+            _contentDownloaderMock.Object);
     }
 
     [Fact]
@@ -39,31 +45,34 @@ public class ContentDownloadCommandHandlerTests
             EnvironmentId = "test-environment"
         };
 
-        var mockService = new MockContentfulService();
-        var mockSerializer = new MockContentEntrySerializer();
-        var mockOutputWriter = new MockOutputWriter();
+        var mockService = new Mock<IContentfulService>();
+        mockService.SetupDefaults();
+        var mockSerializer = new Mock<IContentEntrySerializer>();
+        var mockOutputWriter = new Mock<IOutputWriter>();
 
         // Setup test entries
         var testEntries = CreateTestEntries();
-        mockService.SetupEntries(testEntries);
+        mockService.Setup(x => x.GetEntriesAsync("blogPost", null, PagingMode.SkipForward, It.IsAny<CancellationToken>()))
+            .Returns(testEntries);
 
-        _serviceBuilderMock.SetupService(mockService);
-        _serializerFactoryMock.SetupSerializer(mockSerializer);
-        _outputWriterFactoryMock.SetupOutputWriter(mockOutputWriter);
+        _serviceBuilderMock.Setup(x => x.Build()).Returns(mockService.Object);
+        _serializerFactoryMock.Setup(x => x.CreateAsync("blogPost", It.IsAny<IContentfulService>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(mockSerializer.Object);
+        _outputWriterFactoryMock.Setup(x => x.Create(It.IsAny<DataSource>()))
+            .Returns(mockOutputWriter.Object);
 
         // Act
         await _sut.HandleAsync(command, CancellationToken.None);
 
         // Assert
-        Assert.True(_serviceBuilderMock.BuildWasCalled);
-        Assert.Equal(command.SpaceId, _serviceBuilderMock.LastSpaceId);
-        Assert.Equal(command.EnvironmentId, _serviceBuilderMock.LastEnvironmentId);
+        _serviceBuilderMock.Verify(x => x.Build(), Times.Once);
+        _serviceBuilderMock.Verify(x => x.WithSpaceId(command.SpaceId), Times.Once);
+        _serviceBuilderMock.Verify(x => x.WithEnvironmentId(command.EnvironmentId), Times.Once);
         
-        Assert.True(_serializerFactoryMock.CreateAsyncWasCalled);
-        Assert.Equal(command.ContentTypeId, _serializerFactoryMock.LastContentTypeId);
+        _serializerFactoryMock.Verify(x => x.CreateAsync(command.ContentTypeId, It.IsAny<IContentfulService>(), It.IsAny<CancellationToken>()), Times.Once);
         
-        Assert.True(_outputWriterFactoryMock.CreateWasCalled);
-        Assert.True(_contentDownloaderMock.DownloadAsyncWasCalled);
+        _outputWriterFactoryMock.Verify(x => x.Create(It.IsAny<DataSource>()), Times.Once);
+        _contentDownloaderMock.Verify(x => x.DownloadAsync(It.IsAny<ContentDownloaderInput>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -79,24 +88,27 @@ public class ContentDownloadCommandHandlerTests
             EnvironmentId = "test-environment"
         };
 
-        var mockService = new MockContentfulService();
-        var mockSerializer = new MockContentEntrySerializer();
-        var mockOutputWriter = new MockOutputWriter();
+        var mockService = new Mock<IContentfulService>();
+        mockService.SetupDefaults();
+        var mockSerializer = new Mock<IContentEntrySerializer>();
+        var mockOutputWriter = new Mock<IOutputWriter>();
 
         // Setup test entries
         var testEntries = CreateTestEntries();
-        mockService.SetupEntries(testEntries);
+        mockService.Setup(x => x.GetEntriesAsync("blogPost", null, PagingMode.SkipForward, It.IsAny<CancellationToken>()))
+            .Returns(testEntries);
 
-        _serviceBuilderMock.SetupService(mockService);
-        _serializerFactoryMock.SetupSerializer(mockSerializer);
-        _outputWriterFactoryMock.SetupOutputWriter(mockOutputWriter);
+        _serviceBuilderMock.Setup(x => x.Build()).Returns(mockService.Object);
+        _serializerFactoryMock.Setup(x => x.CreateAsync("blogPost", It.IsAny<IContentfulService>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(mockSerializer.Object);
+        _outputWriterFactoryMock.Setup(x => x.Create(It.IsAny<DataSource>()))
+            .Returns(mockOutputWriter.Object);
 
         // Act
         await _sut.HandleAsync(command, CancellationToken.None);
 
         // Assert
-        Assert.True(_outputWriterFactoryMock.CreateWasCalled);
-        Assert.NotNull(_outputWriterFactoryMock.LastDataSource);
+        _outputWriterFactoryMock.Verify(x => x.Create(It.IsAny<DataSource>()), Times.Once);
     }
 
     [Fact]
@@ -112,23 +124,27 @@ public class ContentDownloadCommandHandlerTests
             EnvironmentId = "test-environment"
         };
 
-        var mockService = new MockContentfulService();
-        var mockSerializer = new MockContentEntrySerializer();
-        var mockOutputWriter = new MockOutputWriter();
+        var mockService = new Mock<IContentfulService>();
+        mockService.SetupDefaults();
+        var mockSerializer = new Mock<IContentEntrySerializer>();
+        var mockOutputWriter = new Mock<IOutputWriter>();
 
         // Setup test entries
         var testEntries = CreateTestEntries();
-        mockService.SetupEntries(testEntries);
+        mockService.Setup(x => x.GetEntriesAsync("blogPost", null, PagingMode.SkipForward, It.IsAny<CancellationToken>()))
+            .Returns(testEntries);
 
-        _serviceBuilderMock.SetupService(mockService);
-        _serializerFactoryMock.SetupSerializer(mockSerializer);
-        _outputWriterFactoryMock.SetupOutputWriter(mockOutputWriter);
+        _serviceBuilderMock.Setup(x => x.Build()).Returns(mockService.Object);
+        _serializerFactoryMock.Setup(x => x.CreateAsync("blogPost", It.IsAny<IContentfulService>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(mockSerializer.Object);
+        _outputWriterFactoryMock.Setup(x => x.Create(It.IsAny<DataSource>()))
+            .Returns(mockOutputWriter.Object);
 
         // Act
         await _sut.HandleAsync(command, CancellationToken.None);
 
         // Assert
-        Assert.True(_outputWriterFactoryMock.CreateWasCalled);
+        _outputWriterFactoryMock.Verify(x => x.Create(It.IsAny<DataSource>()), Times.Once);
     }
 
     [Fact]
@@ -144,17 +160,21 @@ public class ContentDownloadCommandHandlerTests
             EnvironmentId = "test-environment"
         };
 
-        var mockService = new MockContentfulService();
-        var mockSerializer = new MockContentEntrySerializer();
-        var mockOutputWriter = new MockOutputWriter();
+        var mockService = new Mock<IContentfulService>();
+        mockService.SetupDefaults();
+        var mockSerializer = new Mock<IContentEntrySerializer>();
+        var mockOutputWriter = new Mock<IOutputWriter>();
 
         // Setup test entries
         var testEntries = CreateTestEntries();
-        mockService.SetupEntries(testEntries);
+        mockService.Setup(x => x.GetEntriesAsync("blogPost", null, PagingMode.SkipForward, It.IsAny<CancellationToken>()))
+            .Returns(testEntries);
 
-        _serviceBuilderMock.SetupService(mockService);
-        _serializerFactoryMock.SetupSerializer(mockSerializer);
-        _outputWriterFactoryMock.SetupOutputWriter(mockOutputWriter);
+        _serviceBuilderMock.Setup(x => x.Build()).Returns(mockService.Object);
+        _serializerFactoryMock.Setup(x => x.CreateAsync("blogPost", It.IsAny<IContentfulService>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(mockSerializer.Object);
+        _outputWriterFactoryMock.Setup(x => x.Create(It.IsAny<DataSource>()))
+            .Returns(mockOutputWriter.Object);
 
         using var cts = new CancellationTokenSource();
         cts.Cancel();
@@ -177,9 +197,10 @@ public class ContentDownloadCommandHandlerTests
             EnvironmentId = "test-environment"
         };
 
-        var mockService = new MockContentfulService();
-        _serviceBuilderMock.SetupService(mockService);
-        _serializerFactoryMock.SetupToThrow(new InvalidOperationException("Serializer creation failed"));
+        var mockService = new Mock<IContentfulService>();
+        mockService.SetupDefaults();
+        _serializerFactoryMock.Setup(x => x.CreateAsync(It.IsAny<string>(), It.IsAny<IContentfulService>(), It.IsAny<CancellationToken>()))
+            .Throws(new InvalidOperationException("Serializer creation failed"));
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
@@ -201,18 +222,23 @@ public class ContentDownloadCommandHandlerTests
             EnvironmentId = "test-environment"
         };
 
-        var mockService = new MockContentfulService();
-        var mockSerializer = new MockContentEntrySerializer();
-        var mockOutputWriter = new MockOutputWriter();
+        var mockService = new Mock<IContentfulService>();
+        mockService.SetupDefaults();
+        var mockSerializer = new Mock<IContentEntrySerializer>();
+        var mockOutputWriter = new Mock<IOutputWriter>();
 
         // Setup test entries
         var testEntries = CreateTestEntries();
-        mockService.SetupEntries(testEntries);
+        mockService.Setup(x => x.GetEntriesAsync("blogPost", null, PagingMode.SkipForward, It.IsAny<CancellationToken>()))
+            .Returns(testEntries);
 
-        _serviceBuilderMock.SetupService(mockService);
-        _serializerFactoryMock.SetupSerializer(mockSerializer);
-        _outputWriterFactoryMock.SetupOutputWriter(mockOutputWriter);
-        _contentDownloaderMock.SetupToThrow(new IOException("Download failed"));
+        _serviceBuilderMock.Setup(x => x.Build()).Returns(mockService.Object);
+        _serializerFactoryMock.Setup(x => x.CreateAsync("blogPost", It.IsAny<IContentfulService>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(mockSerializer.Object);
+        _outputWriterFactoryMock.Setup(x => x.Create(It.IsAny<DataSource>()))
+            .Returns(mockOutputWriter.Object);
+        _contentDownloaderMock.Setup(x => x.DownloadAsync(It.IsAny<ContentDownloaderInput>(), It.IsAny<CancellationToken>()))
+            .Throws(new IOException("Download failed"));
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<IOException>(() =>
@@ -234,27 +260,31 @@ public class ContentDownloadCommandHandlerTests
             EnvironmentId = "test-environment"
         };
 
-        var mockService = new MockContentfulService();
-        var mockSerializer = new MockContentEntrySerializer();
-        var mockOutputWriter = new MockOutputWriter();
+        var mockService = new Mock<IContentfulService>();
+        mockService.SetupDefaults();
+        var mockSerializer = new Mock<IContentEntrySerializer>();
+        var mockOutputWriter = new Mock<IOutputWriter>();
 
         // Setup test entries
         var testEntries = CreateTestEntries();
-        mockService.SetupEntries(testEntries);
+        mockService.Setup(x => x.GetEntriesAsync("blogPost", null, PagingMode.SkipForward, It.IsAny<CancellationToken>()))
+            .Returns(testEntries);
 
-        _serviceBuilderMock.SetupService(mockService);
-        _serializerFactoryMock.SetupSerializer(mockSerializer);
-        _outputWriterFactoryMock.SetupOutputWriter(mockOutputWriter);
+        _serviceBuilderMock.Setup(x => x.Build()).Returns(mockService.Object);
+        _serializerFactoryMock.Setup(x => x.CreateAsync("blogPost", It.IsAny<IContentfulService>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(mockSerializer.Object);
+        _outputWriterFactoryMock.Setup(x => x.Create(It.IsAny<DataSource>()))
+            .Returns(mockOutputWriter.Object);
 
         // Act
         await _sut.HandleAsync(command, CancellationToken.None);
 
         // Assert
-        Assert.True(_contentDownloaderMock.DownloadAsyncWasCalled);
-        Assert.NotNull(_contentDownloaderMock.LastInput);
-        Assert.Equal(command.ContentTypeId, _contentDownloaderMock.LastInput.ContentTypeId);
-        Assert.Equal(mockOutputWriter, _contentDownloaderMock.LastInput.OutputWriter);
-        Assert.NotNull(_contentDownloaderMock.LastInput.Output);
+        _contentDownloaderMock.Verify(x => x.DownloadAsync(It.Is<ContentDownloaderInput>(input => 
+            input.ContentTypeId == command.ContentTypeId &&
+            input.OutputWriter == mockOutputWriter &&
+            input.Output != null), It.IsAny<CancellationToken>()), Times.Once);
+        // Note: MockLite doesn't support LastInput property tracking like custom mocks
     }
 
     private static IAsyncEnumerableWithTotal<Entry<dynamic>> CreateTestEntries()
@@ -265,7 +295,7 @@ public class ContentDownloadCommandHandlerTests
             EntryBuilder.CreateBlogPost("entry2", "blogPost"),
             EntryBuilder.CreateBlogPost("entry3", "blogPost")
         };
-
+        
         return new AsyncEnumerableWithTotal<Entry<dynamic>>(
             source: AsyncEnumerableFactory.From(entries),
             getTotal: () => entries.Length);

@@ -63,10 +63,10 @@ public class ValidationErrorTests
     [Fact]
     public void GivenValidationError_WhenAccessingProperties_ThenPropertiesAreReadOnly()
     {
-        // Arrange
+        // Arrange & Act
         var error = new ValidationError(1, "test", "message", ValidationErrorType.ContentTypeMismatch);
 
-        // Act & Assert - Properties should not have setters (compile-time check)
+        // Assert
         Assert.Equal(1, error.EntryIndex);
         Assert.Equal("test", error.FieldId);
         Assert.Equal("message", error.Message);

@@ -1,20 +1,23 @@
 using Contool.Core.Features.ContentUpload;
 using Contool.Core.Features.ContentUpload.Validation;
+using Contool.Core.Infrastructure.Contentful.Services;
 using Contool.Core.Infrastructure.Validation;
 using Contool.Core.Tests.Unit.Helpers;
-using Contool.Core.Tests.Unit.Mocks;
+using MockLite;
 
 namespace Contool.Core.Tests.Unit.Features.ContentUpload.Validation;
 
 public class ContentUploadEntryValidatorTests
 {
-    private readonly ContentUploadEntryValidator _validator;
-    private readonly MockContentfulService _mockContentfulService;
+    private readonly ContentUploadEntryValidator _sut;
+    
+    private readonly Mock<IContentfulService> _contentfulServiceMock = new();
 
     public ContentUploadEntryValidatorTests()
     {
-        _validator = new ContentUploadEntryValidator();
-        _mockContentfulService = new MockContentfulService();
+        _contentfulServiceMock.SetupDefaults();
+        
+        _sut = new ContentUploadEntryValidator();
     }
 
     [Fact]
@@ -24,8 +27,10 @@ public class ContentUploadEntryValidatorTests
         var contentType = ContentTypeBuilder.CreateBlogPost();
         var locales = LocaleBuilder.CreateMultiple();
         
-        _mockContentfulService.SetupContentType(contentType);
-        _mockContentfulService.SetupLocales(locales.ToArray());
+        _contentfulServiceMock.Setup(x => x.GetContentTypeAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contentType);
+        _contentfulServiceMock.Setup(x => x.GetLocalesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(locales.ToArray());
 
         var validEntries = new[]
         {
@@ -36,14 +41,14 @@ public class ContentUploadEntryValidatorTests
         var input = new ContentUploaderInput
         {
             ContentTypeId = "blogPost",
-            ContentfulService = _mockContentfulService,
+            ContentfulService = _contentfulServiceMock.Object,
             Entries = new MockAsyncEnumerableWithTotal<Contentful.Core.Models.Entry<dynamic>>(validEntries),
             UploadOnlyValidEntries = false,
             PublishEntries = false
         };
 
         // Act
-        var result = await _validator.ValidateAsync(input, CancellationToken.None);
+        var result = await _sut.ValidateAsync(input, CancellationToken.None);
 
         // Assert
         Assert.Equal(2, result.ValidEntries.Count);
@@ -58,8 +63,10 @@ public class ContentUploadEntryValidatorTests
         var contentType = ContentTypeBuilder.CreateBlogPost();
         var locales = LocaleBuilder.CreateMultiple();
         
-        _mockContentfulService.SetupContentType(contentType);
-        _mockContentfulService.SetupLocales(locales.ToArray());
+        _contentfulServiceMock.Setup(x => x.GetContentTypeAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contentType);
+        _contentfulServiceMock.Setup(x => x.GetLocalesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(locales.ToArray());
 
         var invalidEntries = new[]
         {
@@ -70,14 +77,14 @@ public class ContentUploadEntryValidatorTests
         var input = new ContentUploaderInput
         {
             ContentTypeId = "blogPost",
-            ContentfulService = _mockContentfulService,
+            ContentfulService = _contentfulServiceMock.Object,
             Entries = new MockAsyncEnumerableWithTotal<Contentful.Core.Models.Entry<dynamic>>(invalidEntries),
             UploadOnlyValidEntries = false,
             PublishEntries = false
         };
 
         // Act
-        var result = await _validator.ValidateAsync(input, CancellationToken.None);
+        var result = await _sut.ValidateAsync(input, CancellationToken.None);
 
         // Assert
         Assert.Empty(result.ValidEntries);
@@ -92,8 +99,10 @@ public class ContentUploadEntryValidatorTests
         var contentType = ContentTypeBuilder.CreateBlogPost();
         var locales = LocaleBuilder.CreateMultiple();
         
-        _mockContentfulService.SetupContentType(contentType);
-        _mockContentfulService.SetupLocales(locales.ToArray());
+        _contentfulServiceMock.Setup(x => x.GetContentTypeAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contentType);
+        _contentfulServiceMock.Setup(x => x.GetLocalesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(locales.ToArray());
 
         var entriesWithDuplicateIds = new[]
         {
@@ -104,14 +113,14 @@ public class ContentUploadEntryValidatorTests
         var input = new ContentUploaderInput
         {
             ContentTypeId = "blogPost",
-            ContentfulService = _mockContentfulService,
+            ContentfulService = _contentfulServiceMock.Object,
             Entries = new MockAsyncEnumerableWithTotal<Contentful.Core.Models.Entry<dynamic>>(entriesWithDuplicateIds),
             UploadOnlyValidEntries = false,
             PublishEntries = false
         };
 
         // Act
-        var result = await _validator.ValidateAsync(input, CancellationToken.None);
+        var result = await _sut.ValidateAsync(input, CancellationToken.None);
 
         // Assert
         Assert.Single(result.ValidEntries); // First entry is valid
@@ -127,8 +136,10 @@ public class ContentUploadEntryValidatorTests
         var contentType = ContentTypeBuilder.CreateBlogPost();
         var locales = LocaleBuilder.CreateMultiple();
         
-        _mockContentfulService.SetupContentType(contentType);
-        _mockContentfulService.SetupLocales(locales.ToArray());
+        _contentfulServiceMock.Setup(x => x.GetContentTypeAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contentType);
+        _contentfulServiceMock.Setup(x => x.GetLocalesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(locales.ToArray());
 
         var entriesWithInvalidFields = new[]
         {
@@ -138,14 +149,14 @@ public class ContentUploadEntryValidatorTests
         var input = new ContentUploaderInput
         {
             ContentTypeId = "blogPost",
-            ContentfulService = _mockContentfulService,
+            ContentfulService = _contentfulServiceMock.Object,
             Entries = new MockAsyncEnumerableWithTotal<Contentful.Core.Models.Entry<dynamic>>(entriesWithInvalidFields),
             UploadOnlyValidEntries = false,
             PublishEntries = false
         };
 
         // Act
-        var result = await _validator.ValidateAsync(input, CancellationToken.None);
+        var result = await _sut.ValidateAsync(input, CancellationToken.None);
 
         // Assert
         Assert.Empty(result.ValidEntries);
@@ -164,8 +175,10 @@ public class ContentUploadEntryValidatorTests
         var contentType = ContentTypeBuilder.CreateBlogPost();
         var locales = LocaleBuilder.CreateMultiple();
         
-        _mockContentfulService.SetupContentType(contentType);
-        _mockContentfulService.SetupLocales(locales.ToArray());
+        _contentfulServiceMock.Setup(x => x.GetContentTypeAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contentType);
+        _contentfulServiceMock.Setup(x => x.GetLocalesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(locales.ToArray());
 
         var entriesWithoutIds = new[]
         {
@@ -175,14 +188,14 @@ public class ContentUploadEntryValidatorTests
         var input = new ContentUploaderInput
         {
             ContentTypeId = "blogPost",
-            ContentfulService = _mockContentfulService,
+            ContentfulService = _contentfulServiceMock.Object,
             Entries = new MockAsyncEnumerableWithTotal<Contentful.Core.Models.Entry<dynamic>>(entriesWithoutIds),
             UploadOnlyValidEntries = false,
             PublishEntries = false
         };
 
         // Act
-        var result = await _validator.ValidateAsync(input, CancellationToken.None);
+        var result = await _sut.ValidateAsync(input, CancellationToken.None);
 
         // Assert
         Assert.Single(result.ValidEntries); // Entry is still valid, just has warning
@@ -198,8 +211,10 @@ public class ContentUploadEntryValidatorTests
         var contentType = ContentTypeBuilder.CreateBlogPost();
         var locales = LocaleBuilder.CreateMultiple();
         
-        _mockContentfulService.SetupContentType(contentType);
-        _mockContentfulService.SetupLocales(locales.ToArray());
+        _contentfulServiceMock.Setup(x => x.GetContentTypeAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contentType);
+        _contentfulServiceMock.Setup(x => x.GetLocalesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(locales.ToArray());
 
         var mixedEntries = new[]
         {
@@ -213,14 +228,14 @@ public class ContentUploadEntryValidatorTests
         var input = new ContentUploaderInput
         {
             ContentTypeId = "blogPost",
-            ContentfulService = _mockContentfulService,
+            ContentfulService = _contentfulServiceMock.Object,
             Entries = new MockAsyncEnumerableWithTotal<Contentful.Core.Models.Entry<dynamic>>(mixedEntries),
             UploadOnlyValidEntries = false,
             PublishEntries = false
         };
 
         // Act
-        var result = await _validator.ValidateAsync(input, CancellationToken.None);
+        var result = await _sut.ValidateAsync(input, CancellationToken.None);
 
         // Assert
         Assert.Equal(3, result.ValidEntries.Count); // 3 valid entries (including one with warnings)
@@ -235,22 +250,24 @@ public class ContentUploadEntryValidatorTests
         var contentType = ContentTypeBuilder.CreateBlogPost();
         var locales = LocaleBuilder.CreateMultiple();
         
-        _mockContentfulService.SetupContentType(contentType);
-        _mockContentfulService.SetupLocales(locales.ToArray());
+        _contentfulServiceMock.Setup(x => x.GetContentTypeAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contentType);
+        _contentfulServiceMock.Setup(x => x.GetLocalesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(locales.ToArray());
 
         var emptyEntries = Array.Empty<Contentful.Core.Models.Entry<dynamic>>();
 
         var input = new ContentUploaderInput
         {
             ContentTypeId = "blogPost",
-            ContentfulService = _mockContentfulService,
+            ContentfulService = _contentfulServiceMock.Object,
             Entries = new MockAsyncEnumerableWithTotal<Contentful.Core.Models.Entry<dynamic>>(emptyEntries),
             UploadOnlyValidEntries = false,
             PublishEntries = false
         };
 
         // Act
-        var result = await _validator.ValidateAsync(input, CancellationToken.None);
+        var result = await _sut.ValidateAsync(input, CancellationToken.None);
 
         // Assert
         Assert.Empty(result.ValidEntries);
@@ -265,8 +282,10 @@ public class ContentUploadEntryValidatorTests
         var contentType = ContentTypeBuilder.CreateBlogPost();
         var locales = LocaleBuilder.CreateMultiple();
         
-        _mockContentfulService.SetupContentType(contentType);
-        _mockContentfulService.SetupLocales(locales.ToArray());
+        _contentfulServiceMock.Setup(x => x.GetContentTypeAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contentType);
+        _contentfulServiceMock.Setup(x => x.GetLocalesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(locales.ToArray());
 
         var entries = new[]
         {
@@ -276,7 +295,7 @@ public class ContentUploadEntryValidatorTests
         var input = new ContentUploaderInput
         {
             ContentTypeId = "blogPost",
-            ContentfulService = _mockContentfulService,
+            ContentfulService = _contentfulServiceMock.Object,
             Entries = new MockAsyncEnumerableWithTotal<Contentful.Core.Models.Entry<dynamic>>(entries),
             UploadOnlyValidEntries = false,
             PublishEntries = false
@@ -287,14 +306,14 @@ public class ContentUploadEntryValidatorTests
 
         // Act & Assert
         await Assert.ThrowsAsync<OperationCanceledException>(
-            () => _validator.ValidateAsync(input, cts.Token));
+            () => _sut.ValidateAsync(input, cts.Token));
     }
 
     [Fact]
     public async Task GivenValidatorImplementsInterface_WhenChecked_ThenImplementsIContentUploadEntryValidator()
     {
         // Arrange & Act
-        var implementsInterface = _validator is IContentUploadEntryValidator;
+        var implementsInterface = _sut is IContentUploadEntryValidator;
 
         // Assert
         Assert.True(implementsInterface);
@@ -304,8 +323,8 @@ public class ContentUploadEntryValidatorTests
     public async Task GivenNullContentType_WhenValidated_ThenNullReferenceExceptionIsThrown()
     {
         // Arrange
-        _mockContentfulService.SetupContentType(null!); // Null content type
-        _mockContentfulService.SetupLocales(LocaleBuilder.CreateMultiple().ToArray());
+        _contentfulServiceMock.Setup(x => x.GetLocalesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(LocaleBuilder.CreateMultiple().ToArray());
 
         var entries = new[]
         {
@@ -315,7 +334,7 @@ public class ContentUploadEntryValidatorTests
         var input = new ContentUploaderInput
         {
             ContentTypeId = "nonexistent",
-            ContentfulService = _mockContentfulService,
+            ContentfulService = _contentfulServiceMock.Object,
             Entries = new MockAsyncEnumerableWithTotal<Contentful.Core.Models.Entry<dynamic>>(entries),
             UploadOnlyValidEntries = false,
             PublishEntries = false
@@ -323,7 +342,7 @@ public class ContentUploadEntryValidatorTests
 
         // Act & Assert
         await Assert.ThrowsAsync<NullReferenceException>(
-            () => _validator.ValidateAsync(input, CancellationToken.None));
+            () => _sut.ValidateAsync(input, CancellationToken.None));
     }
 
     [Fact]
@@ -333,8 +352,10 @@ public class ContentUploadEntryValidatorTests
         var contentType = ContentTypeBuilder.CreateBlogPost();
         var locales = LocaleBuilder.CreateMultiple();
         
-        _mockContentfulService.SetupContentType(contentType);
-        _mockContentfulService.SetupLocales(locales.ToArray());
+        _contentfulServiceMock.Setup(x => x.GetContentTypeAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contentType);
+        _contentfulServiceMock.Setup(x => x.GetLocalesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(locales.ToArray());
 
         const int entryCount = 100;
         var entries = Enumerable.Range(0, entryCount)
@@ -344,14 +365,14 @@ public class ContentUploadEntryValidatorTests
         var input = new ContentUploaderInput
         {
             ContentTypeId = "blogPost",
-            ContentfulService = _mockContentfulService,
+            ContentfulService = _contentfulServiceMock.Object,
             Entries = new MockAsyncEnumerableWithTotal<Contentful.Core.Models.Entry<dynamic>>(entries),
             UploadOnlyValidEntries = false,
             PublishEntries = false
         };
 
         // Act
-        var result = await _validator.ValidateAsync(input, CancellationToken.None);
+        var result = await _sut.ValidateAsync(input, CancellationToken.None);
 
         // Assert
         Assert.Equal(entryCount, result.ValidEntries.Count);

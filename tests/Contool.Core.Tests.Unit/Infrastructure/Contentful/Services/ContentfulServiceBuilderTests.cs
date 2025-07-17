@@ -1,6 +1,8 @@
 using Contool.Core.Infrastructure.Contentful.Services;
 using Contool.Core.Infrastructure.Contentful.Extensions;
-using Contool.Core.Tests.Unit.Mocks;
+using Contool.Core.Infrastructure.Utils.Models;
+using Contool.Core.Tests.Unit.Helpers;
+using MockLite;
 
 namespace Contool.Core.Tests.Unit.Infrastructure.Contentful.Services;
 
@@ -8,16 +10,16 @@ public class ContentfulServiceBuilderTests
 {
     private readonly ContentfulServiceBuilder _sut;
     
-    private readonly MockContentfulClientManagementAdapterFactory _adapterFactoryMock = new();
-    private readonly MockContentfulServiceOperationServiceFactory _operationServiceFactoryMock = new();
-    private readonly MockRuntimeContext _runtimeContextMock = new();
+    private readonly Mock<IContentfulManagementClientAdapterFactory> _adapterFactoryMock = new();
+    private readonly Mock<IContentfulEntryOperationServiceFactory> _operationServiceFactoryMock = new();
+    private readonly Mock<IRuntimeContext> _runtimeContextMock = new();
 
     public ContentfulServiceBuilderTests()
     {
         _sut = new ContentfulServiceBuilder(
-            _adapterFactoryMock,
-            _operationServiceFactoryMock,
-            _runtimeContextMock);
+            _adapterFactoryMock.Object,
+            _operationServiceFactoryMock.Object,
+            _runtimeContextMock.Object);
     }
 
     [Fact]
@@ -27,17 +29,18 @@ public class ContentfulServiceBuilderTests
         const string spaceId = "test-space-id";
         const string environmentId = "test-environment-id";
 
-        _adapterFactoryMock.SetupClient(new MockContentfulClient());
-        _operationServiceFactoryMock.SetupClient(new MockContentfulManagementClient());
-
         // Act
-        var service = _sut.Build(spaceId, environmentId);
+        var service = _sut.WithSpaceId(spaceId)
+            .WithEnvironmentId(environmentId)
+            .Build();
 
         // Assert
         Assert.NotNull(service);
-        Assert.IsType<ContentfulService>(service);
-        Assert.True(_adapterFactoryMock.CreateWasCalled);
-        Assert.True(_operationServiceFactoryMock.CreateWasCalled);
+        Assert.IsAssignableFrom<IContentfulService>(service);
+        
+        // Verify the factory methods are called correctly
+        _adapterFactoryMock.Verify(x => x.Create(It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<bool>()), Times.Once);
+        _operationServiceFactoryMock.Verify(x => x.Create(It.IsAny<IContentfulManagementClientAdapter>()), Times.Once);
     }
 
     [Fact]
@@ -47,17 +50,16 @@ public class ContentfulServiceBuilderTests
         var spaceId = "test-space-id";
         var environmentId = "test-environment-id";
 
-        _adapterFactoryMock.SetupClient(new MockContentfulClient());
-        _operationServiceFactoryMock.SetupClient(new MockContentfulManagementClient());
+        // MockLite limitation: Cannot use custom mock classes that were deleted
+        // Simply verify the factory methods are called correctly
 
         // Act
         _sut.Build(spaceId, environmentId);
 
         // Assert
-        Assert.Equal(spaceId, _adapterFactoryMock.LastSpaceId);
-        Assert.Equal(environmentId, _adapterFactoryMock.LastEnvironmentId);
-        Assert.Equal(spaceId, _operationServiceFactoryMock.LastSpaceId);
-        Assert.Equal(environmentId, _operationServiceFactoryMock.LastEnvironmentId);
+        _adapterFactoryMock.Verify(x => x.Create(spaceId, environmentId, It.IsAny<bool>()), Times.Once);
+        _operationServiceFactoryMock.Verify(x => x.Create(It.IsAny<IContentfulManagementClientAdapter>()), Times.Once);
+        // Note: MockLite doesn't support LastSpaceId, LastEnvironmentId property tracking like custom mocks
     }
 
     [Fact]
@@ -74,8 +76,8 @@ public class ContentfulServiceBuilderTests
     public void GivenMultipleCalls_WhenBuild_ThenCreatesMultipleServices()
     {
         // Arrange
-        _adapterFactoryMock.SetupClient(new MockContentfulClient());
-        _operationServiceFactoryMock.SetupClient(new MockContentfulManagementClient());
+        // MockLite limitation: Cannot use custom mock classes that were deleted
+        // Simply verify the factory methods are called correctly
 
         // Act
         var service1 = _sut.Build("space1", "env1");
@@ -85,58 +87,56 @@ public class ContentfulServiceBuilderTests
         Assert.NotNull(service1);
         Assert.NotNull(service2);
         Assert.NotSame(service1, service2);
-        Assert.Equal(2, _adapterFactoryMock.CreateCallCount);
-        Assert.Equal(2, _operationServiceFactoryMock.CreateCallCount);
+        _adapterFactoryMock.Verify(x => x.Create(It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<bool>()), Times.Exactly(2));
+        _operationServiceFactoryMock.Verify(x => x.Create(It.IsAny<IContentfulManagementClientAdapter>()), Times.Exactly(2));
+        // Note: MockLite doesn't support CreateCallCount property tracking like custom mocks
     }
 
     [Fact]
     public void GivenDifferentSpaceIds_WhenBuild_ThenCreatesServicesWithCorrectSpaceIds()
     {
         // Arrange
-        _adapterFactoryMock.SetupClient(new MockContentfulClient());
-        _operationServiceFactoryMock.SetupClient(new MockContentfulManagementClient());
+        // MockLite limitation: Cannot use custom mock classes that were deleted
+        // Simply verify the factory methods are called correctly
 
         // Act
         _sut.Build("space1", "env1");
         _sut.Build("space2", "env2");
 
         // Assert
-        Assert.Equal("space2", _adapterFactoryMock.LastSpaceId); // Last call
-        Assert.Equal("env2", _adapterFactoryMock.LastEnvironmentId); // Last call
-        Assert.Equal("space2", _operationServiceFactoryMock.LastSpaceId); // Last call
-        Assert.Equal("env2", _operationServiceFactoryMock.LastEnvironmentId); // Last call
+        _adapterFactoryMock.Verify(x => x.Create("space1", "env1", It.IsAny<bool>()), Times.Once);
+        _adapterFactoryMock.Verify(x => x.Create("space2", "env2", It.IsAny<bool>()), Times.Once);
+        _operationServiceFactoryMock.Verify(x => x.Create(It.IsAny<IContentfulManagementClientAdapter>()), Times.Exactly(2));
     }
 
     [Fact]
     public void GivenEmptySpaceId_WhenBuild_ThenStillCreatesService()
     {
         // Arrange
-        _adapterFactoryMock.SetupClient(new MockContentfulClient());
-        _operationServiceFactoryMock.SetupClient(new MockContentfulManagementClient());
+        // MockLite limitation: Cannot use custom mock classes that were deleted
+        // Simply verify the factory methods are called correctly
 
         // Act
         var service = _sut.Build("", "environment");
 
         // Assert
         Assert.NotNull(service);
-        Assert.Equal("", _adapterFactoryMock.LastSpaceId);
-        Assert.Equal("environment", _adapterFactoryMock.LastEnvironmentId);
+        _adapterFactoryMock.Verify(x => x.Create("", "environment", It.IsAny<bool>()), Times.Once);
     }
 
     [Fact]
     public void GivenEmptyEnvironmentId_WhenBuild_ThenStillCreatesService()
     {
         // Arrange
-        _adapterFactoryMock.SetupClient(new MockContentfulClient());
-        _operationServiceFactoryMock.SetupClient(new MockContentfulManagementClient());
+        // MockLite limitation: Cannot use custom mock classes that were deleted
+        // Simply verify the factory methods are called correctly
 
         // Act
         var service = _sut.Build("space", "");
 
         // Assert
         Assert.NotNull(service);
-        Assert.Equal("space", _adapterFactoryMock.LastSpaceId);
-        Assert.Equal("", _adapterFactoryMock.LastEnvironmentId);
+        _adapterFactoryMock.Verify(x => x.Create("space", "", It.IsAny<bool>()), Times.Once);
     }
 
     [Fact]
@@ -146,31 +146,30 @@ public class ContentfulServiceBuilderTests
         var spaceId = "test-space_id.123";
         var environmentId = "test-env_id.456";
 
-        _adapterFactoryMock.SetupClient(new MockContentfulClient());
-        _operationServiceFactoryMock.SetupClient(new MockContentfulManagementClient());
+        // MockLite limitation: Cannot use custom mock classes that were deleted
+        // Simply verify the factory methods are called correctly
 
         // Act
         var service = _sut.Build(spaceId, environmentId);
 
         // Assert
         Assert.NotNull(service);
-        Assert.Equal(spaceId, _adapterFactoryMock.LastSpaceId);
-        Assert.Equal(environmentId, _adapterFactoryMock.LastEnvironmentId);
+        _adapterFactoryMock.Verify(x => x.Create(spaceId, environmentId, It.IsAny<bool>()), Times.Once);
     }
 
     [Fact]
     public void GivenBuilder_WhenBuildCalled_ThenCreatesFactoryClients()
     {
         // Arrange
-        _adapterFactoryMock.SetupClient(new MockContentfulClient());
-        _operationServiceFactoryMock.SetupClient(new MockContentfulManagementClient());
+        // MockLite limitation: Cannot use custom mock classes that were deleted
+        // Simply verify the factory methods are called correctly
 
         // Act
         var service = _sut.Build("space", "env");
 
         // Assert
         Assert.NotNull(service);
-        Assert.True(_adapterFactoryMock.CreateWasCalled);
-        Assert.True(_operationServiceFactoryMock.CreateWasCalled);
+        _adapterFactoryMock.Verify(x => x.Create(It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<bool>()), Times.Once);
+        _operationServiceFactoryMock.Verify(x => x.Create(It.IsAny<IContentfulManagementClientAdapter>()), Times.Once);
     }
 }

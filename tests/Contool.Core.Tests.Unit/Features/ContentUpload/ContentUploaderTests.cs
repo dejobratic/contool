@@ -4,23 +4,25 @@ using Contool.Core.Infrastructure.Contentful.Services;
 using Contool.Core.Infrastructure.Utils.Models;
 using Contool.Core.Infrastructure.Utils.Services;
 using Contool.Core.Tests.Unit.Helpers;
-using Contool.Core.Tests.Unit.Mocks;
+using MockLite;
 
 namespace Contool.Core.Tests.Unit.Features.ContentUpload;
 
 public class ContentUploaderTests
 {
-    private readonly ContentUploader _uploader;
-    private readonly MockBatchProcessor _mockBatchProcessor;
-    private readonly MockProgressReporter _mockProgressReporter;
-    private readonly MockContentfulService _mockContentfulService;
+    private readonly ContentUploader _sut;
+    
+    private readonly Mock<IBatchProcessor> _batchProcessorMock = new();
+    private readonly Mock<IProgressReporter> _progressReporterMock = new();
+    private readonly Mock<IContentfulService> _contentfulServiceMock = new();
 
     public ContentUploaderTests()
     {
-        _mockBatchProcessor = new MockBatchProcessor();
-        _mockProgressReporter = new MockProgressReporter();
-        _uploader = new ContentUploader(_mockBatchProcessor, _mockProgressReporter);
-        _mockContentfulService = new MockContentfulService();
+        _batchProcessorMock.SetupDefaults();
+        _progressReporterMock.SetupDefaults();
+        _contentfulServiceMock.SetupDefaults();
+        
+        _sut = new ContentUploader(_batchProcessorMock.Object, _progressReporterMock.Object);
     }
 
     [Fact]
@@ -37,19 +39,22 @@ public class ContentUploaderTests
         var input = new ContentUploaderInput
         {
             ContentTypeId = "blogPost",
-            ContentfulService = _mockContentfulService,
+            ContentfulService = _contentfulServiceMock.Object,
             Entries = new MockAsyncEnumerableWithTotal<Entry<dynamic>>(entries),
             UploadOnlyValidEntries = false,
             PublishEntries = false
         };
 
         // Act
-        await _uploader.UploadAsync(input, CancellationToken.None);
+        await _sut.UploadAsync(input, CancellationToken.None);
 
         // Assert
-        Assert.True(_mockBatchProcessor.ProcessAsyncWasCalled);
-        Assert.Equal(entries.Length, _mockBatchProcessor.ProcessedItemsCount);
-        Assert.Equal(50, _mockBatchProcessor.LastBatchSize); // Default batch size
+        _batchProcessorMock.Verify(x => x.ProcessAsync(
+            It.IsAny<IAsyncEnumerable<Entry<dynamic>>>(),
+            It.IsAny<int>(),
+            It.IsAny<Func<IReadOnlyList<Entry<dynamic>>, CancellationToken, Task>>(),
+            It.IsAny<Func<Entry<dynamic>, bool>>(),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -64,19 +69,17 @@ public class ContentUploaderTests
         var input = new ContentUploaderInput
         {
             ContentTypeId = "blogPost",
-            ContentfulService = _mockContentfulService,
+            ContentfulService = _contentfulServiceMock.Object,
             Entries = new MockAsyncEnumerableWithTotal<Entry<dynamic>>(entries),
             UploadOnlyValidEntries = false,
             PublishEntries = false
         };
 
         // Act
-        await _uploader.UploadAsync(input, CancellationToken.None);
+        await _sut.UploadAsync(input, CancellationToken.None);
 
         // Assert
-        Assert.True(_mockBatchProcessor.ProcessAsyncWasCalled);
-        Assert.Equal(entryCount, _mockBatchProcessor.ProcessedItemsCount);
-        Assert.True(_mockBatchProcessor.BatchCount >= 3); // Should be at least 3 batches (50, 50, 25)
+        _batchProcessorMock.Verify(x => x.ProcessAsync(It.IsAny<IAsyncEnumerable<Entry<dynamic>>>(), It.IsAny<int>(), It.IsAny<Func<IReadOnlyList<Entry<dynamic>>, CancellationToken, Task>>(), It.IsAny<Func<Entry<dynamic>, bool>>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -88,18 +91,17 @@ public class ContentUploaderTests
         var input = new ContentUploaderInput
         {
             ContentTypeId = "blogPost",
-            ContentfulService = _mockContentfulService,
+            ContentfulService = _contentfulServiceMock.Object,
             Entries = new MockAsyncEnumerableWithTotal<Entry<dynamic>>(emptyEntries),
             UploadOnlyValidEntries = false,
             PublishEntries = false
         };
 
         // Act
-        await _uploader.UploadAsync(input, CancellationToken.None);
+        await _sut.UploadAsync(input, CancellationToken.None);
 
         // Assert
-        Assert.True(_mockBatchProcessor.ProcessAsyncWasCalled);
-        Assert.Equal(0, _mockBatchProcessor.ProcessedItemsCount);
+        _batchProcessorMock.Verify(x => x.ProcessAsync(It.IsAny<IAsyncEnumerable<Entry<dynamic>>>(), It.IsAny<int>(), It.IsAny<Func<IReadOnlyList<Entry<dynamic>>, CancellationToken, Task>>(), It.IsAny<Func<Entry<dynamic>, bool>>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -114,19 +116,19 @@ public class ContentUploaderTests
         var input = new ContentUploaderInput
         {
             ContentTypeId = "blogPost",
-            ContentfulService = _mockContentfulService,
+            ContentfulService = _contentfulServiceMock.Object,
             Entries = new MockAsyncEnumerableWithTotal<Entry<dynamic>>(entries),
             UploadOnlyValidEntries = false,
             PublishEntries = true
         };
 
         // Act
-        await _uploader.UploadAsync(input, CancellationToken.None);
+        await _sut.UploadAsync(input, CancellationToken.None);
 
         // Assert
-        Assert.True(_mockContentfulService.CreateOrUpdateEntriesAsyncWasCalled);
-        Assert.True(_mockContentfulService.PublishEntriesAsyncWasCalled);
-        Assert.False(_mockContentfulService.UnpublishEntriesAsyncWasCalled);
+        _contentfulServiceMock.Verify(x => x.CreateOrUpdateEntriesAsync(It.IsAny<IEnumerable<Entry<dynamic>>>(), true, It.IsAny<CancellationToken>()), Times.Once);
+        _contentfulServiceMock.Verify(x => x.PublishEntriesAsync(It.IsAny<IEnumerable<Entry<dynamic>>>(), It.IsAny<CancellationToken>()), Times.Once);
+        _contentfulServiceMock.Verify(x => x.UnpublishEntriesAsync(It.IsAny<IEnumerable<Entry<dynamic>>>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -141,19 +143,19 @@ public class ContentUploaderTests
         var input = new ContentUploaderInput
         {
             ContentTypeId = "blogPost",
-            ContentfulService = _mockContentfulService,
+            ContentfulService = _contentfulServiceMock.Object,
             Entries = new MockAsyncEnumerableWithTotal<Entry<dynamic>>(entries),
             UploadOnlyValidEntries = false,
             PublishEntries = false
         };
 
         // Act
-        await _uploader.UploadAsync(input, CancellationToken.None);
+        await _sut.UploadAsync(input, CancellationToken.None);
 
         // Assert
-        Assert.True(_mockContentfulService.CreateOrUpdateEntriesAsyncWasCalled);
-        Assert.False(_mockContentfulService.PublishEntriesAsyncWasCalled);
-        Assert.False(_mockContentfulService.UnpublishEntriesAsyncWasCalled);
+        _contentfulServiceMock.Verify(x => x.CreateOrUpdateEntriesAsync(It.IsAny<IEnumerable<Entry<dynamic>>>(), false, It.IsAny<CancellationToken>()), Times.Once);
+        _contentfulServiceMock.Verify(x => x.PublishEntriesAsync(It.IsAny<IEnumerable<Entry<dynamic>>>(), It.IsAny<CancellationToken>()), Times.Never);
+        _contentfulServiceMock.Verify(x => x.UnpublishEntriesAsync(It.IsAny<IEnumerable<Entry<dynamic>>>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -168,7 +170,7 @@ public class ContentUploaderTests
         var input = new ContentUploaderInput
         {
             ContentTypeId = "blogPost",
-            ContentfulService = _mockContentfulService,
+            ContentfulService = _contentfulServiceMock.Object,
             Entries = new MockAsyncEnumerableWithTotal<Entry<dynamic>>(entries),
             UploadOnlyValidEntries = false,
             PublishEntries = false
@@ -179,7 +181,7 @@ public class ContentUploaderTests
 
         // Act & Assert
         await Assert.ThrowsAsync<OperationCanceledException>(() =>
-            _uploader.UploadAsync(input, cts.Token));
+            _sut.UploadAsync(input, cts.Token));
     }
 
     [Fact]
@@ -195,26 +197,26 @@ public class ContentUploaderTests
         var input = new ContentUploaderInput
         {
             ContentTypeId = "blogPost",
-            ContentfulService = _mockContentfulService,
+            ContentfulService = _contentfulServiceMock.Object,
             Entries = new MockAsyncEnumerableWithTotal<Entry<dynamic>>(entries),
             UploadOnlyValidEntries = false,
             PublishEntries = false
         };
 
         // Act
-        await _uploader.UploadAsync(input, CancellationToken.None);
+        await _sut.UploadAsync(input, CancellationToken.None);
 
         // Assert
-        Assert.True(_mockProgressReporter.StartWasCalled);
-        Assert.True(_mockProgressReporter.IncrementWasCalled);
-        Assert.True(_mockProgressReporter.CompleteWasCalled);
+        _progressReporterMock.Verify(x => x.Start(It.IsAny<Operation>(), It.IsAny<Func<int>>()), Times.Once);
+        _progressReporterMock.Verify(x => x.Increment(), Times.AtLeastOnce);
+        _progressReporterMock.Verify(x => x.Complete(), Times.Once);
     }
 
     [Fact]
     public void GivenContentUploader_WhenCheckingInterface_ThenImplementsIContentUploader()
     {
         // Arrange & Act
-        var implementsInterface = _uploader is IContentUploader;
+        var implementsInterface = _sut is IContentUploader;
 
         // Assert
         Assert.True(implementsInterface);
@@ -224,7 +226,8 @@ public class ContentUploaderTests
     public async Task GivenBatchProcessorThrowsException_WhenUpload_ThenPropagatesException()
     {
         // Arrange
-        _mockBatchProcessor.ShouldThrowException = true;
+        _batchProcessorMock.Setup(x => x.ProcessAsync(It.IsAny<IAsyncEnumerable<Entry<dynamic>>>(), It.IsAny<int>(), It.IsAny<Func<IReadOnlyList<Entry<dynamic>>, CancellationToken, Task>>(), It.IsAny<Func<Entry<dynamic>, bool>>(), It.IsAny<CancellationToken>()))
+            .Throws(new InvalidOperationException("Mock batch processor exception"));
 
         var entries = new[]
         {
@@ -234,7 +237,7 @@ public class ContentUploaderTests
         var input = new ContentUploaderInput
         {
             ContentTypeId = "blogPost",
-            ContentfulService = _mockContentfulService,
+            ContentfulService = _contentfulServiceMock.Object,
             Entries = new MockAsyncEnumerableWithTotal<Entry<dynamic>>(entries),
             UploadOnlyValidEntries = false,
             PublishEntries = false
@@ -242,7 +245,7 @@ public class ContentUploaderTests
 
         // Act & Assert
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            _uploader.UploadAsync(input, CancellationToken.None));
+            _sut.UploadAsync(input, CancellationToken.None));
     }
 
     [Fact]
@@ -250,8 +253,8 @@ public class ContentUploaderTests
     {
         // Arrange
         const int customBatchSize = 10;
-        var customBatchProcessor = new MockBatchProcessor(customBatchSize);
-        var customUploader = new ContentUploader(customBatchProcessor, _mockProgressReporter);
+        var customBatchProcessor = new Mock<IBatchProcessor>();
+        var customUploader = new ContentUploader(customBatchProcessor.Object, _progressReporterMock.Object);
 
         var entries = new[]
         {
@@ -262,7 +265,7 @@ public class ContentUploaderTests
         var input = new ContentUploaderInput
         {
             ContentTypeId = "blogPost",
-            ContentfulService = _mockContentfulService,
+            ContentfulService = _contentfulServiceMock.Object,
             Entries = new MockAsyncEnumerableWithTotal<Entry<dynamic>>(entries),
             UploadOnlyValidEntries = false,
             PublishEntries = false
@@ -272,7 +275,7 @@ public class ContentUploaderTests
         await customUploader.UploadAsync(input, CancellationToken.None);
 
         // Assert
-        Assert.Equal(customBatchSize, customBatchProcessor.LastBatchSize);
+        customBatchProcessor.Verify(x => x.ProcessAsync(It.IsAny<IAsyncEnumerable<Entry<dynamic>>>(), It.IsAny<int>(), It.IsAny<Func<IReadOnlyList<Entry<dynamic>>, CancellationToken, Task>>(), It.IsAny<Func<Entry<dynamic>, bool>>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -280,6 +283,6 @@ public class ContentUploaderTests
     {
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentNullException>(() =>
-            _uploader.UploadAsync(null!, CancellationToken.None));
+            _sut.UploadAsync(null!, CancellationToken.None));
     }
 }

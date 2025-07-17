@@ -1,8 +1,9 @@
 using Contentful.Core.Models;
 using Contentful.Core.Models.Management;
 using Contool.Core.Features.ContentUpload;
+using Contool.Core.Infrastructure.Contentful.Services;
 using Contool.Core.Tests.Unit.Helpers;
-using Contool.Core.Tests.Unit.Mocks;
+using MockLite;
 
 namespace Contool.Core.Tests.Unit.Features.ContentUpload;
 
@@ -10,7 +11,7 @@ public class ContentEntryDeserializerFactoryTests
 {
     private readonly ContentEntryDeserializerFactory _sut = new();
     
-    private readonly MockContentfulService _contentfulServiceMock = new();
+    private readonly Mock<IContentfulService> _contentfulServiceMock = new();
 
     [Fact]
     public async Task GivenValidContentTypeId_WhenCreateAsync_ThenReturnsDeserializer()
@@ -19,11 +20,13 @@ public class ContentEntryDeserializerFactoryTests
         var contentType = ContentTypeBuilder.CreateBlogPost();
         var locales = new[] { LocaleBuilder.CreateDefault() };
         
-        _contentfulServiceMock.SetupContentType(contentType);
-        _contentfulServiceMock.SetupLocales(locales);
+        _contentfulServiceMock.Setup(x => x.GetContentTypeAsync("blogPost", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contentType);
+        _contentfulServiceMock.Setup(x => x.GetLocalesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(locales);
 
         // Act
-        var deserializer = await _sut.CreateAsync("blogPost", _contentfulServiceMock, CancellationToken.None);
+        var deserializer = await _sut.CreateAsync("blogPost", _contentfulServiceMock.Object, CancellationToken.None);
 
         // Assert
         Assert.NotNull(deserializer);
@@ -37,15 +40,17 @@ public class ContentEntryDeserializerFactoryTests
         var contentType = ContentTypeBuilder.CreateBlogPost();
         var locales = new[] { LocaleBuilder.CreateDefault() };
         
-        _contentfulServiceMock.SetupContentType(contentType);
-        _contentfulServiceMock.SetupLocales(locales);
+        _contentfulServiceMock.Setup(x => x.GetContentTypeAsync("blogPost", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contentType);
+        _contentfulServiceMock.Setup(x => x.GetLocalesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(locales);
 
         // Act
-        await _sut.CreateAsync("blogPost", _contentfulServiceMock, CancellationToken.None);
+        await _sut.CreateAsync("blogPost", _contentfulServiceMock.Object, CancellationToken.None);
 
         // Assert
         // The service should have been called to get the content type
-        Assert.NotNull(_contentfulServiceMock);
+        _contentfulServiceMock.Verify(x => x.GetContentTypeAsync("blogPost", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -55,15 +60,17 @@ public class ContentEntryDeserializerFactoryTests
         var contentType = ContentTypeBuilder.CreateBlogPost();
         var locales = new[] { LocaleBuilder.CreateDefault() };
         
-        _contentfulServiceMock.SetupContentType(contentType);
-        _contentfulServiceMock.SetupLocales(locales);
+        _contentfulServiceMock.Setup(x => x.GetContentTypeAsync("blogPost", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contentType);
+        _contentfulServiceMock.Setup(x => x.GetLocalesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(locales);
 
         // Act
-        await _sut.CreateAsync("blogPost", _contentfulServiceMock, CancellationToken.None);
+        await _sut.CreateAsync("blogPost", _contentfulServiceMock.Object, CancellationToken.None);
 
         // Assert
         // The service should have been called to get the locales
-        Assert.NotNull(_contentfulServiceMock);
+        _contentfulServiceMock.Verify(x => x.GetLocalesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -78,11 +85,13 @@ public class ContentEntryDeserializerFactoryTests
             LocaleBuilder.CreateFrench()
         };
         
-        _contentfulServiceMock.SetupContentType(contentType);
-        _contentfulServiceMock.SetupLocales(locales);
+        _contentfulServiceMock.Setup(x => x.GetContentTypeAsync("blogPost", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contentType);
+        _contentfulServiceMock.Setup(x => x.GetLocalesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(locales);
 
         // Act
-        var deserializer = await _sut.CreateAsync("blogPost", _contentfulServiceMock, CancellationToken.None);
+        var deserializer = await _sut.CreateAsync("blogPost", _contentfulServiceMock.Object, CancellationToken.None);
 
         // Assert
         Assert.NotNull(deserializer);
@@ -96,15 +105,17 @@ public class ContentEntryDeserializerFactoryTests
         var contentType = ContentTypeBuilder.CreateBlogPost();
         var locales = new[] { LocaleBuilder.CreateDefault() };
         
-        _contentfulServiceMock.SetupContentType(contentType);
-        _contentfulServiceMock.SetupLocales(locales);
+        _contentfulServiceMock.Setup(x => x.GetContentTypeAsync("blogPost", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contentType);
+        _contentfulServiceMock.Setup(x => x.GetLocalesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(locales);
 
         using var cts = new CancellationTokenSource();
         cts.Cancel();
 
         // Act & Assert
         await Assert.ThrowsAsync<OperationCanceledException>(() =>
-            _sut.CreateAsync("blogPost", _contentfulServiceMock, cts.Token));
+            _sut.CreateAsync("blogPost", _contentfulServiceMock.Object, cts.Token));
     }
 
     [Fact]
@@ -115,16 +126,19 @@ public class ContentEntryDeserializerFactoryTests
         var productType = ContentTypeBuilder.CreateProduct();
         var locales = new[] { LocaleBuilder.CreateDefault() };
         
-        _contentfulServiceMock.SetupLocales(locales);
+        _contentfulServiceMock.Setup(x => x.GetLocalesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(locales);
 
         // Act & Assert - Blog Post
-        _contentfulServiceMock.SetupContentType(blogPostType);
-        var blogDeserializer = await _sut.CreateAsync("blogPost", _contentfulServiceMock, CancellationToken.None);
+        _contentfulServiceMock.Setup(x => x.GetContentTypeAsync("blogPost", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(blogPostType);
+        var blogDeserializer = await _sut.CreateAsync("blogPost", _contentfulServiceMock.Object, CancellationToken.None);
         Assert.NotNull(blogDeserializer);
 
         // Act & Assert - Product
-        _contentfulServiceMock.SetupContentType(productType);
-        var productDeserializer = await _sut.CreateAsync("product", _contentfulServiceMock, CancellationToken.None);
+        _contentfulServiceMock.Setup(x => x.GetContentTypeAsync("product", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(productType);
+        var productDeserializer = await _sut.CreateAsync("product", _contentfulServiceMock.Object, CancellationToken.None);
         Assert.NotNull(productDeserializer);
     }
 
@@ -135,11 +149,13 @@ public class ContentEntryDeserializerFactoryTests
         var contentType = ContentTypeBuilder.CreateBlogPost();
         var emptyLocales = Array.Empty<Locale>();
         
-        _contentfulServiceMock.SetupContentType(contentType);
-        _contentfulServiceMock.SetupLocales(emptyLocales);
+        _contentfulServiceMock.Setup(x => x.GetContentTypeAsync("blogPost", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contentType);
+        _contentfulServiceMock.Setup(x => x.GetLocalesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(emptyLocales);
 
         // Act
-        var deserializer = await _sut.CreateAsync("blogPost", _contentfulServiceMock, CancellationToken.None);
+        var deserializer = await _sut.CreateAsync("blogPost", _contentfulServiceMock.Object, CancellationToken.None);
 
         // Assert
         Assert.NotNull(deserializer);
@@ -153,11 +169,13 @@ public class ContentEntryDeserializerFactoryTests
         var contentType = ContentTypeBuilder.CreateMinimal();
         var locales = new[] { LocaleBuilder.CreateDefault() };
         
-        _contentfulServiceMock.SetupContentType(contentType);
-        _contentfulServiceMock.SetupLocales(locales);
+        _contentfulServiceMock.Setup(x => x.GetContentTypeAsync("minimal", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contentType);
+        _contentfulServiceMock.Setup(x => x.GetLocalesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(locales);
 
         // Act
-        var deserializer = await _sut.CreateAsync("minimal", _contentfulServiceMock, CancellationToken.None);
+        var deserializer = await _sut.CreateAsync("minimal", _contentfulServiceMock.Object, CancellationToken.None);
 
         // Assert
         Assert.NotNull(deserializer);
@@ -191,11 +209,13 @@ public class ContentEntryDeserializerFactoryTests
         
         var locales = new[] { LocaleBuilder.CreateDefault() };
         
-        _contentfulServiceMock.SetupContentType(contentType);
-        _contentfulServiceMock.SetupLocales(locales);
+        _contentfulServiceMock.Setup(x => x.GetContentTypeAsync("complex", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contentType);
+        _contentfulServiceMock.Setup(x => x.GetLocalesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(locales);
 
         // Act
-        var deserializer = await _sut.CreateAsync("complex", _contentfulServiceMock, CancellationToken.None);
+        var deserializer = await _sut.CreateAsync("complex", _contentfulServiceMock.Object, CancellationToken.None);
 
         // Assert
         Assert.NotNull(deserializer);

@@ -77,10 +77,32 @@ public class ContentTypeBuilder
             .WithField("publishDate", "Publish Date", "Date", required: false)
             .Build();
 
+    public static ContentType CreateBlogPost(string id, string name) =>
+        new ContentTypeBuilder()
+            .WithId(id)
+            .WithName(name)
+            .WithDescription("A blog post content type")
+            .WithField("title", "Title", "Symbol", required: true)
+            .WithField("body", "Body", "RichText", required: true)
+            .WithField("author", "Author", "Symbol", required: false)
+            .WithField("publishDate", "Publish Date", "Date", required: false)
+            .Build();
+
     public static ContentType CreateProduct() =>
         new ContentTypeBuilder()
             .WithId("product")
             .WithName("Product")
+            .WithDescription("A product content type")
+            .WithField("name", "Name", "Symbol", required: true)
+            .WithField("price", "Price", "Number", required: true)
+            .WithField("description", "Description", "Text", required: false)
+            .WithField("inStock", "In Stock", "Boolean", required: false)
+            .Build();
+
+    public static ContentType CreateProduct(string id, string name) =>
+        new ContentTypeBuilder()
+            .WithId(id)
+            .WithName(name)
             .WithDescription("A product content type")
             .WithField("name", "Name", "Symbol", required: true)
             .WithField("price", "Price", "Number", required: true)

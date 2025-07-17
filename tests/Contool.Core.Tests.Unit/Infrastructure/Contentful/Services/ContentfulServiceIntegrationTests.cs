@@ -1,8 +1,9 @@
 using Contentful.Core.Models;
+using Contool.Core.Infrastructure.Contentful.Extensions;
 using Contool.Core.Infrastructure.Contentful.Services;
 using Contool.Core.Infrastructure.Contentful.Utils;
 using Contool.Core.Tests.Unit.Helpers;
-using Contool.Core.Tests.Unit.Mocks;
+using MockLite;
 
 namespace Contool.Core.Tests.Unit.Infrastructure.Contentful.Services;
 
@@ -10,12 +11,14 @@ public class ContentfulServiceIntegrationTests
 {
     private readonly ContentfulService _sut;
 
-    private readonly MockContentfulManagementClientAdapter _clientMock = new();
-    private readonly MockEntryOperationService _entryOperationServiceMock = new();
+    private readonly Mock<IContentfulManagementClientAdapter> _clientMock;
+    private readonly Mock<IContentfulEntryOperationService> _entryOperationServiceMock;
 
     public ContentfulServiceIntegrationTests()
     {
-        _sut = new ContentfulService(_clientMock, _entryOperationServiceMock);
+        _clientMock = new Mock<IContentfulManagementClientAdapter>();
+        _entryOperationServiceMock = new Mock<IContentfulEntryOperationService>();
+        _sut = new ContentfulService(_clientMock.Object, _entryOperationServiceMock.Object);
     }
 
     [Fact]
@@ -23,7 +26,8 @@ public class ContentfulServiceIntegrationTests
     {
         // Arrange
         var contentType = ContentTypeBuilder.CreateBlogPost();
-        _clientMock.SetupContentType(contentType);
+        _clientMock.Setup(x => x.GetContentTypeAsync(contentType.SystemProperties.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contentType);
 
         // Act
         var result = await _sut.GetContentTypeAsync("blogPost", CancellationToken.None);
@@ -32,21 +36,22 @@ public class ContentfulServiceIntegrationTests
         Assert.NotNull(result);
         Assert.Equal("blogPost", result.SystemProperties.Id);
         Assert.Equal("Blog Post", result.Name);
-        Assert.True(_clientMock.GetContentTypeAsyncWasCalled);
+        _clientMock.Verify(x => x.GetContentTypeAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task GivenInvalidContentTypeId_WhenGetContentTypeAsync_ThenReturnsNull()
     {
         // Arrange
-        _clientMock.SetupContentType(null);
+        _clientMock.Setup(x => x.GetContentTypeAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ContentType?)null);
 
         // Act
         var result = await _sut.GetContentTypeAsync("nonexistent", CancellationToken.None);
 
         // Assert
         Assert.Null(result);
-        Assert.True(_clientMock.GetContentTypeAsyncWasCalled);
+        _clientMock.Verify(x => x.GetContentTypeAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -54,7 +59,8 @@ public class ContentfulServiceIntegrationTests
     {
         // Arrange
         var locales = LocaleBuilder.CreateMultiple();
-        _clientMock.SetupLocales(locales);
+        _clientMock.Setup(x => x.GetLocalesCollectionAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(locales);
 
         // Act
         var result = await _sut.GetLocalesAsync(CancellationToken.None);
@@ -65,7 +71,7 @@ public class ContentfulServiceIntegrationTests
         Assert.Contains(result, l => l.Code == "en-US");
         Assert.Contains(result, l => l.Code == "fr-FR");
         Assert.Contains(result, l => l.Code == "es-ES");
-        Assert.True(_clientMock.GetLocalesAsyncWasCalled);
+        _clientMock.Verify(x => x.GetLocalesCollectionAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -78,7 +84,8 @@ public class ContentfulServiceIntegrationTests
             ContentTypeBuilder.CreateProduct(),
             ContentTypeBuilder.CreateMinimal()
         };
-        _clientMock.SetupContentTypes(contentTypes);
+        _clientMock.Setup(x => x.GetContentTypesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contentTypes);
 
         // Act
         var result = await _sut.GetContentTypesAsync(CancellationToken.None);
@@ -89,7 +96,7 @@ public class ContentfulServiceIntegrationTests
         Assert.Contains(result, ct => ct.SystemProperties.Id == "blogPost");
         Assert.Contains(result, ct => ct.SystemProperties.Id == "product");
         Assert.Contains(result, ct => ct.SystemProperties.Id == "minimal");
-        Assert.True(_clientMock.GetContentTypesAsyncWasCalled);
+        _clientMock.Verify(x => x.GetContentTypesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -97,7 +104,12 @@ public class ContentfulServiceIntegrationTests
     {
         // Arrange
         var contentType = ContentTypeBuilder.CreateBlogPost();
-        _clientMock.SetupCreatedContentType(contentType);
+        _clientMock.Setup(x => x.GetContentTypeAsync(contentType.SystemProperties.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ContentType?)null);
+        _clientMock.Setup(x => x.CreateOrUpdateContentTypeAsync(contentType, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contentType);
+        _clientMock.Setup(x => x.ActivateContentTypeAsync(contentType.SystemProperties.Id, It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contentType);
 
         // Act
         var result = await _sut.CreateContentTypeAsync(contentType, CancellationToken.None);
@@ -105,7 +117,8 @@ public class ContentfulServiceIntegrationTests
         // Assert
         Assert.NotNull(result);
         Assert.Equal("blogPost", result.SystemProperties.Id);
-        Assert.True(_clientMock.CreateContentTypeAsyncWasCalled);
+        _clientMock.Verify(x => x.CreateOrUpdateContentTypeAsync(contentType, It.IsAny<CancellationToken>()), Times.Once);
+        _clientMock.Verify(x => x.ActivateContentTypeAsync(contentType.SystemProperties.Id, It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -118,8 +131,8 @@ public class ContentfulServiceIntegrationTests
         await _sut.DeleteContentTypeAsync(contentTypeId, CancellationToken.None);
 
         // Assert
-        Assert.True(_clientMock.DeleteContentTypeAsyncWasCalled);
-        Assert.Equal(contentTypeId, _clientMock.LastDeletedContentTypeId);
+        _clientMock.Verify(x => x.DeactivateContentTypeAsync(contentTypeId, It.IsAny<CancellationToken>()), Times.Once);
+        _clientMock.Verify(x => x.DeleteContentTypeAsync(contentTypeId, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -132,7 +145,13 @@ public class ContentfulServiceIntegrationTests
             EntryBuilder.CreateBlogPost("entry2", "blogPost"),
             EntryBuilder.CreateBlogPost("entry3", "blogPost")
         };
-        _clientMock.SetupEntries(entries);
+        var contentfulCollection = new ContentfulCollection<Entry<dynamic>>
+        {
+            Items = entries.ToList(),
+            Total = entries.Length
+        };
+        _clientMock.Setup(x => x.GetEntriesCollectionAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contentfulCollection);
 
         // Act
         var result = _sut.GetEntriesAsync("blogPost", pageSize: 10, PagingMode.SkipForward, CancellationToken.None);
@@ -152,7 +171,13 @@ public class ContentfulServiceIntegrationTests
         var entries = Enumerable.Range(1, totalEntries)
             .Select(i => EntryBuilder.CreateBlogPost($"entry{i}", "blogPost"))
             .ToArray();
-        _clientMock.SetupEntries(entries);
+        var contentfulCollection = new ContentfulCollection<Entry<dynamic>>
+        {
+            Items = entries.ToList(),
+            Total = entries.Length
+        };
+        _clientMock.Setup(x => x.GetEntriesCollectionAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contentfulCollection);
 
         // Act
         var result = _sut.GetEntriesAsync("blogPost", pageSize: 50, PagingMode.SkipForward, CancellationToken.None);
@@ -173,14 +198,25 @@ public class ContentfulServiceIntegrationTests
             EntryBuilder.CreateBlogPost("entry1", "blogPost"),
             EntryBuilder.CreateBlogPost("entry2", "blogPost")
         };
+        
+        // Set up the client mock to return empty lookups
+        _clientMock.Setup(x => x.GetExistingEntriesLookupByIdAsync(It.IsAny<IEnumerable<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<string, Entry<dynamic>>());
+        _clientMock.Setup(x => x.GetUnpublishedOrMissingReferencedEntriesIdsLookup(It.IsAny<IEnumerable<Entry<dynamic>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<string, HashSet<string>>());
 
         // Act
         await _sut.CreateOrUpdateEntriesAsync(entries, publish: false, CancellationToken.None);
 
         // Assert
-        Assert.True(_clientMock.CreateOrUpdateEntriesAsyncWasCalled);
-        Assert.Equal(2, _clientMock.LastCreatedOrUpdatedEntries?.Count());
-        Assert.False(_clientMock.LastPublishFlag);
+        _entryOperationServiceMock.Verify(
+            x => x.CreateOrUpdateEntryAsync(
+                It.IsAny<Entry<dynamic>>(), 
+                It.IsAny<int>(), 
+                It.IsAny<bool>(), 
+                It.IsAny<bool>(), 
+                It.IsAny<CancellationToken>()), 
+            Times.Exactly(2));
     }
 
     [Fact]
@@ -191,13 +227,25 @@ public class ContentfulServiceIntegrationTests
         {
             EntryBuilder.CreateBlogPost("entry1", "blogPost")
         };
+        
+        // Set up the client mock to return empty lookups (enabling publish)
+        _clientMock.Setup(x => x.GetExistingEntriesLookupByIdAsync(It.IsAny<IEnumerable<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<string, Entry<dynamic>>());
+        _clientMock.Setup(x => x.GetUnpublishedOrMissingReferencedEntriesIdsLookup(It.IsAny<IEnumerable<Entry<dynamic>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<string, HashSet<string>> { { "entry1", new HashSet<string>() } });
 
         // Act
         await _sut.CreateOrUpdateEntriesAsync(entries, publish: true, CancellationToken.None);
 
         // Assert
-        Assert.True(_clientMock.CreateOrUpdateEntriesAsyncWasCalled);
-        Assert.True(_clientMock.LastPublishFlag);
+        _entryOperationServiceMock.Verify(
+            x => x.CreateOrUpdateEntryAsync(
+                It.IsAny<Entry<dynamic>>(), 
+                It.IsAny<int>(), 
+                It.IsAny<bool>(), 
+                true, // publish should be true
+                It.IsAny<CancellationToken>()), 
+            Times.Once);
     }
 
     [Fact]
@@ -214,8 +262,9 @@ public class ContentfulServiceIntegrationTests
         await _sut.PublishEntriesAsync(entries, CancellationToken.None);
 
         // Assert
-        Assert.True(_clientMock.PublishEntriesAsyncWasCalled);
-        Assert.Equal(2, _clientMock.LastPublishedEntries?.Count());
+        _entryOperationServiceMock.Verify(
+            x => x.PublishEntryAsync(It.IsAny<Entry<dynamic>>(), It.IsAny<CancellationToken>()), 
+            Times.Exactly(2));
     }
 
     [Fact]
@@ -232,8 +281,9 @@ public class ContentfulServiceIntegrationTests
         await _sut.UnpublishEntriesAsync(entries, CancellationToken.None);
 
         // Assert
-        Assert.True(_clientMock.UnpublishEntriesAsyncWasCalled);
-        Assert.Equal(2, _clientMock.LastUnpublishedEntries?.Count());
+        _entryOperationServiceMock.Verify(
+            x => x.UnpublishEntryAsync(It.IsAny<Entry<dynamic>>(), It.IsAny<CancellationToken>()), 
+            Times.Exactly(2));
     }
 
     [Fact]
@@ -250,8 +300,9 @@ public class ContentfulServiceIntegrationTests
         await _sut.DeleteEntriesAsync(entries, CancellationToken.None);
 
         // Assert
-        Assert.True(_clientMock.DeleteEntriesAsyncWasCalled);
-        Assert.Equal(2, _clientMock.LastDeletedEntries?.Count());
+        _entryOperationServiceMock.Verify(
+            x => x.DeleteEntryAsync(It.IsAny<Entry<dynamic>>(), It.IsAny<CancellationToken>()), 
+            Times.Exactly(2));
     }
 
     [Fact]
@@ -259,7 +310,8 @@ public class ContentfulServiceIntegrationTests
     {
         // Arrange
         var contentType = ContentTypeBuilder.CreateBlogPost();
-        _clientMock.SetupContentType(contentType);
+        _clientMock.Setup(x => x.GetContentTypeAsync(contentType.SystemProperties.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contentType);
 
         using var cts = new CancellationTokenSource();
         cts.Cancel();
@@ -274,7 +326,8 @@ public class ContentfulServiceIntegrationTests
     {
         // Arrange
         var locales = LocaleBuilder.CreateMultiple();
-        _clientMock.SetupLocales(locales);
+        _clientMock.Setup(x => x.GetLocalesCollectionAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(locales);
 
         using var cts = new CancellationTokenSource();
         cts.Cancel();
@@ -292,7 +345,13 @@ public class ContentfulServiceIntegrationTests
         {
             EntryBuilder.CreateBlogPost("entry1", "blogPost")
         };
-        _clientMock.SetupEntries(entries);
+        var contentfulCollection = new ContentfulCollection<Entry<dynamic>>
+        {
+            Items = entries.ToList(),
+            Total = entries.Length
+        };
+        _clientMock.Setup(x => x.GetEntriesCollectionAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contentfulCollection);
 
         using var cts = new CancellationTokenSource();
         cts.Cancel();
@@ -317,13 +376,25 @@ public class ContentfulServiceIntegrationTests
     {
         // Arrange
         var emptyEntries = Array.Empty<Entry<dynamic>>();
+        
+        // Set up the client mock to return empty lookups
+        _clientMock.Setup(x => x.GetExistingEntriesLookupByIdAsync(It.IsAny<IEnumerable<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<string, Entry<dynamic>>());
+        _clientMock.Setup(x => x.GetUnpublishedOrMissingReferencedEntriesIdsLookup(It.IsAny<IEnumerable<Entry<dynamic>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<string, HashSet<string>>());
 
         // Act
         await _sut.CreateOrUpdateEntriesAsync(emptyEntries, publish: false, CancellationToken.None);
 
         // Assert
-        Assert.True(_clientMock.CreateOrUpdateEntriesAsyncWasCalled);
-        Assert.Empty(_clientMock.LastCreatedOrUpdatedEntries ?? []);
+        _entryOperationServiceMock.Verify(
+            x => x.CreateOrUpdateEntryAsync(
+                It.IsAny<Entry<dynamic>>(), 
+                It.IsAny<int>(), 
+                It.IsAny<bool>(), 
+                It.IsAny<bool>(), 
+                It.IsAny<CancellationToken>()), 
+            Times.Never);
     }
 
     [Fact]
@@ -338,9 +409,23 @@ public class ContentfulServiceIntegrationTests
             EntryBuilder.CreateBlogPost("entry2", "blogPost")
         };
 
-        _clientMock.SetupContentType(contentType);
-        _clientMock.SetupLocales(locales);
-        _clientMock.SetupEntries(entries);
+        _clientMock.Setup(x => x.GetContentTypeAsync(contentType.SystemProperties.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contentType);
+        _clientMock.Setup(x => x.GetLocalesCollectionAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(locales);
+        var contentfulCollection = new ContentfulCollection<Entry<dynamic>>
+        {
+            Items = entries.ToList(),
+            Total = entries.Length
+        };
+        _clientMock.Setup(x => x.GetEntriesCollectionAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contentfulCollection);
+        
+        // Set up lookups for CreateOrUpdateEntriesAsync
+        _clientMock.Setup(x => x.GetExistingEntriesLookupByIdAsync(It.IsAny<IEnumerable<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<string, Entry<dynamic>>());
+        _clientMock.Setup(x => x.GetUnpublishedOrMissingReferencedEntriesIdsLookup(It.IsAny<IEnumerable<Entry<dynamic>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<string, HashSet<string>>());
 
         // Act
         var retrievedContentType = await _sut.GetContentTypeAsync("blogPost", CancellationToken.None);
@@ -353,7 +438,16 @@ public class ContentfulServiceIntegrationTests
         Assert.NotNull(retrievedContentType);
         Assert.NotNull(retrievedLocales);
         Assert.Equal(2, retrievedEntries.Count);
-        Assert.True(_clientMock.CreateOrUpdateEntriesAsyncWasCalled);
-        Assert.True(_clientMock.PublishEntriesAsyncWasCalled);
+        _entryOperationServiceMock.Verify(
+            x => x.CreateOrUpdateEntryAsync(
+                It.IsAny<Entry<dynamic>>(), 
+                It.IsAny<int>(), 
+                It.IsAny<bool>(), 
+                It.IsAny<bool>(), 
+                It.IsAny<CancellationToken>()), 
+            Times.Exactly(2));
+        _entryOperationServiceMock.Verify(
+            x => x.PublishEntryAsync(It.IsAny<Entry<dynamic>>(), It.IsAny<CancellationToken>()), 
+            Times.Exactly(2));
     }
 }

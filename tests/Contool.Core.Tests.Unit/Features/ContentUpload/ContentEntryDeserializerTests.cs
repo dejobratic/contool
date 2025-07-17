@@ -9,7 +9,7 @@ namespace Contool.Core.Tests.Unit.Features.ContentUpload;
 
 public class ContentEntryDeserializerTests
 {
-    private readonly ContentEntryDeserializer _deserializer;
+    private readonly ContentEntryDeserializer _sut;
     private readonly ContentType _contentType;
     private readonly ContentLocales _locales;
 
@@ -17,7 +17,7 @@ public class ContentEntryDeserializerTests
     {
         _contentType = ContentTypeBuilder.CreateBlogPost();
         _locales = ContentLocalesBuilder.CreateDefault();
-        _deserializer = new ContentEntryDeserializer(_contentType, _locales);
+        _sut = new ContentEntryDeserializer(_contentType, _locales);
     }
 
     [Fact]
@@ -32,7 +32,7 @@ public class ContentEntryDeserializerTests
         };
 
         // Act
-        var entry = _deserializer.Deserialize(row);
+        var entry = _sut.Deserialize(row);
 
         // Assert
         Assert.NotNull(entry);
@@ -60,7 +60,7 @@ public class ContentEntryDeserializerTests
         };
 
         // Act
-        var entry = _deserializer.Deserialize(row);
+        var entry = _sut.Deserialize(row);
 
         // Assert
         Assert.Equal("test-entry-id", entry.SystemProperties.Id);
@@ -81,7 +81,7 @@ public class ContentEntryDeserializerTests
         };
 
         // Act
-        var entry = _deserializer.Deserialize(row);
+        var entry = _sut.Deserialize(row);
 
         // Assert
         var fields = entry.Fields as JObject;
@@ -104,7 +104,7 @@ public class ContentEntryDeserializerTests
         };
 
         // Act
-        var entry = _deserializer.Deserialize(row);
+        var entry = _sut.Deserialize(row);
 
         // Assert
         var fields = entry.Fields as JObject;
@@ -126,7 +126,7 @@ public class ContentEntryDeserializerTests
         };
 
         // Act
-        var entry = _deserializer.Deserialize(row);
+        var entry = _sut.Deserialize(row);
 
         // Assert
         var fields = entry.Fields as JObject;
@@ -143,7 +143,7 @@ public class ContentEntryDeserializerTests
         var row = new Dictionary<string, object?>();
 
         // Act
-        var entry = _deserializer.Deserialize(row);
+        var entry = _sut.Deserialize(row);
 
         // Assert
         Assert.NotNull(entry);
@@ -236,7 +236,7 @@ public class ContentEntryDeserializerTests
         var invalidRow = "not a dictionary";
 
         // Act & Assert
-        var exception = Assert.Throws<ArgumentException>(() => _deserializer.Deserialize(invalidRow));
+        var exception = Assert.Throws<ArgumentException>(() => _sut.Deserialize(invalidRow));
         Assert.Contains("Row must be a dictionary", exception.Message);
     }
 
@@ -244,7 +244,7 @@ public class ContentEntryDeserializerTests
     public void GivenDeserializer_WhenCheckingInterface_ThenImplementsIContentEntryDeserializer()
     {
         // Arrange & Act
-        var implementsInterface = _deserializer is IContentEntryDeserializer;
+        var implementsInterface = _sut is IContentEntryDeserializer;
 
         // Assert
         Assert.True(implementsInterface);
@@ -265,7 +265,7 @@ public class ContentEntryDeserializerTests
         };
 
         // Act
-        var entry = _deserializer.Deserialize(row);
+        var entry = _sut.Deserialize(row);
 
         // Assert
         Assert.Equal("test-entry-id", entry.SystemProperties.Id);
