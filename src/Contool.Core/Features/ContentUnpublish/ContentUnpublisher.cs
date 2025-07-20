@@ -9,7 +9,7 @@ public class ContentUnpublisher(
     IBatchProcessor batchProcessor,
     IProgressReporter progressReporter) : IContentUnpublisher
 {
-    private const int DefaultBatchSize = 50;
+    private const int DefaultBatchSize = 100;
 
     public async Task UnpublishAsync(ContentUnpublisherInput input, CancellationToken cancellationToken = default)
     {

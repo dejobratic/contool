@@ -10,15 +10,13 @@ public class ContentfulEntryOperationService(
     public async Task<OperationResult> CreateOrUpdateEntryAsync(
         Entry<dynamic> entry,
         int version,
-        bool archived,
-        bool publish,
         CancellationToken cancellationToken = default)
     {
         var entryId = entry.GetId()!;
 
         try
         {
-            if (archived)
+            if (entry.IsArchived())
             {
                 var unarchived = await client.UnarchiveEntryAsync(
                     entryId: entryId,
@@ -28,18 +26,10 @@ public class ContentfulEntryOperationService(
                 version = unarchived.GetVersion();
             }
 
-            var upserted = await client.CreateOrUpdateEntryAsync(
+            await client.CreateOrUpdateEntryAsync(
                 entry,
                 version: version,
                 cancellationToken: cancellationToken);
-
-            if (publish)
-            {
-                await client.PublishEntryAsync(
-                    entryId: entryId,
-                    version: upserted.GetVersion(),
-                    cancellationToken: cancellationToken);
-            }
 
             return OperationResult.Success(entryId, Operation.Upload);
         }
@@ -109,14 +99,7 @@ public class ContentfulEntryOperationService(
 
         try
         {
-            if (entry.IsPublished())
-            {
-                entry = await client.UnpublishEntryAsync(
-                    entryId: entryId,
-                    version: entry.GetVersion(),
-                    cancellationToken: cancellationToken);
-            }
-            else if (entry.IsArchived())
+            if (entry.IsArchived())
             {
                 entry = await client.UnarchiveEntryAsync(
                     entryId: entryId,

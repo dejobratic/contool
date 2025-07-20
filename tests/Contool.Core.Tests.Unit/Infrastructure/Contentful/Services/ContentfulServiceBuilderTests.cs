@@ -11,14 +11,16 @@ public class ContentfulServiceBuilderTests
     private readonly ContentfulServiceBuilder _sut;
     
     private readonly Mock<IContentfulManagementClientAdapterFactory> _adapterFactoryMock = new();
-    private readonly Mock<IContentfulEntryOperationServiceFactory> _operationServiceFactoryMock = new();
+    private readonly Mock<IContentfulEntryOperationServiceFactory> _entryOperationServiceFactoryMock = new();
+    private readonly Mock<IContentfulEntryBulkOperationServiceFactory> _entryBulkOperationServiceFactoryMock = new();
     private readonly Mock<IRuntimeContext> _runtimeContextMock = new();
 
     public ContentfulServiceBuilderTests()
     {
         _sut = new ContentfulServiceBuilder(
             _adapterFactoryMock.Object,
-            _operationServiceFactoryMock.Object,
+            _entryOperationServiceFactoryMock.Object,
+            _entryBulkOperationServiceFactoryMock.Object,
             _runtimeContextMock.Object);
     }
 
@@ -40,7 +42,7 @@ public class ContentfulServiceBuilderTests
         
         // Verify the factory methods are called correctly
         _adapterFactoryMock.Verify(x => x.Create(It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<bool>()), Times.Once);
-        _operationServiceFactoryMock.Verify(x => x.Create(It.IsAny<IContentfulManagementClientAdapter>()), Times.Once);
+        _entryOperationServiceFactoryMock.Verify(x => x.Create(It.IsAny<IContentfulManagementClientAdapter>()), Times.Once);
     }
 
     [Fact]
@@ -58,7 +60,7 @@ public class ContentfulServiceBuilderTests
 
         // Assert
         _adapterFactoryMock.Verify(x => x.Create(spaceId, environmentId, It.IsAny<bool>()), Times.Once);
-        _operationServiceFactoryMock.Verify(x => x.Create(It.IsAny<IContentfulManagementClientAdapter>()), Times.Once);
+        _entryOperationServiceFactoryMock.Verify(x => x.Create(It.IsAny<IContentfulManagementClientAdapter>()), Times.Once);
         // Note: MockLite doesn't support LastSpaceId, LastEnvironmentId property tracking like custom mocks
     }
 
@@ -88,7 +90,7 @@ public class ContentfulServiceBuilderTests
         Assert.NotNull(service2);
         Assert.NotSame(service1, service2);
         _adapterFactoryMock.Verify(x => x.Create(It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<bool>()), Times.Exactly(2));
-        _operationServiceFactoryMock.Verify(x => x.Create(It.IsAny<IContentfulManagementClientAdapter>()), Times.Exactly(2));
+        _entryOperationServiceFactoryMock.Verify(x => x.Create(It.IsAny<IContentfulManagementClientAdapter>()), Times.Exactly(2));
         // Note: MockLite doesn't support CreateCallCount property tracking like custom mocks
     }
 
@@ -106,7 +108,7 @@ public class ContentfulServiceBuilderTests
         // Assert
         _adapterFactoryMock.Verify(x => x.Create("space1", "env1", It.IsAny<bool>()), Times.Once);
         _adapterFactoryMock.Verify(x => x.Create("space2", "env2", It.IsAny<bool>()), Times.Once);
-        _operationServiceFactoryMock.Verify(x => x.Create(It.IsAny<IContentfulManagementClientAdapter>()), Times.Exactly(2));
+        _entryOperationServiceFactoryMock.Verify(x => x.Create(It.IsAny<IContentfulManagementClientAdapter>()), Times.Exactly(2));
     }
 
     [Fact]
@@ -170,6 +172,6 @@ public class ContentfulServiceBuilderTests
         // Assert
         Assert.NotNull(service);
         _adapterFactoryMock.Verify(x => x.Create(It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<bool>()), Times.Once);
-        _operationServiceFactoryMock.Verify(x => x.Create(It.IsAny<IContentfulManagementClientAdapter>()), Times.Once);
+        _entryOperationServiceFactoryMock.Verify(x => x.Create(It.IsAny<IContentfulManagementClientAdapter>()), Times.Once);
     }
 }

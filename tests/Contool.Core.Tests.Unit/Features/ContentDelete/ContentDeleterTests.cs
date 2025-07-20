@@ -68,7 +68,7 @@ public class ContentDeleterTests
     public async Task GivenValidInput_WhenDeleting_ThenCallsContentfulServiceDeleteEntries()
     {
         // Arrange
-        const int entriesCount = 100;
+        const int entriesCount = 150;
         
         SetupEntriesToRead(entriesCount: entriesCount);
         
@@ -80,7 +80,7 @@ public class ContentDeleterTests
         // Assert
         _contentfulServiceMock.Verify(
             x => x.DeleteEntriesAsync(
-                It.Is<IEnumerable<Entry<dynamic>>>(entries => entries.Count() == entriesCount),
+                It.Is<IReadOnlyList<Entry<dynamic>>>(entries => entries.Count == entriesCount),
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }
@@ -141,7 +141,7 @@ public class ContentDeleterTests
 
     private void SetupEntriesToRead(
         string contentTypeId =  "blogPost",
-        int entriesCount = 100)
+        int entriesCount = 150)
     {
         var entries = CreateBlogPostEntryAsyncEnumerable(entriesCount);
         

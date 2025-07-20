@@ -8,8 +8,6 @@ public interface IContentfulEntryOperationService
     Task<OperationResult> CreateOrUpdateEntryAsync(
         Entry<dynamic> entry,
         int version,
-        bool archived,
-        bool publish,
         CancellationToken cancellationToken = default);
 
     Task<OperationResult> PublishEntryAsync(

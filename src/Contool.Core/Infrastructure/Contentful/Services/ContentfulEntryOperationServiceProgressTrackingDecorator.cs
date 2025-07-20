@@ -12,18 +12,14 @@ public class ContentfulEntryOperationServiceProgressTrackingDecorator(
     public async Task<OperationResult> CreateOrUpdateEntryAsync(
         Entry<dynamic> entry,
         int version,
-        bool archived,
-        bool publish,
         CancellationToken cancellationToken = default)
     {
-        var result = await inner.CreateOrUpdateEntryAsync(entry, version, archived, publish, cancellationToken);
+        var result = await inner.CreateOrUpdateEntryAsync(entry, version, cancellationToken);
         
         progressReporter.Increment();
         
         if (!result.IsSuccess)
-        {
-            operationTracker.IncrementErrorCount(result.Operation, result.EntityId);
-        }
+            operationTracker.IncrementErrorCount(result.Operation, result.EntryId);
         
         return result;
     }
@@ -37,9 +33,7 @@ public class ContentfulEntryOperationServiceProgressTrackingDecorator(
         progressReporter.Increment();
         
         if (!result.IsSuccess)
-        {
-            operationTracker.IncrementErrorCount(result.Operation, result.EntityId);
-        }
+            operationTracker.IncrementErrorCount(result.Operation, result.EntryId);
         
         return result;
     }
@@ -53,9 +47,7 @@ public class ContentfulEntryOperationServiceProgressTrackingDecorator(
         progressReporter.Increment();
         
         if (!result.IsSuccess)
-        {
-            operationTracker.IncrementErrorCount(result.Operation, result.EntityId);
-        }
+            operationTracker.IncrementErrorCount(result.Operation, result.EntryId);
         
         return result;
     }
@@ -69,9 +61,7 @@ public class ContentfulEntryOperationServiceProgressTrackingDecorator(
         progressReporter.Increment();
         
         if (!result.IsSuccess)
-        {
-            operationTracker.IncrementErrorCount(result.Operation, result.EntityId);
-        }
+            operationTracker.IncrementErrorCount(result.Operation, result.EntryId);
         
         return result;
     }

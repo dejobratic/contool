@@ -9,7 +9,7 @@ public class ContentPublisher(
     IBatchProcessor batchProcessor,
     IProgressReporter progressReporter) : IContentPublisher
 {
-    private const int DefaultBatchSize = 50;
+    private const int DefaultBatchSize = 100;
 
     public async Task PublishAsync(ContentPublisherInput input, CancellationToken cancellationToken = default)
     {

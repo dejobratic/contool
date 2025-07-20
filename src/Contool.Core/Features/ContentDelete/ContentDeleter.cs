@@ -11,7 +11,7 @@ public class ContentDeleter(
     IBatchProcessor batchProcessor,
     IProgressReporter progressReporter) : IContentDeleter
 {
-    private const int DefaultBatchSize = 50;
+    private const int DefaultBatchSize = 100;
 
     public async Task DeleteAsync(ContentDeleterInput input, CancellationToken cancellationToken = default)
     {

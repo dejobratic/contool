@@ -7,7 +7,7 @@ public class ContentUploader(
     IBatchProcessor batchProcessor,
     IProgressReporter progressReporter) : IContentUploader
 {
-    private const int DefaultBatchSize = 50;
+    private const int DefaultBatchSize = 100;
 
     public async Task UploadAsync(ContentUploaderInput input, CancellationToken cancellationToken)
     {

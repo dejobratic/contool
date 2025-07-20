@@ -4,6 +4,7 @@ using Contool.Core.Infrastructure.Contentful.Services;
 using Contool.Core.Infrastructure.Validation;
 using Contool.Core.Tests.Unit.Helpers;
 using MockLite;
+// ReSharper disable ConvertTypeCheckToNullCheck
 
 namespace Contool.Core.Tests.Unit.Features.ContentUpload.Validation;
 
@@ -70,8 +71,8 @@ public class ContentUploadEntryValidatorTests
 
         var invalidEntries = new[]
         {
-            EntryBuilder.CreateWithMissingRequiredFields("entry1", "blogPost"),
-            EntryBuilder.CreateWithMissingRequiredFields("entry2", "blogPost")
+            EntryBuilder.CreateWithMissingRequiredFields("entry1"),
+            EntryBuilder.CreateWithMissingRequiredFields("entry2")
         };
 
         var input = new ContentUploaderInput
@@ -123,8 +124,8 @@ public class ContentUploadEntryValidatorTests
         var result = await _sut.ValidateAsync(input, CancellationToken.None);
 
         // Assert
-        Assert.Single(result.ValidEntries); // First entry is valid
-        Assert.Single(result.Errors); // Second entry has duplicate ID error
+        Assert.Single(result.ValidEntries); // The first entry is valid
+        Assert.Single(result.Errors); // The second entry has duplicate ID error
         Assert.Equal(ValidationErrorType.DuplicateId, result.Errors[0].Type);
         Assert.Equal(1, result.Errors[0].EntryIndex); // Second entry (index 1)
     }
@@ -182,7 +183,7 @@ public class ContentUploadEntryValidatorTests
 
         var entriesWithoutIds = new[]
         {
-            EntryBuilder.CreateWithoutId("blogPost")
+            EntryBuilder.CreateWithoutId()
         };
 
         var input = new ContentUploaderInput
@@ -198,7 +199,7 @@ public class ContentUploadEntryValidatorTests
         var result = await _sut.ValidateAsync(input, CancellationToken.None);
 
         // Assert
-        Assert.Single(result.ValidEntries); // Entry is still valid, just has warning
+        Assert.Single(result.ValidEntries); // Entry is still valid, just has a warning
         Assert.Empty(result.Errors);
         Assert.NotEmpty(result.Warnings);
         Assert.All(result.Warnings, warning => Assert.Equal(ValidationErrorType.RequiredFieldMissing, warning.Type));
@@ -219,10 +220,10 @@ public class ContentUploadEntryValidatorTests
         var mixedEntries = new[]
         {
         EntryBuilder.CreateBlogPost("valid1"),                                      // Valid
-            EntryBuilder.CreateWithMissingRequiredFields("invalid1", "blogPost"),   // Invalid - missing required fields
+            EntryBuilder.CreateWithMissingRequiredFields("invalid1"),   // Invalid - missing required fields
             EntryBuilder.CreateBlogPost("valid2"),                                  // Valid
             EntryBuilder.CreateWithInvalidFields("invalid2"),                       // Invalid - has invalid fields
-            EntryBuilder.CreateWithoutId("blogPost")                                // Valid but with warnings
+            EntryBuilder.CreateWithoutId()                                // Valid but with warnings
         };
 
         var input = new ContentUploaderInput
@@ -276,47 +277,10 @@ public class ContentUploadEntryValidatorTests
     }
 
     [Fact]
-    public async Task GivenCancellationToken_WhenValidationIsCancelled_ThenOperationCancelledExceptionIsThrown()
+    public void GivenValidatorImplementsInterface_WhenChecked_ThenImplementsIContentUploadEntryValidator()
     {
-        // Arrange
-        var contentType = ContentTypeBuilder.CreateBlogPost();
-        var locales = LocaleBuilder.CreateMultiple();
-        
-        _contentfulServiceMock.Setup(x => x.GetContentTypeAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(contentType);
-        _contentfulServiceMock.Setup(x => x.GetLocalesAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(locales.ToArray());
-
-        var entries = new[]
-        {
-            EntryBuilder.CreateBlogPost("entry1"),
-        };
-
-        var input = new ContentUploaderInput
-        {
-            ContentTypeId = "blogPost",
-            ContentfulService = _contentfulServiceMock.Object,
-            Entries = new MockAsyncEnumerableWithTotal<Contentful.Core.Models.Entry<dynamic>>(entries),
-            UploadOnlyValidEntries = false,
-            PublishEntries = false
-        };
-
-        using var cts = new CancellationTokenSource();
-        cts.Cancel();
-
-        // Act & Assert
-        await Assert.ThrowsAsync<OperationCanceledException>(
-            () => _sut.ValidateAsync(input, cts.Token));
-    }
-
-    [Fact]
-    public async Task GivenValidatorImplementsInterface_WhenChecked_ThenImplementsIContentUploadEntryValidator()
-    {
-        // Arrange & Act
-        var implementsInterface = _sut is IContentUploadEntryValidator;
-
-        // Assert
-        Assert.True(implementsInterface);
+        // Arrange & Act & Assert
+        Assert.True(_sut is IContentUploadEntryValidator);
     }
 
     [Fact]

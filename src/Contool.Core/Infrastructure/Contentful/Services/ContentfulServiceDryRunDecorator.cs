@@ -36,15 +36,15 @@ public class ContentfulServiceDryRunDecorator(
             cancellationToken: cancellationToken);
     }
 
-    public Task CreateOrUpdateEntriesAsync(IEnumerable<Entry<dynamic>> entries, bool publish = false, CancellationToken cancellationToken = default)
+    public Task CreateOrUpdateEntriesAsync(IReadOnlyList<Entry<dynamic>> entries, bool publish = false, CancellationToken cancellationToken = default)
         => inner.CreateOrUpdateEntriesAsync(entries, publish, cancellationToken);
 
-    public Task PublishEntriesAsync(IEnumerable<Entry<dynamic>> entries, CancellationToken cancellationToken = default)
+    public Task PublishEntriesAsync(IReadOnlyList<Entry<dynamic>> entries, CancellationToken cancellationToken = default)
         => inner.PublishEntriesAsync(entries, cancellationToken);
 
-    public Task UnpublishEntriesAsync(IEnumerable<Entry<dynamic>> entries, CancellationToken cancellationToken = default)
+    public Task UnpublishEntriesAsync(IReadOnlyList<Entry<dynamic>> entries, CancellationToken cancellationToken = default)
         => inner.UnpublishEntriesAsync(entries, cancellationToken);
 
-    public Task DeleteEntriesAsync(IEnumerable<Entry<dynamic>> entries, CancellationToken cancellationToken = default)
+    public Task DeleteEntriesAsync(IReadOnlyList<Entry<dynamic>> entries, CancellationToken cancellationToken = default)
         => inner.DeleteEntriesAsync(entries, cancellationToken);
 }

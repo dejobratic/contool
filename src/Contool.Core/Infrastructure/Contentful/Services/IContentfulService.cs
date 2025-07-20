@@ -19,11 +19,11 @@ public interface IContentfulService
 
     IAsyncEnumerableWithTotal<Entry<dynamic>> GetEntriesAsync(string contentTypeId, int? pageSize = null, PagingMode pagingMode = PagingMode.SkipForward, CancellationToken cancellationToken = default);
 
-    Task CreateOrUpdateEntriesAsync(IEnumerable<Entry<dynamic>> entries, bool publish = false, CancellationToken cancellationToken = default);
+    Task CreateOrUpdateEntriesAsync(IReadOnlyList<Entry<dynamic>> entries, bool publish = false, CancellationToken cancellationToken = default);
 
-    Task UnpublishEntriesAsync(IEnumerable<Entry<dynamic>> entries, CancellationToken cancellationToken = default);
+    Task UnpublishEntriesAsync(IReadOnlyList<Entry<dynamic>> entries, CancellationToken cancellationToken = default);
 
-    Task PublishEntriesAsync(IEnumerable<Entry<dynamic>> entries, CancellationToken cancellationToken = default);
+    Task PublishEntriesAsync(IReadOnlyList<Entry<dynamic>> entries, CancellationToken cancellationToken = default);
 
-    Task DeleteEntriesAsync(IEnumerable<Entry<dynamic>> entries, CancellationToken cancellationToken = default);
+    Task DeleteEntriesAsync(IReadOnlyList<Entry<dynamic>> entries, CancellationToken cancellationToken = default);
 }

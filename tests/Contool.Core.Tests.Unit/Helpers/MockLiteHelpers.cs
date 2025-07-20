@@ -54,8 +54,6 @@ public static class MockLiteHelpers
         mock.Setup(x => x.CreateOrUpdateEntryAsync(
                 It.IsAny<Entry<dynamic>>(),
                 It.IsAny<int>(),
-                It.IsAny<bool>(),
-                It.IsAny<bool>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(OperationResult.Success("test-id", Operation.Upload));
         
@@ -84,23 +82,23 @@ public static class MockLiteHelpers
             .ReturnsAsync(new List<ContentType>());
         
         mock.Setup(x => x.CreateOrUpdateEntriesAsync(
-                It.IsAny<IEnumerable<Entry<dynamic>>>(),
+                It.IsAny<IReadOnlyList<Entry<dynamic>>>(),
                 It.IsAny<bool>(),
                 It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
         
         mock.Setup(x => x.PublishEntriesAsync(
-                It.IsAny<IEnumerable<Entry<dynamic>>>(),
+                It.IsAny<IReadOnlyList<Entry<dynamic>>>(),
                 It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
         
         mock.Setup(x => x.UnpublishEntriesAsync(
-                It.IsAny<IEnumerable<Entry<dynamic>>>(),
+                It.IsAny<IReadOnlyList<Entry<dynamic>>>(),
                 It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
         
         mock.Setup(x => x.DeleteEntriesAsync(
-                It.IsAny<IEnumerable<Entry<dynamic>>>(),
+                It.IsAny<IReadOnlyList<Entry<dynamic>>>(),
                 It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
         

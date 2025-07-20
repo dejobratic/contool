@@ -235,9 +235,9 @@ public class EntryValidationSummaryTests
         var summary = new EntryValidationSummary();
 
         // Assert
-        Assert.Equal(0, summary.ValidEntries.Count);
-        Assert.Equal(0, summary.Errors.Count);
-        Assert.Equal(0, summary.Warnings.Count);
+        Assert.Empty(summary.ValidEntries);
+        Assert.Empty(summary.Errors);
+        Assert.Empty(summary.Warnings);
     }
 
     [Fact]

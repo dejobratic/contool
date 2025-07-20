@@ -8,8 +8,8 @@ namespace Contool.Core.Tests.Unit.Helpers;
 public class ContentUploaderInputBuilder
 {
     private string _contentTypeId = "blogPost";
-    private IContentfulService _contentfulService;
-    private IAsyncEnumerableWithTotal<Entry<dynamic>> _entries;
+    private IContentfulService _contentfulService = null!;
+    private IAsyncEnumerableWithTotal<Entry<dynamic>> _entries = null!;
     private bool _uploadOnlyValidEntries = false;
     private bool _publishEntries = false;
 

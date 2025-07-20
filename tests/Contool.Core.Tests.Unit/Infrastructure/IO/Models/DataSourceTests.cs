@@ -52,9 +52,9 @@ public class DataSourceTests
     public void GivenDataSource_WhenCheckingType_ThenIsCorrectType()
     {
         // Act & Assert
-        Assert.IsType<DataSource>(DataSource.Csv);
-        Assert.IsType<DataSource>(DataSource.Excel);
-        Assert.IsType<DataSource>(DataSource.Json);
+        Assert.IsType<DataSource>(DataSource.Csv, exactMatch: false);
+        Assert.IsType<DataSource>(DataSource.Excel, exactMatch: false);
+        Assert.IsType<DataSource>(DataSource.Json, exactMatch: false);
     }
 
     [Theory]

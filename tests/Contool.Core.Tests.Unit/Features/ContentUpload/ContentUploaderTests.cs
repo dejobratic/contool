@@ -126,9 +126,9 @@ public class ContentUploaderTests
         await _sut.UploadAsync(input, CancellationToken.None);
 
         // Assert
-        _contentfulServiceMock.Verify(x => x.CreateOrUpdateEntriesAsync(It.IsAny<IEnumerable<Entry<dynamic>>>(), true, It.IsAny<CancellationToken>()), Times.Once);
-        _contentfulServiceMock.Verify(x => x.PublishEntriesAsync(It.IsAny<IEnumerable<Entry<dynamic>>>(), It.IsAny<CancellationToken>()), Times.Once);
-        _contentfulServiceMock.Verify(x => x.UnpublishEntriesAsync(It.IsAny<IEnumerable<Entry<dynamic>>>(), It.IsAny<CancellationToken>()), Times.Never);
+        _contentfulServiceMock.Verify(x => x.CreateOrUpdateEntriesAsync(It.IsAny<IReadOnlyList<Entry<dynamic>>>(), true, It.IsAny<CancellationToken>()), Times.Once);
+        _contentfulServiceMock.Verify(x => x.PublishEntriesAsync(It.IsAny<IReadOnlyList<Entry<dynamic>>>(), It.IsAny<CancellationToken>()), Times.Once);
+        _contentfulServiceMock.Verify(x => x.UnpublishEntriesAsync(It.IsAny<IReadOnlyList<Entry<dynamic>>>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -153,9 +153,9 @@ public class ContentUploaderTests
         await _sut.UploadAsync(input, CancellationToken.None);
 
         // Assert
-        _contentfulServiceMock.Verify(x => x.CreateOrUpdateEntriesAsync(It.IsAny<IEnumerable<Entry<dynamic>>>(), false, It.IsAny<CancellationToken>()), Times.Once);
-        _contentfulServiceMock.Verify(x => x.PublishEntriesAsync(It.IsAny<IEnumerable<Entry<dynamic>>>(), It.IsAny<CancellationToken>()), Times.Never);
-        _contentfulServiceMock.Verify(x => x.UnpublishEntriesAsync(It.IsAny<IEnumerable<Entry<dynamic>>>(), It.IsAny<CancellationToken>()), Times.Never);
+        _contentfulServiceMock.Verify(x => x.CreateOrUpdateEntriesAsync(It.IsAny<IReadOnlyList<Entry<dynamic>>>(), false, It.IsAny<CancellationToken>()), Times.Once);
+        _contentfulServiceMock.Verify(x => x.PublishEntriesAsync(It.IsAny<IReadOnlyList<Entry<dynamic>>>(), It.IsAny<CancellationToken>()), Times.Never);
+        _contentfulServiceMock.Verify(x => x.UnpublishEntriesAsync(It.IsAny<IReadOnlyList<Entry<dynamic>>>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -252,7 +252,6 @@ public class ContentUploaderTests
     public async Task GivenCustomBatchSize_WhenUpload_ThenUsesBatchSize()
     {
         // Arrange
-        const int customBatchSize = 10;
         var customBatchProcessor = new Mock<IBatchProcessor>();
         var customUploader = new ContentUploader(customBatchProcessor.Object, _progressReporterMock.Object);
 

@@ -42,6 +42,7 @@ public static class Dependencies
 
             // Contentful services
             .AddSingleton<IContentfulEntryOperationServiceFactory, ContentfulEntryOperationServiceFactory>()
+            .AddSingleton<IContentfulEntryBulkOperationServiceFactory, ContentfulEntryBulkOperationServiceFactory>()
             .AddSingleton<IContentDownloader, ContentDownloader>()
             .AddSingleton<IContentUploader, ContentUploader>()
             .AddSingleton<IContentPublisher, ContentPublisher>()

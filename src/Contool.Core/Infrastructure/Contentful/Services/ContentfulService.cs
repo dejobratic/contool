@@ -9,9 +9,10 @@ namespace Contool.Core.Infrastructure.Contentful.Services;
 
 public class ContentfulService(
     IContentfulManagementClientAdapter client,
-    IContentfulEntryOperationService entryOperationService) : IContentfulService
+    IContentfulEntryOperationService entryOperationService,
+    IContentfulEntryBulkOperationService entryBulkOperationService) : IContentfulService
 {
-    private const int DefaultBatchSize = 50;
+    private const int DefaultBatchSize = 100;
 
     public async Task<IEnumerable<Locale>> GetLocalesAsync(CancellationToken cancellationToken)
     {
@@ -75,31 +76,22 @@ public class ContentfulService(
         PagingMode pagingMode = PagingMode.SkipForward,
         CancellationToken cancellationToken = default)
     {
-        async Task<ContentfulCollection<Entry<dynamic>>> GetEntriesAsync(string queryString, CancellationToken ct)
+        async Task<ContentfulCollection<Entry<dynamic>>> GetEntriesByQueryAsync(string queryString, CancellationToken ct)
             => await client.GetEntriesCollectionAsync(queryString, cancellationToken: ct);
 
         var query = new EntryQueryBuilder()
             .WithContentTypeId(contentTypeId)
             .Limit(pageSize ?? DefaultBatchSize);
 
-        return new EntryAsyncEnumerableWithTotal<dynamic>(GetEntriesAsync, query, pagingMode);
+        return new EntryAsyncEnumerableWithTotal<dynamic>(GetEntriesByQueryAsync, query, pagingMode);
     }
 
-    public async Task CreateOrUpdateEntriesAsync(IEnumerable<Entry<dynamic>> entries, bool publish = false, CancellationToken cancellationToken = default)
+    public async Task CreateOrUpdateEntriesAsync(IReadOnlyList<Entry<dynamic>> entries, bool publish = false, CancellationToken cancellationToken = default)
     {
-        async Task<(Dictionary<string, Entry<dynamic>>, Dictionary<string, HashSet<string>>)> GetLookupsAsync(
-            IEnumerable<Entry<dynamic>> entries, CancellationToken cancellationToken)
-        {
-            var existingEntriesLookupTask = client.GetExistingEntriesLookupByIdAsync(entries.Select(e => e.GetId()!), cancellationToken);
-            var unpublishedReferencedEntriesLookupTask = client.GetUnpublishedOrMissingReferencedEntriesIdsLookup(entries, cancellationToken);
-            await Task.WhenAll(existingEntriesLookupTask, unpublishedReferencedEntriesLookupTask);
+        var existingEntriesLookup = await client.GetExistingEntriesLookupByIdAsync(
+            entries.Select(e => e.GetId()!), cancellationToken);
 
-            return (await existingEntriesLookupTask, await unpublishedReferencedEntriesLookupTask);
-        }
-
-        var (existingEntriesLookup, unpublishedReferencedEntriesLookup) =
-            await GetLookupsAsync(entries, cancellationToken);
-
+        // First, create or update all entries without publishing
         await ExecuteAsync(
             entries,
             entryAction: async (entry, ct) =>
@@ -108,39 +100,62 @@ public class ContentfulService(
                     ? existing.GetVersion()
                     : entry.GetVersion();
 
-                var archived = existing?.IsArchived() == true;
-
-                // all referenced entries are published
-                var canPublish =
-                    unpublishedReferencedEntriesLookup.TryGetValue(entry.GetId()!, out var unpublishedReferencedEntries)
-                    && unpublishedReferencedEntries.Count == 0;
-
-                await entryOperationService.CreateOrUpdateEntryAsync(entry, version, archived, publish && canPublish,
-                    cancellationToken);
+                await entryOperationService.CreateOrUpdateEntryAsync(entry, version, ct);
             },
+            cancellationToken);
+
+        // Then, if publish is requested, bulk publish all entries that can be published
+        if (publish)
+        {
+            var unpublishedReferencedEntriesLookup = await client.GetUnpublishedOrMissingReferencedEntriesIdsLookup(
+                entries, cancellationToken);
+            
+            var entriesToPublish = entries.Where(entry =>
+            {
+                // all referenced entries are published
+                var allReferencedEntriesArePublished = unpublishedReferencedEntriesLookup.TryGetValue(entry.GetId()!, out var unpublishedReferencedEntries)
+                    && unpublishedReferencedEntries.Count == 0;
+                
+                return allReferencedEntriesArePublished && !entry.IsArchived();
+            })
+            .ToList();
+
+            await entryBulkOperationService.PublishEntriesAsync(entriesToPublish, cancellationToken);
+        }
+    }
+
+    public async Task PublishEntriesAsync(IReadOnlyList<Entry<dynamic>> entries, CancellationToken cancellationToken = default)
+    {
+        var entriesToPublish = entries
+            .Where(e => !e.IsPublished() && !e.IsArchived())
+            .ToList();
+        
+        await entryBulkOperationService.PublishEntriesAsync(entriesToPublish, cancellationToken);
+    }
+
+    public async Task UnpublishEntriesAsync(IReadOnlyList<Entry<dynamic>> entries, CancellationToken cancellationToken = default)
+    {
+        var entriesToUnpublish = entries
+            .Where(e => e.IsPublished())
+            .ToList();
+        
+        await entryBulkOperationService.UnpublishEntriesAsync(entriesToUnpublish, cancellationToken);
+    }
+
+    public async Task DeleteEntriesAsync(IReadOnlyList<Entry<dynamic>> entries, CancellationToken cancellationToken = default)
+    {
+        await UnpublishEntriesAsync(
+            entries,
+            cancellationToken);
+        
+        await ExecuteAsync(
+            entries,
+            entryAction: (entry, ct) => entryOperationService.DeleteEntryAsync(entry, ct),
             cancellationToken);
     }
 
-    public async Task PublishEntriesAsync(IEnumerable<Entry<dynamic>> entries, CancellationToken cancellationToken = default)
-        => await ExecuteAsync(
-            entries,
-            entryAction: async (entry, ct) => await entryOperationService.PublishEntryAsync(entry, ct),
-            cancellationToken);
-
-    public async Task UnpublishEntriesAsync(IEnumerable<Entry<dynamic>> entries, CancellationToken cancellationToken = default)
-        => await ExecuteAsync(
-            entries,
-            entryAction: async (entry, ct) => await entryOperationService.UnpublishEntryAsync(entry, ct),
-            cancellationToken);
-
-    public async Task DeleteEntriesAsync(IEnumerable<Entry<dynamic>> entries, CancellationToken cancellationToken = default)
-        => await ExecuteAsync(
-            entries,
-            entryAction: async (entry, ct) => await entryOperationService.DeleteEntryAsync(entry, ct),
-            cancellationToken);
-
     private static async Task ExecuteAsync(
-        IEnumerable<Entry<dynamic>> entries,
+        IReadOnlyList<Entry<dynamic>> entries,
         Func<Entry<dynamic>, CancellationToken, Task> entryAction,
         CancellationToken cancellationToken = default)
     {
