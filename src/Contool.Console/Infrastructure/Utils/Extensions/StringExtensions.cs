@@ -16,9 +16,11 @@ public static partial class StringExtensions
         if (string.IsNullOrEmpty(input))
             return input;
 
-        return StringRegex().Replace(input, "_")
+        return StringRegex()
+            .Replace(input, "_")
             .Replace(' ', '_')
             .Replace('-', '_')
+            .Replace("__", "_")
             .ToUpperInvariant();
     }
 

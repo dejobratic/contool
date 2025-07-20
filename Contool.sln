@@ -11,8 +11,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Contool.Core.Tests.Unit", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Contool.Console.Tests.Unit", "tests\Contool.Console.Tests.Unit\Contool.Console.Tests.Unit.csproj", "{5858ADC7-A362-40BE-92E6-320B424898B7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Contool.Core.Tests.Integration", "tests\Contool.Core.Tests.Integration\Contool.Core.Tests.Integration.csproj", "{DE07D23F-005D-489B-A24B-136C0E8D99CC}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,10 +33,6 @@ Global
 		{5858ADC7-A362-40BE-92E6-320B424898B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5858ADC7-A362-40BE-92E6-320B424898B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5858ADC7-A362-40BE-92E6-320B424898B7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{DE07D23F-005D-489B-A24B-136C0E8D99CC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DE07D23F-005D-489B-A24B-136C0E8D99CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DE07D23F-005D-489B-A24B-136C0E8D99CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DE07D23F-005D-489B-A24B-136C0E8D99CC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

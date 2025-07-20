@@ -1,11 +1,12 @@
 using Contool.Core.Infrastructure.Utils.Services;
-using Contool.Core.Tests.Unit.Helpers;
 
 namespace Contool.Core.Tests.Unit.Infrastructure.Utils.Services;
 
 public class BatchProcessorTests
 {
     private readonly BatchProcessor _sut = new();
+    
+    private static readonly int[] SourceArray = [1, 2, 3, 4, 5];
 
     [Fact]
     public async Task GivenSourceWithMultipleItems_WhenProcessed_ThenBatchesAreCreatedCorrectly()
@@ -15,7 +16,7 @@ public class BatchProcessorTests
 
         // Act
         await _sut.ProcessAsync(
-            source: AsyncEnumerableFactory.From([1, 2, 3, 4, 5]),
+            source: SourceArray.ToAsyncEnumerable(),
             batchSize: 2,
             batchActionAsync: (batch, _) =>
             {
@@ -38,7 +39,7 @@ public class BatchProcessorTests
 
         // Act
         await _sut.ProcessAsync(
-            source: AsyncEnumerableFactory.From([1, 2, 3, 4, 5]),
+            source: SourceArray.ToAsyncEnumerable(),
             batchSize: 2,
             batchActionAsync: (batch, _) =>
             {
@@ -60,7 +61,7 @@ public class BatchProcessorTests
 
         // Act
         await _sut.ProcessAsync(
-            source: AsyncEnumerableFactory.From(Array.Empty<int>()),
+            source: Array.Empty<int>().ToAsyncEnumerable(),
             batchSize: 2,
             batchActionAsync: (batch, _) =>
             {
@@ -82,7 +83,7 @@ public class BatchProcessorTests
         await Assert.ThrowsAsync<TaskCanceledException>(async () =>
         {
             await _sut.ProcessAsync(
-                source: AsyncEnumerableFactory.From([1, 2, 3, 4, 5]),
+                source: SourceArray.ToAsyncEnumerable(),
                 batchSize: 1,
                 batchActionAsync: async (batch, cancellationToken) =>
                 {
@@ -108,7 +109,7 @@ public class BatchProcessorTests
         var actualException = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
         {
             await _sut.ProcessAsync(
-                source: AsyncEnumerableFactory.From([1, 2, 3]),
+                source: SourceArray.ToAsyncEnumerable(),
                 batchSize: 2,
                 batchActionAsync: (_, _) => throw expectedException);
         });
@@ -124,7 +125,7 @@ public class BatchProcessorTests
 
         // Act
         await _sut.ProcessAsync(
-            source: AsyncEnumerableFactory.From([1, 2, 3]),
+            source: SourceArray.ToAsyncEnumerable(),
             batchSize: 10,
             batchActionAsync: (batch, _) =>
             {
@@ -134,6 +135,6 @@ public class BatchProcessorTests
 
         // Assert
         Assert.Single(processedBatches);
-        Assert.Equal([1, 2, 3], processedBatches[0]);
+        Assert.Equal([1, 2, 3, 4, 5], processedBatches[0]);
     }
 }

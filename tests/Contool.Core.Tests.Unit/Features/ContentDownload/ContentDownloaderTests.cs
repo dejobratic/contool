@@ -157,7 +157,7 @@ public class ContentDownloaderTests
         };
 
         var asyncEnumerable = new AsyncEnumerableWithTotal<dynamic>(
-            source: AsyncEnumerableFactory.From(entries.Cast<dynamic>()),
+            source: entries.Cast<dynamic>().ToAsyncEnumerable(),
             getTotal: () => entries.Length);
 
         // Force the total to be set by reading the first item and resetting

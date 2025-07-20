@@ -7,12 +7,14 @@ namespace Contool.Core.Tests.Unit.Infrastructure.Utils.Models;
 
 public class AsyncEnumerableWithTotalTests
 {
+    private static readonly int[] SourceArray = [1, 2, 3];
+
     [Fact]
     public async Task GivenSourceWithItems_WhenEnumerated_ThenItemsAreReturnedCorrectly()
     {
         // Arrange
         var asyncEnumerableWithTotal = new AsyncEnumerableWithTotal<int>(
-            source: AsyncEnumerableFactory.From([1, 2, 3]),
+            source: SourceArray.ToAsyncEnumerable(),
             getTotal: () => 3);
 
         // Act
@@ -27,7 +29,7 @@ public class AsyncEnumerableWithTotalTests
     {
         // Arrange
         var asyncEnumerableWithTotal = new AsyncEnumerableWithTotal<int>(
-            source: AsyncEnumerableFactory.From([1, 2, 3]),
+            source: SourceArray.ToAsyncEnumerable(),
             getTotal: () => 3);
 
         // Act
@@ -44,19 +46,17 @@ public class AsyncEnumerableWithTotalTests
         // Arrange
         var progressReporterMock = new Mock<IProgressReporter>();
         progressReporterMock.SetupDefaults();
-        var progressReporter = progressReporterMock.Object;
 
         var asyncEnumerableWithTotal = new AsyncEnumerableWithTotal<int>(
-            source: AsyncEnumerableFactory.From([1, 2, 3]),
+            source: SourceArray.ToAsyncEnumerable(),
             getTotal: () => 3,
-            progressReporter);
+            progressReporterMock.Object);
 
         // Act
         _ = await asyncEnumerableWithTotal.ToListAsync();
 
         // Assert
-        // MockLite limitation: Cannot access IncrementCount and CompleteWasCalled properties
-        // Assert.Equal(3, progressReporter.IncrementCount);
-        // Assert.True(progressReporter.CompleteWasCalled);
+        progressReporterMock.Verify(x => x.Increment(), Times.Exactly(3));
+        progressReporterMock.Verify(x => x.Complete(), Times.Once);
     }
 }

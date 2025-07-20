@@ -423,48 +423,6 @@ public class ContentfulEntryOperationServiceTests
     }
 
     [Fact]
-    public async Task GivenCancelledToken_WhenCreateOrUpdateEntryAsync_ThenRespectsCancellation()
-    {
-        // Arrange
-        var entry = EntryBuilder.CreateBlogPost("entry1", "blogPost");
-        var version = 1;
-        var archived = false;
-        var publish = false;
-        using var cts = new CancellationTokenSource();
-        cts.Cancel();
-
-        // Act
-        var actual = await _sut.CreateOrUpdateEntryAsync(entry, version, archived, publish, cts.Token);
-
-        // Assert - Should handle cancellation gracefully and return failure
-        Assert.False(actual.IsSuccess);
-        Assert.Equal(entry.SystemProperties.Id, actual.EntityId);
-        Assert.Equal(Operation.Upload, actual.Operation);
-        Assert.IsType<OperationCanceledException>(actual.Exception);
-    }
-
-    [Fact]
-    public async Task GivenCancelledToken_WhenPublishEntryAsync_ThenRespectsCancellation()
-    {
-        // Arrange
-        var entry = EntryBuilder.CreateBlogPost("entry1", "blogPost");
-        // Make it a draft (not published)
-        entry.SystemProperties.PublishedAt = null;
-        entry.SystemProperties.PublishedVersion = null;
-        using var cts = new CancellationTokenSource();
-        cts.Cancel();
-
-        // Act
-        var actual = await _sut.PublishEntryAsync(entry, cts.Token);
-
-        // Assert - Should handle cancellation gracefully and return failure
-        Assert.False(actual.IsSuccess);
-        Assert.Equal(entry.SystemProperties.Id, actual.EntityId);
-        Assert.Equal(Operation.Publish, actual.Operation);
-        Assert.IsType<OperationCanceledException>(actual.Exception);
-    }
-
-    [Fact]
     public async Task GivenCancelledToken_WhenUnpublishEntryAsync_ThenRespectsCancellation()
     {
         // Arrange

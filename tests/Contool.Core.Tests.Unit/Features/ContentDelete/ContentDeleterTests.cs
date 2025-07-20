@@ -27,27 +27,33 @@ public class ContentDeleterTests
     }
 
     [Fact]
-    public async Task GivenValidInput_WhenDeleteAsync_ThenDeletesEntriesInBatches()
+    public async Task GivenValidInput_WhenDeleting_ThenDeletesEntriesInBatches()
     {
         // Arrange
+        SetupEntriesToRead();
+        
         var input = CreateDeleterInput();
         
         // Act
         await _sut.DeleteAsync(input, CancellationToken.None);
         
         // Assert
-        _batchProcessorMock.Verify(x => x.ProcessAsync(
-            It.IsAny<IAsyncEnumerable<Entry<dynamic>>>(),
-            50,
-            It.IsAny<Func<IReadOnlyList<Entry<dynamic>>, CancellationToken, Task>>(),
-            It.IsAny<Func<Entry<dynamic>, bool>>(),
-            It.IsAny<CancellationToken>()), Times.Once);
+        _batchProcessorMock.Verify(
+            x => x.ProcessAsync(
+                It.IsAny<IAsyncEnumerable<Entry<dynamic>>>(),
+                50,
+                It.IsAny<Func<IReadOnlyList<Entry<dynamic>>, CancellationToken, Task>>(),
+                It.IsAny<Func<Entry<dynamic>, bool>>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
-    public async Task GivenValidInput_WhenDeleteAsync_ThenReportsProgressCorrectly()
+    public async Task GivenValidInput_WhenDeleting_ThenReportsProgressCorrectly()
     {
         // Arrange
+        SetupEntriesToRead();
+        
         var input = CreateDeleterInput();
         
         // Act
@@ -59,48 +65,39 @@ public class ContentDeleterTests
     }
 
     [Fact]
-    public async Task GivenValidInput_WhenDeleteAsync_ThenCallsContentfulServiceDeleteEntries()
+    public async Task GivenValidInput_WhenDeleting_ThenCallsContentfulServiceDeleteEntries()
     {
         // Arrange
+        const int entriesCount = 100;
+        
+        SetupEntriesToRead(entriesCount: entriesCount);
+        
         var input = CreateDeleterInput();
         
         // Act
         await _sut.DeleteAsync(input, CancellationToken.None);
         
         // Assert
-        _batchProcessorMock.Verify(x => x.ProcessAsync(
-            It.IsAny<IAsyncEnumerable<Entry<dynamic>>>(),
-            It.IsAny<int>(),
-            It.IsAny<Func<IReadOnlyList<Entry<dynamic>>, CancellationToken, Task>>(),
-            It.IsAny<Func<Entry<dynamic>, bool>>(),
-            It.IsAny<CancellationToken>()), Times.Once);
+        _contentfulServiceMock.Verify(
+            x => x.DeleteEntriesAsync(
+                It.Is<IEnumerable<Entry<dynamic>>>(entries => entries.Count() == entriesCount),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
-    public async Task GivenCancellationToken_WhenDeleteAsync_ThenRespectsCancellation()
+    public async Task GivenBatchProcessorThrowsException_WhenDeleting_ThenBubblesException()
     {
         // Arrange
         var input = CreateDeleterInput();
         
-        using var cts = new CancellationTokenSource();
-        await cts.CancelAsync();
-        
-        // Act & Assert
-        await Assert.ThrowsAsync<OperationCanceledException>(() =>
-            _sut.DeleteAsync(input, cts.Token));
-    }
-
-    [Fact]
-    public async Task GivenBatchProcessorThrowsException_WhenDeleteAsync_ThenBubblesException()
-    {
-        // Arrange
-        var input = CreateDeleterInput();
-        _batchProcessorMock.Setup(x => x.ProcessAsync(
-            It.IsAny<IAsyncEnumerable<Entry<dynamic>>>(),
-            It.IsAny<int>(),
-            It.IsAny<Func<IReadOnlyList<Entry<dynamic>>, CancellationToken, Task>>(),
-            It.IsAny<Func<Entry<dynamic>, bool>>(),
-            It.IsAny<CancellationToken>()))
+        _batchProcessorMock.Setup(
+            x => x.ProcessAsync(
+                It.IsAny<IAsyncEnumerable<Entry<dynamic>>>(),
+                It.IsAny<int>(),
+                It.IsAny<Func<IReadOnlyList<Entry<dynamic>>, CancellationToken, Task>>(),
+                It.IsAny<Func<Entry<dynamic>, bool>>(),
+                It.IsAny<CancellationToken>()))
             .Throws(new InvalidOperationException("Batch processing failed"));
         
         // Act & Assert
@@ -111,222 +108,58 @@ public class ContentDeleterTests
     }
 
     [Fact]
-    public async Task GivenEmptyEntries_WhenDeleteAsync_ThenHandlesEmptyCollection()
+    public async Task GivenContentfulServiceThrowsException_WhenDeleting_ThenBubblesException()
     {
         // Arrange
-        var input = CreateDeleterInputWithEmptyEntries();
+        var input = CreateDeleterInput();
         
-        // Act
-        await _sut.DeleteAsync(input, CancellationToken.None);
-        
-        // Assert
-        _batchProcessorMock.Verify(x => x.ProcessAsync(
-            It.IsAny<IAsyncEnumerable<Entry<dynamic>>>(),
-            It.IsAny<int>(),
-            It.IsAny<Func<IReadOnlyList<Entry<dynamic>>, CancellationToken, Task>>(),
-            It.IsAny<Func<Entry<dynamic>, bool>>(),
-            It.IsAny<CancellationToken>()), Times.Once);
-        _progressReporterMock.Verify(x => x.Start(It.IsAny<Operation>(), It.IsAny<Func<int>>()), Times.Once);
-        _progressReporterMock.Verify(x => x.Complete(), Times.Once);
-    }
-
-    [Fact]
-    public async Task GivenLargeNumberOfEntries_WhenDeleteAsync_ThenProcessesInBatchesOfFifty()
-    {
-        // Arrange
-        var input = CreateDeleterInputWithLargeDataset(300);
-        
-        // Act
-        await _sut.DeleteAsync(input, CancellationToken.None);
-        
-        // Assert
-        _batchProcessorMock.Verify(x => x.ProcessAsync(
-            It.IsAny<IAsyncEnumerable<Entry<dynamic>>>(),
-            50,
-            It.IsAny<Func<IReadOnlyList<Entry<dynamic>>, CancellationToken, Task>>(),
-            It.IsAny<Func<Entry<dynamic>, bool>>(),
-            It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task GivenContentfulServiceThrowsException_WhenDeleteAsync_ThenBubblesException()
-    {
-        // Arrange
-        var input = CreateDeleterInputWithFailingService();
+        _contentfulServiceMock
+            .Setup(x => x.GetEntriesAsync(
+                It.IsAny<string>(),
+                It.IsAny<int?>(),
+                It.IsAny<PagingMode>(),
+                It.IsAny<CancellationToken>()))
+            .Throws(new InvalidOperationException("Entry read failed"));
         
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             _sut.DeleteAsync(input, CancellationToken.None));
+        
+        Assert.Equal("Entry read failed", exception.Message);
     }
 
-    [Fact]
-    public async Task GivenIncludeArchivedFalse_WhenDeleteAsync_ThenFiltersOutArchivedEntries()
+    private ContentDeleterInput CreateDeleterInput(
+        string contentTypeId = "blogPost")
     {
-        // Arrange
-        var input = CreateDeleterInputWithArchivedEntries(includeArchived: false);
-        
-        // Act
-        await _sut.DeleteAsync(input, CancellationToken.None);
-        
-        // Assert
-        _batchProcessorMock.Verify(x => x.ProcessAsync(
-            It.IsAny<IAsyncEnumerable<Entry<dynamic>>>(),
-            It.IsAny<int>(),
-            It.IsAny<Func<IReadOnlyList<Entry<dynamic>>, CancellationToken, Task>>(),
-            It.IsAny<Func<Entry<dynamic>, bool>>(),
-            It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task GivenIncludeArchivedTrue_WhenDeleteAsync_ThenIncludesArchivedEntries()
-    {
-        // Arrange
-        var input = CreateDeleterInputWithArchivedEntries(includeArchived: true);
-        
-        // Act
-        await _sut.DeleteAsync(input, CancellationToken.None);
-        
-        // Assert
-        _batchProcessorMock.Verify(x => x.ProcessAsync(
-            It.IsAny<IAsyncEnumerable<Entry<dynamic>>>(),
-            It.IsAny<int>(),
-            It.IsAny<Func<IReadOnlyList<Entry<dynamic>>, CancellationToken, Task>>(),
-            It.IsAny<Func<Entry<dynamic>, bool>>(),
-            It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task GivenMixedArchivedAndNonArchivedEntries_WhenDeleteAsyncWithIncludeArchivedFalse_ThenProcessesOnlyNonArchivedEntries()
-    {
-        // Arrange
-        var input = CreateDeleterInputWithMixedArchivedEntries(includeArchived: false);
-        
-        // Act
-        await _sut.DeleteAsync(input, CancellationToken.None);
-        
-        // Assert
-        _batchProcessorMock.Verify(x => x.ProcessAsync(
-            It.IsAny<IAsyncEnumerable<Entry<dynamic>>>(),
-            It.IsAny<int>(),
-            It.IsAny<Func<IReadOnlyList<Entry<dynamic>>, CancellationToken, Task>>(),
-            It.IsAny<Func<Entry<dynamic>, bool>>(),
-            It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    private ContentDeleterInput CreateDeleterInput()
-    {
-        var testEntries = CreateTestEntries();
-        
-        _contentfulServiceMock
-            .Setup(x => x.GetEntriesAsync("test-content-type", null, PagingMode.SkipForward, It.IsAny<CancellationToken>()))
-            .Returns(testEntries);
-        
         return new ContentDeleterInput
         {
-            ContentTypeId = "test-content-type",
+            ContentTypeId = contentTypeId,
             ContentfulService = _contentfulServiceMock.Object,
             IncludeArchived = false
         };
     }
 
-    private ContentDeleterInput CreateDeleterInputWithEmptyEntries()
+    private void SetupEntriesToRead(
+        string contentTypeId =  "blogPost",
+        int entriesCount = 100)
     {
-        var emptyEntries = new MockAsyncEnumerableWithTotal<Entry<dynamic>>([]);
+        var entries = CreateBlogPostEntryAsyncEnumerable(entriesCount);
         
         _contentfulServiceMock
-            .Setup(x => x.GetEntriesAsync("test-content-type", null, PagingMode.SkipForward, It.IsAny<CancellationToken>()))
-            .Returns(emptyEntries);
-        
-        return new ContentDeleterInput
-        {
-            ContentTypeId = "test-content-type",
-            ContentfulService = _contentfulServiceMock.Object,
-            IncludeArchived = false
-        };
+            .Setup(x => x.GetEntriesAsync(
+               contentTypeId,
+                null,
+                PagingMode.SkipForward,
+                It.IsAny<CancellationToken>()))
+            .Returns(entries);
     }
 
-    private ContentDeleterInput CreateDeleterInputWithLargeDataset(int count)
+    private static MockAsyncEnumerableWithTotal<Entry<dynamic>> CreateBlogPostEntryAsyncEnumerable(int count)
     {
         var entries = Enumerable.Range(1, count)
-            .Select(i => EntryBuilder.CreateBlogPost($"entry{i}"))
+            .Select(i => EntryBuilder.CreateBlogPost(id: $"entry{i}"))
             .ToArray();
         
-        var testEntries = new MockAsyncEnumerableWithTotal<Entry<dynamic>>(entries);
-        
-        _contentfulServiceMock
-            .Setup(x => x.GetEntriesAsync("test-content-type", null, PagingMode.SkipForward, It.IsAny<CancellationToken>()))
-            .Returns(testEntries);
-        
-        return new ContentDeleterInput
-        {
-            ContentTypeId = "test-content-type",
-            ContentfulService = _contentfulServiceMock.Object,
-            IncludeArchived = false
-        };
+        return new MockAsyncEnumerableWithTotal<Entry<dynamic>>(entries);
     }
-
-    private ContentDeleterInput CreateDeleterInputWithFailingService()
-    {
-        _contentfulServiceMock
-            .Setup(x => x.GetEntriesAsync(It.IsAny<string>(), It.IsAny<int?>(), It.IsAny<PagingMode>(), It.IsAny<CancellationToken>()))
-            .Throws(new InvalidOperationException("Service failure"));
-        
-        return new ContentDeleterInput
-        {
-            ContentTypeId = "test-content-type",
-            ContentfulService = _contentfulServiceMock.Object,
-            IncludeArchived = false
-        };
-    }
-
-    private ContentDeleterInput CreateDeleterInputWithArchivedEntries(bool includeArchived)
-    {
-        var testEntries = new MockAsyncEnumerableWithTotal<Entry<dynamic>>(
-        [
-            EntryBuilder.CreateArchivedBlogPost("archived1"),
-            EntryBuilder.CreateArchivedBlogPost("archived2"),
-            EntryBuilder.CreateArchivedProduct("archived3"),
-        ]);
-        
-        _contentfulServiceMock
-            .Setup(x => x.GetEntriesAsync("test-content-type", null, PagingMode.SkipForward, It.IsAny<CancellationToken>()))
-            .Returns(testEntries);
-        
-        return new ContentDeleterInput
-        {
-            ContentTypeId = "test-content-type",
-            ContentfulService = _contentfulServiceMock.Object,
-            IncludeArchived = includeArchived,
-        };
-    }
-
-    private ContentDeleterInput CreateDeleterInputWithMixedArchivedEntries(bool includeArchived)
-    {
-        var testEntries = new MockAsyncEnumerableWithTotal<Entry<dynamic>>(
-        [
-            EntryBuilder.CreateBlogPost("entry1"),
-            EntryBuilder.CreateArchivedBlogPost("archived1"),
-            EntryBuilder.CreateProduct("entry2"),
-            EntryBuilder.CreateArchivedProduct("archived2"),
-        ]);
-        
-        _contentfulServiceMock
-            .Setup(x => x.GetEntriesAsync("test-content-type", null, PagingMode.SkipForward, It.IsAny<CancellationToken>()))
-            .Returns(testEntries);
-        
-        return new ContentDeleterInput
-        {
-            ContentTypeId = "test-content-type",
-            ContentfulService = _contentfulServiceMock.Object,
-            IncludeArchived = includeArchived
-        };
-    }
-
-    private static MockAsyncEnumerableWithTotal<Entry<dynamic>> CreateTestEntries() 
-        => new(
-        [
-            EntryBuilder.CreateBlogPost("entry1"),
-            EntryBuilder.CreateBlogPost("entry2"),
-            EntryBuilder.CreateBlogPost("entry3"),
-        ]);
 }

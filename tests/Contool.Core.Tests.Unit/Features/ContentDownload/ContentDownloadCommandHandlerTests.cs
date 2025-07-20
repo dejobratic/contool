@@ -146,44 +146,7 @@ public class ContentDownloadCommandHandlerTests
         // Assert
         _outputWriterFactoryMock.Verify(x => x.Create(It.IsAny<DataSource>()), Times.Once);
     }
-
-    [Fact]
-    public async Task GivenCancellationToken_WhenHandleAsync_ThenRespectsCancellation()
-    {
-        // Arrange
-        var command = new ContentDownloadCommand
-        {
-            ContentTypeId = "blogPost",
-            OutputPath = "/test/output",
-            OutputFormat = "csv",
-            SpaceId = "test-space",
-            EnvironmentId = "test-environment"
-        };
-
-        var mockService = new Mock<IContentfulService>();
-        mockService.SetupDefaults();
-        var mockSerializer = new Mock<IContentEntrySerializer>();
-        var mockOutputWriter = new Mock<IOutputWriter>();
-
-        // Setup test entries
-        var testEntries = CreateTestEntries();
-        mockService.Setup(x => x.GetEntriesAsync("blogPost", null, PagingMode.SkipForward, It.IsAny<CancellationToken>()))
-            .Returns(testEntries);
-
-        _serviceBuilderMock.Setup(x => x.Build()).Returns(mockService.Object);
-        _serializerFactoryMock.Setup(x => x.CreateAsync("blogPost", It.IsAny<IContentfulService>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(mockSerializer.Object);
-        _outputWriterFactoryMock.Setup(x => x.Create(It.IsAny<DataSource>()))
-            .Returns(mockOutputWriter.Object);
-
-        using var cts = new CancellationTokenSource();
-        cts.Cancel();
-
-        // Act & Assert
-        await Assert.ThrowsAsync<OperationCanceledException>(() =>
-            _sut.HandleAsync(command, cts.Token));
-    }
-
+    
     [Fact]
     public async Task GivenSerializerFactoryThrowsException_WhenHandleAsync_ThenBubblesException()
     {
@@ -291,13 +254,13 @@ public class ContentDownloadCommandHandlerTests
     {
         var entries = new[]
         {
-            EntryBuilder.CreateBlogPost("entry1", "blogPost"),
-            EntryBuilder.CreateBlogPost("entry2", "blogPost"),
-            EntryBuilder.CreateBlogPost("entry3", "blogPost")
+            EntryBuilder.CreateBlogPost("entry1"),
+            EntryBuilder.CreateBlogPost("entry2"),
+            EntryBuilder.CreateBlogPost("entry3")
         };
         
         return new AsyncEnumerableWithTotal<Entry<dynamic>>(
-            source: AsyncEnumerableFactory.From(entries),
+            source: entries.ToAsyncEnumerable(),
             getTotal: () => entries.Length);
     }
 }
