@@ -48,9 +48,7 @@ public class ContentfulEntryOperationService(
         try
         {
             if (entry.IsPublished() || entry.IsArchived())
-            {
                 return OperationResult.Success(entryId, Operation.Publish);
-            }
 
             await client.PublishEntryAsync(
                 entryId: entryId,
@@ -74,9 +72,7 @@ public class ContentfulEntryOperationService(
         try
         {
             if (!entry.IsPublished())
-            {
                 return OperationResult.Success(entryId, Operation.Unpublish);
-            }
 
             await client.UnpublishEntryAsync(
                 entryId: entryId,

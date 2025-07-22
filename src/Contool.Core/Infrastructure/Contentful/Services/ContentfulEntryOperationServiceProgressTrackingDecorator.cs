@@ -6,7 +6,6 @@ namespace Contool.Core.Infrastructure.Contentful.Services;
 
 public class ContentfulEntryOperationServiceProgressTrackingDecorator(
     IContentfulEntryOperationService inner,
-    IOperationTracker operationTracker,
     IProgressReporter progressReporter) : IContentfulEntryOperationService
 {
     public async Task<OperationResult> CreateOrUpdateEntryAsync(
@@ -17,9 +16,6 @@ public class ContentfulEntryOperationServiceProgressTrackingDecorator(
         var result = await inner.CreateOrUpdateEntryAsync(entry, version, cancellationToken);
         
         progressReporter.Increment();
-        
-        if (!result.IsSuccess)
-            operationTracker.IncrementErrorCount(result.Operation, result.EntryId);
         
         return result;
     }
@@ -32,9 +28,6 @@ public class ContentfulEntryOperationServiceProgressTrackingDecorator(
         
         progressReporter.Increment();
         
-        if (!result.IsSuccess)
-            operationTracker.IncrementErrorCount(result.Operation, result.EntryId);
-        
         return result;
     }
 
@@ -46,9 +39,6 @@ public class ContentfulEntryOperationServiceProgressTrackingDecorator(
         
         progressReporter.Increment();
         
-        if (!result.IsSuccess)
-            operationTracker.IncrementErrorCount(result.Operation, result.EntryId);
-        
         return result;
     }
 
@@ -59,9 +49,6 @@ public class ContentfulEntryOperationServiceProgressTrackingDecorator(
         var result = await inner.DeleteEntryAsync(entry, cancellationToken);
         
         progressReporter.Increment();
-        
-        if (!result.IsSuccess)
-            operationTracker.IncrementErrorCount(result.Operation, result.EntryId);
         
         return result;
     }

@@ -39,10 +39,11 @@ public static class Dependencies
             .AddSingleton<IContentfulManagementClientAdapterFactory, ContentfulManagementClientAdapterFactory>()
             .AddSingleton<IContentfulLoginServiceBuilder, ContentfulLoginServiceBuilder>()
             .AddSingleton<IContentfulServiceBuilder, ContentfulServiceBuilder>()
-
-            // Contentful services
+            .AddSingleton<IContentfulBulkClientFactory, ContentfulBulkClientFactory>()
             .AddSingleton<IContentfulEntryOperationServiceFactory, ContentfulEntryOperationServiceFactory>()
             .AddSingleton<IContentfulEntryBulkOperationServiceFactory, ContentfulEntryBulkOperationServiceFactory>()
+
+            // Contentful services
             .AddSingleton<IContentDownloader, ContentDownloader>()
             .AddSingleton<IContentUploader, ContentUploader>()
             .AddSingleton<IContentPublisher, ContentPublisher>()
@@ -71,6 +72,7 @@ public static class Dependencies
             // Utils
             .AddSingleton<IOperationTracker, OperationTracker>()
             .AddSingleton<IBatchProcessor, BatchProcessor>()
+            .AddSingleton<IResiliencyExecutor, ResiliencyExecutor>()
             .AddSingleton<IRuntimeContext, RuntimeContext>();
     }
 

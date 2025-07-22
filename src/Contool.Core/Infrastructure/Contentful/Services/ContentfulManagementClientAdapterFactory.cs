@@ -10,7 +10,7 @@ namespace Contool.Core.Infrastructure.Contentful.Services;
 public class ContentfulManagementClientAdapterFactory(
     IHttpClientFactory httpClientFactory,
     IOptions<ContentfulOptions> options,
-    IOptions<ResiliencyOptions> resiliencyOptions,
+    IResiliencyExecutor resiliencyExecutor,
     IOperationTracker operationTracker,
     IRuntimeContext runtimeContext) : IContentfulManagementClientAdapterFactory
 {
@@ -18,16 +18,16 @@ public class ContentfulManagementClientAdapterFactory(
 
     public IContentfulManagementClientAdapter Create(string? spaceId, string? environmentId, bool usePreviewApi)
     {
-        IContentfulManagementClientAdapter adapter = CreateBaseAdapter(spaceId, environmentId, usePreviewApi);
-        adapter = DecorateWithResiliency(adapter);
+        IContentfulManagementClientAdapter client = CreateBaseClient(spaceId, environmentId, usePreviewApi);
+        client = DecorateWithResiliency(client);
 
         if (runtimeContext.IsDryRun)
-            adapter = DecorateWithDryRun(adapter);
+            client = DecorateWithDryRun(client);
 
-        return DecorateWithOperationTracking(adapter);
+        return DecorateWithOperationTracking(client);
     }
 
-    private ContentfulManagementClientAdapter CreateBaseAdapter(
+    private ContentfulManagementClientAdapter CreateBaseClient(
         string? spaceId, string? environmentId, bool usePreviewApi)
     {
         var client = CreateContentfulClient(spaceId, environmentId, usePreviewApi);
@@ -50,7 +50,7 @@ public class ContentfulManagementClientAdapterFactory(
 
     private ContentfulManagementClientAdapterResiliencyDecorator DecorateWithResiliency(
         IContentfulManagementClientAdapter inner)
-        => new(inner, resiliencyOptions);
+        => new(inner, resiliencyExecutor);
 
     private static ContentfulManagementClientAdapterDryRunDecorator DecorateWithDryRun(
         IContentfulManagementClientAdapter inner)

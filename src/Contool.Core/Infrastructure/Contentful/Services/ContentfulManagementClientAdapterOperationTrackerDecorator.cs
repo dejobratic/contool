@@ -49,9 +49,7 @@ public class ContentfulManagementClientAdapterOperationTrackerDecorator(
         var result = await inner.GetEntriesCollectionAsync(queryString, cancellationToken);
 
         foreach (var entry in result.Items)
-        {
             operationTracker.IncrementSuccessCount(Operation.Read, entry.GetId()!);
-        }
 
         return result;
     }

@@ -15,15 +15,10 @@ public class ContentfulEntryBulkOperationServiceProgressTrackingDecorator(
     {
         var results = await inner.PublishEntriesAsync(entries, cancellationToken);
         
-        // Track progress for each entry operation
         foreach (var result in results)
         {
             progressReporter.Increment();
-            
-            if (!result.IsSuccess)
-            {
-                operationTracker.IncrementErrorCount(result.Operation, result.EntryId);
-            }
+            TrackOperation(result);
         }
         
         return results;
@@ -35,17 +30,24 @@ public class ContentfulEntryBulkOperationServiceProgressTrackingDecorator(
     {
         var results = await inner.UnpublishEntriesAsync(entries, cancellationToken);
         
-        // Track progress for each entry operation
         foreach (var result in results)
         {
             progressReporter.Increment();
-            
-            if (!result.IsSuccess)
-            {
-                operationTracker.IncrementErrorCount(result.Operation, result.EntryId);
-            }
+            TrackOperation(result);
         }
         
         return results;
+    }
+
+    private void TrackOperation(OperationResult result)
+    {
+        if (result.IsSuccess)
+        {
+            operationTracker.IncrementSuccessCount(result.Operation, result.EntryId);
+        }
+        else
+        {
+            operationTracker.IncrementErrorCount(result.Operation, result.EntryId);
+        }
     }
 }

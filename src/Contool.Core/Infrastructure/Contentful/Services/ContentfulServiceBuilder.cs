@@ -3,9 +3,10 @@
 namespace Contool.Core.Infrastructure.Contentful.Services;
 
 public class ContentfulServiceBuilder(
-    IContentfulManagementClientAdapterFactory adapterFactory,
+    IContentfulManagementClientAdapterFactory clientFactory,
+    IContentfulBulkClientFactory bulkClientFactory,
     IContentfulEntryOperationServiceFactory operationServiceFactory,
-    IContentfulEntryBulkOperationServiceFactory entryBulkOperationServiceFactory,
+    IContentfulEntryBulkOperationServiceFactory bulkOperationServiceFactory,
     IRuntimeContext runtimeContext) : IContentfulServiceBuilder
 {
     private string? _spaceId;
@@ -32,12 +33,14 @@ public class ContentfulServiceBuilder(
 
     public IContentfulService Build()
     {
-        var clientAdapter = adapterFactory.Create(_spaceId, _environmentId, _usePreviewApi);
-        var entryOperationService = operationServiceFactory.Create(clientAdapter);
-        var entryBulkOperationService = entryBulkOperationServiceFactory.Create(_spaceId, _environmentId);
+        var client = clientFactory.Create(_spaceId, _environmentId, _usePreviewApi);
+        var entryOperationService = operationServiceFactory.Create(client);
+
+        var bulkClient = bulkClientFactory.Create(_spaceId, _environmentId);
+        var entryBulkOperationService = bulkOperationServiceFactory.Create(bulkClient);
 
         var service = new ContentfulService(
-            clientAdapter, entryOperationService, entryBulkOperationService);
+            client, entryOperationService, entryBulkOperationService);
 
         return runtimeContext.IsDryRun
             ? new ContentfulServiceDryRunDecorator(service)
