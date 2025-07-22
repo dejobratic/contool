@@ -1,4 +1,3 @@
-using Contentful.Core.Configuration;
 using Contentful.Core.Models;
 using Contool.Core.Infrastructure.Contentful.Services;
 using MockLite;
@@ -9,20 +8,11 @@ public class ContentfulEntryBulkOperationServiceTests
 {
     private readonly ContentfulEntryBulkOperationService _sut;
     
-    private readonly Mock<HttpClient> _httpClientMock = new();
+    private readonly Mock<IContentfulBulkClient> _bulkClientMock = new();
 
     public ContentfulEntryBulkOperationServiceTests()
     {
-        var options = new ContentfulOptions
-        {
-            SpaceId = "test-space",
-            Environment = "test-env", 
-            ManagementApiKey = "test-key"
-        };
-        
-        _sut = new ContentfulEntryBulkOperationService(
-            _httpClientMock.Object,
-            options);
+        _sut = new ContentfulEntryBulkOperationService(_bulkClientMock.Object);
     }
 
     [Fact]

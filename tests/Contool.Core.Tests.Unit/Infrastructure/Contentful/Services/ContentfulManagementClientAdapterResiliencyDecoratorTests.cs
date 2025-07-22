@@ -1,11 +1,10 @@
 using Contentful.Core.Errors;
 using Contentful.Core.Models;
 using Contentful.Core.Models.Management;
-using Contool.Core.Infrastructure.Contentful.Options;
 using Contool.Core.Infrastructure.Contentful.Services;
+using Contool.Core.Infrastructure.Utils.Services;
 using Contool.Core.Tests.Unit.Helpers;
 using MockLite;
-using Microsoft.Extensions.Options;
 using System.Net;
 
 namespace Contool.Core.Tests.Unit.Infrastructure.Contentful.Services;
@@ -15,26 +14,14 @@ public class ContentfulManagementClientAdapterResiliencyDecoratorTests : IDispos
     private readonly ContentfulManagementClientAdapterResiliencyDecorator _sut;
     
     private readonly Mock<IContentfulManagementClientAdapter> _innerMock;
-    private readonly IOptions<ResiliencyOptions> _resiliencyOptions;
+    private readonly Mock<IResiliencyExecutor> _resiliencyExecutorMock;
 
     public ContentfulManagementClientAdapterResiliencyDecoratorTests()
     {
         _innerMock = new Mock<IContentfulManagementClientAdapter>();
-        _resiliencyOptions = Options.Create(new ResiliencyOptions
-        {
-            RetryPolicy = new ResiliencyOptions.RetryPolicyOptions
-            {
-                RetryCount = 3,
-                BackoffStrategy = "Exponential",
-                BaseDelaySeconds = 0.1 // Short delay for testing
-            },
-            ConcurrencyLimiter = new ResiliencyOptions.ConcurrencyLimiterOptions
-            {
-                ConcurrencyLimit = 2
-            }
-        });
+        _resiliencyExecutorMock = new Mock<IResiliencyExecutor>();
         
-        _sut = new ContentfulManagementClientAdapterResiliencyDecorator(_innerMock.Object, _resiliencyOptions);
+        _sut = new ContentfulManagementClientAdapterResiliencyDecorator(_innerMock.Object, _resiliencyExecutorMock.Object);
     }
 
     [Fact]
@@ -431,21 +418,8 @@ public class ContentfulManagementClientAdapterResiliencyDecoratorTests : IDispos
     public async Task GivenFixedBackoffStrategy_WhenCreatingRetryPolicy_ThenUsesFixedDelays()
     {
         // Arrange
-        var fixedBackoffOptions = Options.Create(new ResiliencyOptions
-        {
-            RetryPolicy = new ResiliencyOptions.RetryPolicyOptions
-            {
-                RetryCount = 2,
-                BackoffStrategy = "Fixed",
-                BaseDelaySeconds = 0.1
-            },
-            ConcurrencyLimiter = new ResiliencyOptions.ConcurrencyLimiterOptions
-            {
-                ConcurrencyLimit = 2
-            }
-        });
 
-        var fixedBackoffDecorator = new ContentfulManagementClientAdapterResiliencyDecorator(_innerMock.Object, fixedBackoffOptions);
+        var fixedBackoffDecorator = new ContentfulManagementClientAdapterResiliencyDecorator(_innerMock.Object, _resiliencyExecutorMock.Object);
         
         var spaceId = "test-space";
         var expectedException = new ContentfulException(400, "Test exception");
@@ -463,21 +437,8 @@ public class ContentfulManagementClientAdapterResiliencyDecoratorTests : IDispos
     public async Task GivenNoBackoffStrategy_WhenCreatingRetryPolicy_ThenUsesImmediateRetry()
     {
         // Arrange
-        var noBackoffOptions = Options.Create(new ResiliencyOptions
-        {
-            RetryPolicy = new ResiliencyOptions.RetryPolicyOptions
-            {
-                RetryCount = 2,
-                BackoffStrategy = "None",
-                BaseDelaySeconds = 0.1
-            },
-            ConcurrencyLimiter = new ResiliencyOptions.ConcurrencyLimiterOptions
-            {
-                ConcurrencyLimit = 2
-            }
-        });
 
-        var noBackoffDecorator = new ContentfulManagementClientAdapterResiliencyDecorator(_innerMock.Object, noBackoffOptions);
+        var noBackoffDecorator = new ContentfulManagementClientAdapterResiliencyDecorator(_innerMock.Object, _resiliencyExecutorMock.Object);
         
         var spaceId = "test-space";
         var expectedException = new ContentfulException(400, "Test exception");
@@ -495,21 +456,8 @@ public class ContentfulManagementClientAdapterResiliencyDecoratorTests : IDispos
     public async Task GivenConcurrencyLimit_WhenMultipleRequestsExecuteConcurrently_ThenLimitsConcurrency()
     {
         // Arrange
-        var concurrencyLimitOptions = Options.Create(new ResiliencyOptions
-        {
-            RetryPolicy = new ResiliencyOptions.RetryPolicyOptions
-            {
-                RetryCount = 0,
-                BackoffStrategy = "None",
-                BaseDelaySeconds = 0.1
-            },
-            ConcurrencyLimiter = new ResiliencyOptions.ConcurrencyLimiterOptions
-            {
-                ConcurrencyLimit = 1 // Very limited concurrency
-            }
-        });
 
-        var concurrencyLimitDecorator = new ContentfulManagementClientAdapterResiliencyDecorator(_innerMock.Object, concurrencyLimitOptions);
+        var concurrencyLimitDecorator = new ContentfulManagementClientAdapterResiliencyDecorator(_innerMock.Object, _resiliencyExecutorMock.Object);
         
         var spaceId = "test-space";
         var expectedSpace = SpaceBuilder.CreateWithId(spaceId);

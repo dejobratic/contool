@@ -11,6 +11,7 @@ public class ContentfulServiceBuilderTests
     private readonly ContentfulServiceBuilder _sut;
     
     private readonly Mock<IContentfulManagementClientAdapterFactory> _adapterFactoryMock = new();
+    private readonly Mock<IContentfulBulkClientFactory> _bulkClientFactoryMock = new();
     private readonly Mock<IContentfulEntryOperationServiceFactory> _entryOperationServiceFactoryMock = new();
     private readonly Mock<IContentfulEntryBulkOperationServiceFactory> _entryBulkOperationServiceFactoryMock = new();
     private readonly Mock<IRuntimeContext> _runtimeContextMock = new();
@@ -19,6 +20,7 @@ public class ContentfulServiceBuilderTests
     {
         _sut = new ContentfulServiceBuilder(
             _adapterFactoryMock.Object,
+            _bulkClientFactoryMock.Object,
             _entryOperationServiceFactoryMock.Object,
             _entryBulkOperationServiceFactoryMock.Object,
             _runtimeContextMock.Object);

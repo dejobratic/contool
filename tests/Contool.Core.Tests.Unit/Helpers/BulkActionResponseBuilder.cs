@@ -1,4 +1,3 @@
-using Contentful.Core.Models;
 using Contool.Core.Infrastructure.Contentful.Models;
 
 namespace Contool.Core.Tests.Unit.Helpers;
@@ -6,13 +5,13 @@ namespace Contool.Core.Tests.Unit.Helpers;
 public class BulkActionResponseBuilder
 {
     private string _id = "bulk-action-1";
-    private BulkActionType _action = BulkActionType.Publish;
-    private BulkActionStatus _status = BulkActionStatus.Created;
+    private string _action = "publish";
+    private string _status = BulkActionStatus.Create;
     private DateTime _createdAt = DateTime.UtcNow;
-    private DateTime? _completedAt;
-    private List<BulkActionItem> _items = [];
-    private string? _error;
-    private SystemProperties? _sys;
+    private DateTime _updatedAt = DateTime.UtcNow;
+    private List<BulkActionEntity> _items = [];
+    private string? _errorId;
+    private BulkActionSys? _sys;
 
     public BulkActionResponseBuilder WithId(string id)
     {
@@ -20,13 +19,13 @@ public class BulkActionResponseBuilder
         return this;
     }
 
-    public BulkActionResponseBuilder WithAction(BulkActionType action)
+    public BulkActionResponseBuilder WithAction(string action)
     {
         _action = action;
         return this;
     }
 
-    public BulkActionResponseBuilder WithStatus(BulkActionStatus status)
+    public BulkActionResponseBuilder WithStatus(string status)
     {
         _status = status;
         return this;
@@ -38,25 +37,25 @@ public class BulkActionResponseBuilder
         return this;
     }
 
-    public BulkActionResponseBuilder WithCompletedAt(DateTime? completedAt)
+    public BulkActionResponseBuilder WithUpdatedAt(DateTime updatedAt)
     {
-        _completedAt = completedAt;
+        _updatedAt = updatedAt;
         return this;
     }
 
-    public BulkActionResponseBuilder WithItems(IEnumerable<BulkActionItem> items)
+    public BulkActionResponseBuilder WithItems(IEnumerable<BulkActionEntity> items)
     {
         _items = items.ToList();
         return this;
     }
 
-    public BulkActionResponseBuilder WithError(string? error)
+    public BulkActionResponseBuilder WithErrorId(string? errorId)
     {
-        _error = error;
+        _errorId = errorId;
         return this;
     }
 
-    public BulkActionResponseBuilder WithSys(SystemProperties? sys)
+    public BulkActionResponseBuilder WithSys(BulkActionSys? sys)
     {
         _sys = sys;
         return this;
@@ -65,15 +64,15 @@ public class BulkActionResponseBuilder
     public BulkActionResponseBuilder AsSucceeded()
     {
         _status = BulkActionStatus.Succeeded;
-        _completedAt = DateTime.UtcNow;
+        _updatedAt = DateTime.UtcNow;
         return this;
     }
 
-    public BulkActionResponseBuilder AsFailed(string error = "Operation failed")
+    public BulkActionResponseBuilder AsFailed(string? errorId = "error-1")
     {
         _status = BulkActionStatus.Failed;
-        _error = error;
-        _completedAt = DateTime.UtcNow;
+        _errorId = errorId;
+        _updatedAt = DateTime.UtcNow;
         return this;
     }
 
@@ -87,34 +86,52 @@ public class BulkActionResponseBuilder
     {
         return new BulkActionResponse
         {
-            Id = _id,
+            Sys = _sys ?? new BulkActionSys 
+            { 
+                Id = _id, 
+                Type = "BulkAction", 
+                Status = _status, 
+                SchemaVersion = "1", 
+                CreatedAt = _createdAt, 
+                UpdatedAt = _updatedAt 
+            },
             Action = _action,
-            Status = _status,
-            CreatedAt = _createdAt,
-            CompletedAt = _completedAt,
-            Items = _items,
-            Error = _error,
-            Sys = _sys
+            Payload = new BulkActionPayload
+            {
+                Entities = new BulkActionEntities
+                {
+                    Type = "Array",
+                    Items = _items
+                }
+            },
+            Error = _errorId != null ? new BulkActionError 
+            { 
+                Sys = new BulkActionErrorSys 
+                { 
+                    Id = _errorId, 
+                    Type = "Error" 
+                } 
+            } : null!
         };
     }
 
     public static BulkActionResponseBuilder Create() => new();
 
-    public static BulkActionResponse CreateSuccessful(string id = "bulk-action-1", BulkActionType action = BulkActionType.Publish) =>
+    public static BulkActionResponse CreateSuccessful(string id = "bulk-action-1", string action = "publish") =>
         new BulkActionResponseBuilder()
             .WithId(id)
             .WithAction(action)
             .AsSucceeded()
             .Build();
 
-    public static BulkActionResponse CreateFailed(string id = "bulk-action-1", BulkActionType action = BulkActionType.Publish, string error = "Operation failed") =>
+    public static BulkActionResponse CreateFailed(string id = "bulk-action-1", string action = "publish", string? errorId = "error-1") =>
         new BulkActionResponseBuilder()
             .WithId(id)
             .WithAction(action)
-            .AsFailed(error)
+            .AsFailed(errorId)
             .Build();
 
-    public static BulkActionResponse CreateInProgress(string id = "bulk-action-1", BulkActionType action = BulkActionType.Publish) =>
+    public static BulkActionResponse CreateInProgress(string id = "bulk-action-1", string action = "publish") =>
         new BulkActionResponseBuilder()
             .WithId(id)
             .WithAction(action)
