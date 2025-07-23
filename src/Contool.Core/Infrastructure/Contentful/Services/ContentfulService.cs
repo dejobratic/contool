@@ -15,17 +15,15 @@ public class ContentfulService(
     private const int DefaultBatchSize = 100;
 
     public async Task<IEnumerable<Locale>> GetLocalesAsync(CancellationToken cancellationToken)
-    {
-        return await client.GetLocalesCollectionAsync(cancellationToken);
-    }
+        => await client.GetLocalesCollectionAsync(cancellationToken);
 
-    public async Task<ContentType?> GetContentTypeAsync(string contentTypeId, CancellationToken cancellationToken)
+    public async Task<ContentType?> GetContentTypeAsync(
+        string contentTypeId,
+        CancellationToken cancellationToken)
     {
         try
         {
-            return await client.GetContentTypeAsync(
-                contentTypeId: contentTypeId,
-                cancellationToken: cancellationToken);
+            return await client.GetContentTypeAsync(contentTypeId, cancellationToken);
         }
         catch (ContentfulException)
         {
@@ -34,40 +32,26 @@ public class ContentfulService(
     }
 
     public async Task<IEnumerable<ContentType>> GetContentTypesAsync(CancellationToken cancellationToken = default)
+        => await client.GetContentTypesAsync(cancellationToken);
+
+    public async Task<ContentType> CreateContentTypeAsync(
+        ContentType contentType,
+        CancellationToken cancellationToken = default)
     {
-        return await client.GetContentTypesAsync(cancellationToken);
+        var id = contentType.GetId()!;
+        if (await GetContentTypeAsync(id, cancellationToken) is not null)
+            throw new InvalidOperationException($"Content type with ID '{id}' already exists.");
+
+        var created = await client.CreateOrUpdateContentTypeAsync(contentType, cancellationToken);
+        return await client.ActivateContentTypeAsync(created.GetId()!, created.GetVersion(), cancellationToken);
     }
 
-    public async Task<ContentType> CreateContentTypeAsync(ContentType contentType, CancellationToken cancellationToken = default)
+    public async Task DeleteContentTypeAsync(
+        string contentTypeId,
+        CancellationToken cancellationToken = default)
     {
-        var existingContentType = await GetContentTypeAsync(
-            contentType.GetId()!,
-            cancellationToken);
-
-        if (existingContentType is not null)
-            throw new InvalidOperationException($"Content type with ID '{contentType.GetId()}' already exists.");
-
-        var created = await client.CreateOrUpdateContentTypeAsync(
-            contentType,
-            cancellationToken: cancellationToken);
-
-        created = await client.ActivateContentTypeAsync(
-            contentTypeId: created.GetId()!,
-            version: created.GetVersion(),
-            cancellationToken: cancellationToken);
-
-        return created;
-    }
-
-    public async Task DeleteContentTypeAsync(string contentTypeId, CancellationToken cancellationToken = default)
-    {
-        await client.DeactivateContentTypeAsync(
-            contentTypeId: contentTypeId,
-            cancellationToken: cancellationToken);
-
-        await client.DeleteContentTypeAsync(
-            contentTypeId: contentTypeId,
-            cancellationToken: cancellationToken);
+        await client.DeactivateContentTypeAsync(contentTypeId, cancellationToken);
+        await client.DeleteContentTypeAsync(contentTypeId, cancellationToken);
     }
 
     public IAsyncEnumerableWithTotal<Entry<dynamic>> GetEntriesAsync(
@@ -76,8 +60,9 @@ public class ContentfulService(
         PagingMode pagingMode = PagingMode.SkipForward,
         CancellationToken cancellationToken = default)
     {
-        async Task<ContentfulCollection<Entry<dynamic>>> GetEntriesByQueryAsync(string queryString, CancellationToken ct)
-            => await client.GetEntriesCollectionAsync(queryString, cancellationToken: ct);
+        async Task<ContentfulCollection<Entry<dynamic>>> GetEntriesByQueryAsync(string queryString,
+            CancellationToken ct)
+            => await client.GetEntriesCollectionAsync(queryString, ct);
 
         var query = new EntryQueryBuilder()
             .WithContentTypeId(contentTypeId)
@@ -86,75 +71,88 @@ public class ContentfulService(
         return new EntryAsyncEnumerableWithTotal<dynamic>(GetEntriesByQueryAsync, query, pagingMode);
     }
 
-    public async Task CreateOrUpdateEntriesAsync(IReadOnlyList<Entry<dynamic>> entries, bool publish = false, CancellationToken cancellationToken = default)
+    public async Task CreateOrUpdateEntriesAsync(
+        IReadOnlyList<Entry<dynamic>> entries,
+        bool publish = false,
+        CancellationToken cancellationToken = default)
     {
-        var existingEntriesLookup = await client.GetExistingEntriesLookupByIdAsync(
+        await CreateOrUpdateEntriesAsync(entries, cancellationToken);
+
+        if (publish)
+            await PublishEntriesWithValidReferencesAsync(entries, cancellationToken);
+    }
+
+    private async Task CreateOrUpdateEntriesAsync(
+        IReadOnlyList<Entry<dynamic>> entries,
+        CancellationToken cancellationToken)
+    {
+        var existingEntries = await client.GetExistingEntriesLookupByIdAsync(
             entries.Select(e => e.GetId()!), cancellationToken);
 
-        // First, create or update all entries without publishing
-        await ExecuteAsync(
+        await ExecuteEntryActionsAsync(
             entries,
-            entryAction: async (entry, ct) =>
+            async (entry, ct) =>
             {
-                var version = existingEntriesLookup.TryGetValue(entry.GetId()!, out var existing)
+                var version = existingEntries.TryGetValue(entry.GetId()!, out var existing)
                     ? existing.GetVersion()
                     : entry.GetVersion();
 
                 await entryOperationService.CreateOrUpdateEntryAsync(entry, version, ct);
             },
             cancellationToken);
-
-        // Then, if publish is requested, bulk publish all entries that can be published
-        if (publish)
-        {
-            var unpublishedReferencedEntriesLookup = await client.GetUnpublishedOrMissingReferencedEntriesIdsLookup(
-                entries, cancellationToken);
-            
-            var entriesToPublish = entries.Where(entry =>
-            {
-                // all referenced entries are published
-                var allReferencedEntriesArePublished = unpublishedReferencedEntriesLookup.TryGetValue(entry.GetId()!, out var unpublishedReferencedEntries)
-                    && unpublishedReferencedEntries.Count == 0;
-                
-                return allReferencedEntriesArePublished && !entry.IsArchived();
-            })
-            .ToList();
-
-            await entryBulkOperationService.PublishEntriesAsync(entriesToPublish, cancellationToken);
-        }
     }
 
-    public async Task PublishEntriesAsync(IReadOnlyList<Entry<dynamic>> entries, CancellationToken cancellationToken = default)
+    private async Task PublishEntriesWithValidReferencesAsync(
+        IReadOnlyList<Entry<dynamic>> entries,
+        CancellationToken cancellationToken)
     {
-        var entriesToPublish = entries
-            .Where(e => !e.IsPublished() && !e.IsArchived())
-            .ToList();
-        
-        await entryBulkOperationService.PublishEntriesAsync(entriesToPublish, cancellationToken);
+        var unpublishedRefs = await client
+            .GetUnpublishedOrMissingReferencedEntriesIdsLookup(entries, cancellationToken);
+
+        var entriesToPublish = GetEntriesToPublish(entries, unpublishedRefs);
+        await PublishEntriesAsync(entriesToPublish, cancellationToken);
     }
 
-    public async Task UnpublishEntriesAsync(IReadOnlyList<Entry<dynamic>> entries, CancellationToken cancellationToken = default)
+    private static List<Entry<dynamic>> GetEntriesToPublish(
+        IEnumerable<Entry<dynamic>> entries,
+        Dictionary<string, HashSet<string>> unpublishedReferencedEntriesLookup)
     {
-        var entriesToUnpublish = entries
-            .Where(e => e.IsPublished())
+        return entries
+            .Where(entry =>
+                unpublishedReferencedEntriesLookup.TryGetValue(entry.GetId()!, out var unpublished)
+                && unpublished.Count == 0
+                && !entry.IsArchived())
             .ToList();
-        
-        await entryBulkOperationService.UnpublishEntriesAsync(entriesToUnpublish, cancellationToken);
     }
 
-    public async Task DeleteEntriesAsync(IReadOnlyList<Entry<dynamic>> entries, CancellationToken cancellationToken = default)
+    public async Task PublishEntriesAsync(
+        IReadOnlyList<Entry<dynamic>> entries,
+        CancellationToken cancellationToken = default)
     {
-        await UnpublishEntriesAsync(
+        var toPublish = entries.Where(e => !e.IsPublished() && !e.IsArchived()).ToList();
+        await entryBulkOperationService.PublishEntriesAsync(toPublish, cancellationToken);
+    }
+
+    public async Task UnpublishEntriesAsync(
+        IReadOnlyList<Entry<dynamic>> entries,
+        CancellationToken cancellationToken = default)
+    {
+        var toUnpublish = entries.Where(e => e.IsPublished()).ToList();
+        await entryBulkOperationService.UnpublishEntriesAsync(toUnpublish, cancellationToken);
+    }
+
+    public async Task DeleteEntriesAsync(
+        IReadOnlyList<Entry<dynamic>> entries,
+        CancellationToken cancellationToken = default)
+    {
+        await UnpublishEntriesAsync(entries, cancellationToken);
+
+        await ExecuteEntryActionsAsync(
             entries,
-            cancellationToken);
-        
-        await ExecuteAsync(
-            entries,
-            entryAction: (entry, ct) => entryOperationService.DeleteEntryAsync(entry, ct),
-            cancellationToken);
+            (entry, ct) => entryOperationService.DeleteEntryAsync(entry, ct), cancellationToken);
     }
 
-    private static async Task ExecuteAsync(
+    private static async Task ExecuteEntryActionsAsync(
         IReadOnlyList<Entry<dynamic>> entries,
         Func<Entry<dynamic>, CancellationToken, Task> entryAction,
         CancellationToken cancellationToken = default)
@@ -167,7 +165,7 @@ public class ContentfulService(
             }
             catch
             {
-                // will be tracked by operation tracker
+                // Errors are silently ignored, assumed to be tracked externally
             }
         });
 

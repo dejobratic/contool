@@ -11,16 +11,14 @@ public class ContentfulEntryBulkOperationServiceProgressTrackingDecoratorTests
 {
     private readonly ContentfulEntryBulkOperationServiceProgressTrackingDecorator _sut;
     
-    private readonly Mock<IContentfulEntryBulkOperationService> _innerMock = new Mock<IContentfulEntryBulkOperationService>();
-    private readonly Mock<IOperationTracker> _operationTrackerMock = new Mock<IOperationTracker>();
-    private readonly Mock<IProgressReporter> _progressReporterMock = new Mock<IProgressReporter>();
+    private readonly Mock<IContentfulEntryBulkOperationService> _innerMock = new();
+    private readonly Mock<IOperationTracker> _operationTrackerMock = new();
 
     public ContentfulEntryBulkOperationServiceProgressTrackingDecoratorTests()
     {
         _sut = new ContentfulEntryBulkOperationServiceProgressTrackingDecorator(
             _innerMock.Object, 
-            _operationTrackerMock.Object, 
-            _progressReporterMock.Object);
+            _operationTrackerMock.Object);
     }
 
     [Fact]
@@ -47,7 +45,6 @@ public class ContentfulEntryBulkOperationServiceProgressTrackingDecoratorTests
 
         // Assert
         _innerMock.Verify(x => x.PublishEntriesAsync(entries, It.IsAny<CancellationToken>()), Times.Once);
-        _progressReporterMock.Verify(x => x.Increment(), Times.Exactly(expectedResults.Count));
         _operationTrackerMock.Verify(x => x.IncrementErrorCount(It.IsAny<Operation>(), It.IsAny<string>()), Times.Never);
         Assert.Equal(expectedResults, actual);
     }
@@ -76,7 +73,6 @@ public class ContentfulEntryBulkOperationServiceProgressTrackingDecoratorTests
 
         // Assert
         _innerMock.Verify(x => x.UnpublishEntriesAsync(entries, It.IsAny<CancellationToken>()), Times.Once);
-        _progressReporterMock.Verify(x => x.Increment(), Times.Exactly(expectedResults.Count));
         _operationTrackerMock.Verify(x => x.IncrementErrorCount(It.IsAny<Operation>(), It.IsAny<string>()), Times.Never);
         Assert.Equal(expectedResults, actual);
     }
@@ -106,7 +102,6 @@ public class ContentfulEntryBulkOperationServiceProgressTrackingDecoratorTests
 
         // Assert
         _innerMock.Verify(x => x.PublishEntriesAsync(entries, It.IsAny<CancellationToken>()), Times.Once);
-        _progressReporterMock.Verify(x => x.Increment(), Times.Exactly(expectedResults.Count));
         _operationTrackerMock.Verify(x => x.IncrementErrorCount(Operation.Publish, "entry2"), Times.Once);
         Assert.Equal(expectedResults, actual);
     }
@@ -136,7 +131,6 @@ public class ContentfulEntryBulkOperationServiceProgressTrackingDecoratorTests
 
         // Assert
         _innerMock.Verify(x => x.UnpublishEntriesAsync(entries, It.IsAny<CancellationToken>()), Times.Once);
-        _progressReporterMock.Verify(x => x.Increment(), Times.Exactly(expectedResults.Count));
         _operationTrackerMock.Verify(x => x.IncrementErrorCount(Operation.Unpublish, "entry2"), Times.Once);
         Assert.Equal(expectedResults, actual);
     }
@@ -156,7 +150,6 @@ public class ContentfulEntryBulkOperationServiceProgressTrackingDecoratorTests
 
         // Assert
         _innerMock.Verify(x => x.PublishEntriesAsync(entries, It.IsAny<CancellationToken>()), Times.Once);
-        _progressReporterMock.Verify(x => x.Increment(), Times.Never);
         _operationTrackerMock.Verify(x => x.IncrementErrorCount(It.IsAny<Operation>(), It.IsAny<string>()), Times.Never);
         Assert.Equal(expectedResults, actual);
     }
@@ -176,7 +169,6 @@ public class ContentfulEntryBulkOperationServiceProgressTrackingDecoratorTests
 
         // Assert
         _innerMock.Verify(x => x.UnpublishEntriesAsync(entries, It.IsAny<CancellationToken>()), Times.Once);
-        _progressReporterMock.Verify(x => x.Increment(), Times.Never);
         _operationTrackerMock.Verify(x => x.IncrementErrorCount(It.IsAny<Operation>(), It.IsAny<string>()), Times.Never);
         Assert.Equal(expectedResults, actual);
     }

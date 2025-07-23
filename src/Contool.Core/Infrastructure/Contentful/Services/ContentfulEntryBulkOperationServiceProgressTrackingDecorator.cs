@@ -6,8 +6,7 @@ namespace Contool.Core.Infrastructure.Contentful.Services;
 
 public class ContentfulEntryBulkOperationServiceProgressTrackingDecorator(
     IContentfulEntryBulkOperationService inner,
-    IOperationTracker operationTracker,
-    IProgressReporter progressReporter) : IContentfulEntryBulkOperationService
+    IOperationTracker operationTracker) : IContentfulEntryBulkOperationService
 {
     public async Task<IReadOnlyList<OperationResult>> PublishEntriesAsync(
         IReadOnlyList<Entry<dynamic>> entries,
@@ -16,10 +15,7 @@ public class ContentfulEntryBulkOperationServiceProgressTrackingDecorator(
         var results = await inner.PublishEntriesAsync(entries, cancellationToken);
         
         foreach (var result in results)
-        {
-            progressReporter.Increment();
             TrackOperation(result);
-        }
         
         return results;
     }
@@ -29,12 +25,9 @@ public class ContentfulEntryBulkOperationServiceProgressTrackingDecorator(
         CancellationToken cancellationToken = default)
     {
         var results = await inner.UnpublishEntriesAsync(entries, cancellationToken);
-        
+     
         foreach (var result in results)
-        {
-            progressReporter.Increment();
             TrackOperation(result);
-        }
         
         return results;
     }

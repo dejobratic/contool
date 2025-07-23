@@ -1,6 +1,5 @@
 ﻿using Contool.Console.Infrastructure.UI;
 using Contool.Console.Infrastructure.UI.Services;
-using Contool.Console.Infrastructure.Utils;
 using Contool.Console.Infrastructure.Utils.Models;
 using Contool.Core.Infrastructure.Contentful.Services;
 using Contool.Core.Infrastructure.Utils.Models;
@@ -18,29 +17,31 @@ public abstract class LoggedInCommandBase<TSettings>(
 {
     protected override async Task<int> ExecuteCommandAsync(CommandContext context, TSettings settings)
     {
-        if (await IsNotLoggedInAsync(settings))
+        if (await IsLoginMissingAsync(settings))
         {
-            AnsiConsole.MarkupLine(
-                $"[{Styles.Alert.ToMarkup()}]Please log in before running this command. " +
-                $"Run '[{Styles.Highlight.ToMarkup()}]contool login[/]' and follow the instructions.[/]");
-
-            return CommandResult.Success; // Not an error, just needs login
+            ShowLoginRequiredMessage();
+            return CommandResult.Success;
         }
 
         UpdateRuntimeContext(settings);
 
-        if (runtimeContext.IsDryRun)
+        if (ShouldRequireConfirmation(settings))
         {
-            AnsiConsole.MarkupLine(
-                $"[{Styles.Alert.ToMarkup()}]DRY RUN MODE[/] - " +
-                $"[{Styles.Normal.ToMarkup()}] Use [{Styles.Highlight.ToMarkup()}]--apply|-a[/] to execute operations.[/]",
-                Styles.Normal);
+            if (runtimeContext.IsDryRun)
+            {
+                ShowDryRunMessage();
+            }
+            else if (!TryConfirmExecution(context))
+            {
+                ShowExecutionCancelledMessage();
+                return CommandResult.Success;
+            }
         }
 
         return await ExecuteLoggedInCommandAsync(context, settings);
     }
 
-    private async Task<bool> IsNotLoggedInAsync(TSettings settings)
+    private async Task<bool> IsLoginMissingAsync(TSettings settings)
     {
         var contentfulService = contentfulServiceBuilder
             .WithSpaceId(settings.SpaceId)
@@ -55,6 +56,49 @@ public abstract class LoggedInCommandBase<TSettings>(
         var isDryRun = settings is WriteSettingsBase { Apply: false };
         runtimeContext.SetDryRun(isDryRun);
     }
+
+    private static bool ShouldRequireConfirmation(TSettings settings)
+        => settings is WriteSettingsBase;
+
+    private static void ShowLoginRequiredMessage()
+    {
+        AnsiConsole.MarkupLine(
+            $"[{Styles.Alert.ToMarkup()}]Please log in before running this command. " +
+            $"Run '[{Styles.Highlight.ToMarkup()}]contool login[/]' and follow the instructions.[/]");
+    }
+
+    private static void ShowDryRunMessage()
+    {
+        AnsiConsole.MarkupLine(
+            $"[{Styles.Alert.ToMarkup()}]DRY RUN MODE[/] - " +
+            $"[{Styles.Normal.ToMarkup()}] Use [{Styles.Highlight.ToMarkup()}]--apply|-a[/] to execute operations.[/]");
+    }
+
+    private static void ShowExecutionCancelledMessage()
+        => AnsiConsole.MarkupLine($"[{Styles.Alert.ToMarkup()}]Command execution cancelled.[/]");
+
+    private static bool TryConfirmExecution(CommandContext context)
+    {
+        var commandName = GetCommandName(context);
+        var expectedCode = GenerateRandomTwoDigitCode();
+
+        AnsiConsole.MarkupLine(
+            $"[{Styles.Alert.ToMarkup()}]SECURITY CONFIRMATION[/] - " +
+            $"[{Styles.Normal.ToMarkup()}]About to execute: [{Styles.Highlight.ToMarkup()}]{commandName}[/][/]");
+
+        var prompt = new TextPrompt<string>(
+                $"[{Styles.Normal.ToMarkup()}]Enter [{Styles.Highlight.ToMarkup()}]{expectedCode}[/] to continue:[/]")
+            .PromptStyle(Styles.Highlight);
+
+        var userInput = AnsiConsole.Prompt(prompt);
+        return userInput == expectedCode;
+    }
+
+    private static string GetCommandName(CommandContext context)
+        => string.Join(' ', context.Arguments.TakeWhile(arg => !arg.StartsWith('-')));
+
+    private static string GenerateRandomTwoDigitCode()
+        => Random.Shared.Next(10, 100).ToString();
 
     protected abstract Task<int> ExecuteLoggedInCommandAsync(CommandContext context, TSettings settings);
 }
