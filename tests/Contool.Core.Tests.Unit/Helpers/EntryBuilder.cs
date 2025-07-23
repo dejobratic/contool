@@ -10,6 +10,7 @@ public class EntryBuilder
     private string? _contentTypeId;
     private Dictionary<string, object> _fields = [];
     private DateTime? _archivedAt;
+    private int? _version;
 
     public EntryBuilder WithId(string id)
     {
@@ -54,6 +55,12 @@ public class EntryBuilder
         return this;
     }
 
+    public EntryBuilder WithVersion(int version)
+    {
+        _version = version;
+        return this;
+    }
+
     public Entry<dynamic> Build()
     {
         var entry = new Entry<dynamic>
@@ -62,7 +69,8 @@ public class EntryBuilder
             {
                 Id = _id,
                 Type = "Entry",
-                ArchivedAt = _archivedAt
+                ArchivedAt = _archivedAt,
+                Version = _version
             },
             Fields = JObject.FromObject(_fields)
         };

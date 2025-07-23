@@ -21,7 +21,8 @@ public class BulkActionRequestBuilder
 
     public BulkActionRequestBuilder WithEntry(string id, int version = 1)
     {
-        _items.Add(new PublishBulkActionItem { Id = id, Version = version, LinkType = "Entry" });
+        var entry = EntryBuilder.Create().WithId(id).WithVersion(version).Build();
+        _items.Add(new PublishBulkActionItem(entry));
         return this;
     }
 
@@ -45,13 +46,21 @@ public class BulkActionRequestBuilder
     public static BulkActionRequest CreatePublishRequest(params string[] entryIds) =>
         new BulkActionRequestBuilder()
             .WithAction(BulkActionType.Publish)
-            .WithItems(entryIds.Select(id => new PublishBulkActionItem { Id = id, Version = 1, LinkType = "Entry" }))
+            .WithItems(entryIds.Select(id => 
+            {
+                var entry = EntryBuilder.Create().WithId(id).WithVersion(1).Build();
+                return new PublishBulkActionItem(entry);
+            }))
             .Build();
 
     public static BulkActionRequest CreateUnpublishRequest(params string[] entryIds) =>
         new BulkActionRequestBuilder()
             .WithAction(BulkActionType.Unpublish)
-            .WithItems(entryIds.Select(id => new UnpublishBulkActionItem { Id = id, LinkType = "Entry" }))
+            .WithItems(entryIds.Select(id => 
+            {
+                var entry = EntryBuilder.Create().WithId(id).Build();
+                return new UnpublishBulkActionItem(entry);
+            }))
             .Build();
 
 }

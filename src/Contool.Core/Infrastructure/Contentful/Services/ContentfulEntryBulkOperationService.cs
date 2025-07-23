@@ -1,5 +1,4 @@
 using Contentful.Core.Models;
-using Contool.Core.Infrastructure.Contentful.Extensions;
 using Contool.Core.Infrastructure.Contentful.Models;
 using Contool.Core.Infrastructure.Utils.Models;
 
@@ -12,12 +11,9 @@ public class ContentfulEntryBulkOperationService(
         IReadOnlyList<Entry<dynamic>> entries,
         CancellationToken cancellationToken = default)
     {
-        var items = entries.Select(entry => new PublishBulkActionItem
-        {
-            Id = entry.GetId()!,
-            Version = entry.GetVersionForPublishing(),
-        })
-        .ToList();
+        var items = entries
+            .Select(entry => new PublishBulkActionItem(entry))
+            .ToList();
         
         return ExecuteAsync(Operation.Publish, items, bulkClient.PublishAsync, cancellationToken);
     }
@@ -26,11 +22,9 @@ public class ContentfulEntryBulkOperationService(
         IReadOnlyList<Entry<dynamic>> entries,
         CancellationToken cancellationToken = default)
     {
-        var items = entries.Select(entry => new UnpublishBulkActionItem
-        {
-            Id = entry.GetId()!,
-        })
-        .ToList();
+        var items = entries
+            .Select(entry => new UnpublishBulkActionItem(entry))
+            .ToList();
         
         return ExecuteAsync(Operation.Unpublish, items, bulkClient.UnpublishAsync, cancellationToken);
     }

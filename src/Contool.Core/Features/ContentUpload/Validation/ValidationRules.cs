@@ -2,6 +2,7 @@ using Contentful.Core.Models;
 using Contentful.Core.Models.Management;
 using Contool.Core.Infrastructure.Contentful.Extensions;
 using Contool.Core.Infrastructure.Contentful.Models;
+using Contool.Core.Infrastructure.Extensions;
 using Contool.Core.Infrastructure.Utils.Models;
 using Contool.Core.Infrastructure.Validation;
 using Newtonsoft.Json.Linq;
@@ -139,7 +140,7 @@ public static class ValidationRules
             
             if (isValid)
                 continue;
-
+            
             var error = new ValidationError(
                 entryIndex,
                 fieldId,
