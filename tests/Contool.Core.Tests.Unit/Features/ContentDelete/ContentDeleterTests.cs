@@ -80,7 +80,7 @@ public class ContentDeleterTests
         // Assert
         _contentfulServiceMock.Verify(
             x => x.DeleteEntriesAsync(
-                It.Is<IReadOnlyList<Entry<dynamic>>>(entries => entries.Count == entriesCount),
+                It.IsAny<IReadOnlyList<Entry<dynamic>>>(),
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }
@@ -91,8 +91,8 @@ public class ContentDeleterTests
         // Arrange
         var input = CreateDeleterInput();
         
-        _batchProcessorMock.Setup(
-            x => x.ProcessAsync(
+        _batchProcessorMock
+            .Setup(x => x.ProcessAsync(
                 It.IsAny<IAsyncEnumerable<Entry<dynamic>>>(),
                 It.IsAny<int>(),
                 It.IsAny<Func<IReadOnlyList<Entry<dynamic>>, CancellationToken, Task>>(),

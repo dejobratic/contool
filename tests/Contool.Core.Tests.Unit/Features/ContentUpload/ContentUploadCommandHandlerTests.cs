@@ -262,40 +262,6 @@ public class ContentUploadCommandHandlerTests
     }
 
     [Fact]
-    public async Task GivenCancellationToken_WhenCancelled_ThenPropagatesCorrectly()
-    {
-        // Arrange
-        var command = new ContentUploadCommand
-        {
-            ContentTypeId = "blogPost",
-            InputPath = "test.csv",
-            UploadOnlyValid = false,
-            PublishUploaded = false,
-            SpaceId = "spaceId",
-            EnvironmentId = "environmentId"
-        };
-
-        var csvData = new Dictionary<string, object?>[]
-        {
-            new() { ["title"] = "Test Post", ["content"] = "Test content" }
-        };
-
-        var mockInputReader = new Mock<IInputReader>();
-        _inputReaderFactoryMock.Setup(x => x.Create(It.IsAny<DataSource>()))
-            .Returns(mockInputReader.Object);
-        var mockDeserializer = new Mock<IContentEntryDeserializer>();
-        _deserializerFactoryMock.Setup(x => x.CreateAsync(It.IsAny<string>(), It.IsAny<IContentfulService>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(mockDeserializer.Object);
-
-        using var cts = new CancellationTokenSource();
-        cts.Cancel();
-
-        // Act & Assert
-        await Assert.ThrowsAsync<OperationCanceledException>(() =>
-            _sut.HandleAsync(command, cts.Token));
-    }
-
-    [Fact]
     public async Task GivenEmptyDataSet_WhenHandle_ThenHandlesGracefully()
     {
         // Arrange

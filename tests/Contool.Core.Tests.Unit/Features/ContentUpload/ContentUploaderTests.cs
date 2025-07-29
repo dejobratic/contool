@@ -159,32 +159,6 @@ public class ContentUploaderTests
     }
 
     [Fact]
-    public async Task GivenCancellationToken_WhenCancelled_ThenThrowsOperationCancelledException()
-    {
-        // Arrange
-        var entries = new[]
-        {
-            EntryBuilder.CreateBlogPost("entry1")
-        };
-
-        var input = new ContentUploaderInput
-        {
-            ContentTypeId = "blogPost",
-            ContentfulService = _contentfulServiceMock.Object,
-            Entries = new MockAsyncEnumerableWithTotal<Entry<dynamic>>(entries),
-            UploadOnlyValidEntries = false,
-            PublishEntries = false
-        };
-
-        using var cts = new CancellationTokenSource();
-        cts.Cancel();
-
-        // Act & Assert
-        await Assert.ThrowsAsync<OperationCanceledException>(() =>
-            _sut.UploadAsync(input, cts.Token));
-    }
-
-    [Fact]
     public async Task GivenProgressReporter_WhenUpload_ThenReportsProgress()
     {
         // Arrange

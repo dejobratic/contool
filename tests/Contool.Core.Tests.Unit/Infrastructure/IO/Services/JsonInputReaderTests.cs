@@ -44,12 +44,12 @@ public class JsonInputReaderTests
             var firstRecord = records[0] as IDictionary<string, object>;
             Assert.NotNull(firstRecord);
             Assert.Equal("John", firstRecord["name"]);
-            Assert.Equal(30L, firstRecord["age"]);
+            Assert.Equal(30.0, firstRecord["age"]);
             
             var secondRecord = records[1] as IDictionary<string, object>;
             Assert.NotNull(secondRecord);
             Assert.Equal("Jane", secondRecord["name"]);
-            Assert.Equal(25L, secondRecord["age"]);
+            Assert.Equal(25.0, secondRecord["age"]);
         }
         finally
         {

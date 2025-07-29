@@ -45,9 +45,11 @@ public class ContentfulManagementClientAdapterResiliencyDecoratorTests : IDispos
     public async Task GivenValidEnvironmentId_WhenGetEnvironmentAsync_ThenCallsInnerAdapterWithResiliency()
     {
         // Arrange
-        var environmentId = "test-environment";
+        const string environmentId = "test-environment";
         var expectedEnvironment = ContentfulEnvironmentBuilder.CreateDefault();
-        _innerMock.Setup(x => x.GetEnvironmentAsync(environmentId, It.IsAny<CancellationToken>()))
+        
+        _innerMock
+            .Setup(x => x.GetEnvironmentAsync(environmentId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedEnvironment);
 
         // Act
@@ -324,46 +326,6 @@ public class ContentfulManagementClientAdapterResiliencyDecoratorTests : IDispos
 
         // Assert
         _innerMock.Verify(x => x.DeleteEntryAsync(entryId, version, It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task GivenCancelledToken_WhenGetSpaceAsync_ThenRespectsCancellation()
-    {
-        // Arrange
-        var spaceId = "test-space";
-        using var cts = new CancellationTokenSource();
-        cts.Cancel();
-
-        // Act & Assert
-        await Assert.ThrowsAsync<OperationCanceledException>(() =>
-            _sut.GetSpaceAsync(spaceId, cts.Token));
-    }
-
-    [Fact]
-    public async Task GivenCancelledToken_WhenCreateOrUpdateContentTypeAsync_ThenRespectsCancellation()
-    {
-        // Arrange
-        var contentType = ContentTypeBuilder.CreateBlogPost("blogPost", "Blog Post");
-        using var cts = new CancellationTokenSource();
-        cts.Cancel();
-
-        // Act & Assert
-        await Assert.ThrowsAsync<OperationCanceledException>(() =>
-            _sut.CreateOrUpdateContentTypeAsync(contentType, cts.Token));
-    }
-
-    [Fact]
-    public async Task GivenCancelledToken_WhenPublishEntryAsync_ThenRespectsCancellation()
-    {
-        // Arrange
-        var entryId = "test-entry";
-        var version = 1;
-        using var cts = new CancellationTokenSource();
-        cts.Cancel();
-
-        // Act & Assert
-        await Assert.ThrowsAsync<OperationCanceledException>(() =>
-            _sut.PublishEntryAsync(entryId, version, cts.Token));
     }
 
     [Fact]

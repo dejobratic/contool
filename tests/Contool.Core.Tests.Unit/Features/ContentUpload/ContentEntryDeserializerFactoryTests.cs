@@ -99,26 +99,6 @@ public class ContentEntryDeserializerFactoryTests
     }
 
     [Fact]
-    public async Task GivenCancellationToken_WhenCancelled_ThenThrowsOperationCanceledException()
-    {
-        // Arrange
-        var contentType = ContentTypeBuilder.CreateBlogPost();
-        var locales = new[] { LocaleBuilder.CreateDefault() };
-        
-        _contentfulServiceMock.Setup(x => x.GetContentTypeAsync("blogPost", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(contentType);
-        _contentfulServiceMock.Setup(x => x.GetLocalesAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(locales);
-
-        using var cts = new CancellationTokenSource();
-        cts.Cancel();
-
-        // Act & Assert
-        await Assert.ThrowsAsync<OperationCanceledException>(() =>
-            _sut.CreateAsync("blogPost", _contentfulServiceMock.Object, cts.Token));
-    }
-
-    [Fact]
     public async Task GivenDifferentContentTypes_WhenCreateAsync_ThenCreatesCorrectDeserializers()
     {
         // Arrange

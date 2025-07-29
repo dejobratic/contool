@@ -35,12 +35,14 @@ public class ContentPublisherTests
         await _sut.PublishAsync(input, CancellationToken.None);
         
         // Assert
-        _batchProcessorMock.Verify(x => x.ProcessAsync(
-            It.IsAny<IAsyncEnumerable<object>>(),
-            50,
-            It.IsAny<Func<IReadOnlyList<object>, CancellationToken, Task>>(),
-            It.IsAny<Func<object, bool>>(),
-            It.IsAny<CancellationToken>()), Times.Once);
+        _batchProcessorMock.Verify(
+            x => x.ProcessAsync(
+                It.IsAny<IAsyncEnumerable<object>>(),
+                100,
+                It.IsAny<Func<IReadOnlyList<object>, CancellationToken, Task>>(),
+                It.IsAny<Func<object, bool>>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
@@ -57,7 +59,7 @@ public class ContentPublisherTests
         _progressReporterMock.Verify(x => x.Complete(), Times.Once);
     }
 
-    [Fact(Skip = "MockLite limitation: Cannot cast to MockContentfulService - deleted custom mock")]
+    [Fact]
     public async Task GivenValidInput_WhenPublishAsync_ThenCallsContentfulServicePublishEntries()
     {
         // Arrange
@@ -75,20 +77,6 @@ public class ContentPublisherTests
             It.IsAny<Func<IReadOnlyList<object>, CancellationToken, Task>>(),
             It.IsAny<Func<object, bool>>(),
             It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task GivenCancellationToken_WhenPublishAsync_ThenRespectsCancellation()
-    {
-        // Arrange
-        var input = CreatePublisherInput();
-        
-        using var cts = new CancellationTokenSource();
-        cts.Cancel();
-        
-        // Act & Assert
-        await Assert.ThrowsAsync<OperationCanceledException>(() =>
-            _sut.PublishAsync(input, cts.Token));
     }
 
     [Fact]

@@ -9,7 +9,7 @@ public class DataSourceTests
     {
         // Act & Assert
         Assert.Equal("CSV", DataSource.Csv.Name);
-        Assert.Equal("Excel", DataSource.Excel.Name);
+        Assert.Equal("EXCEL", DataSource.Excel.Name);
         Assert.Equal("JSON", DataSource.Json.Name);
     }
 
@@ -32,9 +32,9 @@ public class DataSourceTests
     public void GivenDataSource_WhenCallingToString_ThenReturnsName()
     {
         // Act & Assert
-        Assert.Equal("CSV", DataSource.Csv.ToString());
-        Assert.Equal("Excel", DataSource.Excel.ToString());
-        Assert.Equal("JSON", DataSource.Json.ToString());
+        Assert.Equal("CSV (.csv)", DataSource.Csv.ToString());
+        Assert.Equal("EXCEL (.xlsx)", DataSource.Excel.ToString());
+        Assert.Equal("JSON (.json)", DataSource.Json.ToString());
     }
 
     [Fact]
@@ -59,7 +59,7 @@ public class DataSourceTests
 
     [Theory]
     [InlineData("CSV")]
-    [InlineData("Excel")]
+    [InlineData("EXCEL")]
     [InlineData("JSON")]
     public void GivenDataSourceName_WhenValidating_ThenNamesAreCorrect(string expectedName)
     {
@@ -67,7 +67,7 @@ public class DataSourceTests
         var dataSource = expectedName switch
         {
             "CSV" => DataSource.Csv,
-            "Excel" => DataSource.Excel,
+            "EXCEL" => DataSource.Excel,
             "JSON" => DataSource.Json,
             _ => throw new ArgumentException("Invalid data source name")
         };

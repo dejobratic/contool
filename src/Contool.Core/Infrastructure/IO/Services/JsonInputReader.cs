@@ -14,9 +14,16 @@ public class JsonInputReader : IInputReader
         var rows = ReadRowsAsync(path, cancellationToken);
         var total = GetTotalCount(path);
 
-        return new AsyncEnumerableWithTotal<dynamic>(
+        var result = new AsyncEnumerableWithTotal<dynamic>(
             rows,
             () => total);
+        
+        // Set total immediately instead of waiting for enumeration
+        typeof(AsyncEnumerableWithTotal<dynamic>)
+            .GetProperty("Total")!
+            .SetValue(result, total);
+
+        return result;
     }
 
     private static int GetTotalCount(string path)
@@ -74,8 +81,8 @@ public class JsonInputReader : IInputReader
         return element.ValueKind switch
         {
             JsonValueKind.String => element.GetString(),
-            JsonValueKind.Number => element.TryGetInt64(out var longValue) ? longValue : element.GetDouble(),
-            JsonValueKind.True => true,
+            JsonValueKind.Number => element.GetDouble(), // Always use double for consistency
+            JsonValueKind.True => true,  
             JsonValueKind.False => false,
             JsonValueKind.Null => null,
             JsonValueKind.Array => element.EnumerateArray().Select(GetJsonValue).ToArray(),

@@ -15,11 +15,18 @@ public class CsvInputReader : IInputReader
         CancellationToken cancellationToken)
     {
         var rows = ReadRowsAsync(path, cancellationToken);
-        var total = File.ReadLines(path).Skip(1).Where(l => l.Contains(",Entry,")).Count(); // TODO: quick fix
+        var total = CountDataRows(path);
 
-        return new AsyncEnumerableWithTotal<dynamic>(
+        var result = new AsyncEnumerableWithTotal<dynamic>(
             rows,
             () => total);
+        
+        // Set total immediately instead of waiting for enumeration
+        typeof(AsyncEnumerableWithTotal<dynamic>)
+            .GetProperty("Total")!
+            .SetValue(result, total);
+
+        return result;
     }
 
     private static async IAsyncEnumerable<dynamic> ReadRowsAsync(
@@ -46,5 +53,24 @@ public class CsvInputReader : IInputReader
 
             yield return row;
         }
+    }
+
+    private static int CountDataRows(string path)
+    {
+        using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+        using var reader = new StreamReader(stream);
+        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+        
+        var count = 0;
+        if (csv.Read()) // Skip header
+        {
+            csv.ReadHeader();
+            while (csv.Read())
+            {
+                count++;
+            }
+        }
+        
+        return count;
     }
 }

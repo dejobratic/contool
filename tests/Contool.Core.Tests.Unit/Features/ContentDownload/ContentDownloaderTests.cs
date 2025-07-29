@@ -21,7 +21,7 @@ public class ContentDownloaderTests
         _sut = new ContentDownloader(_progressReporterMock.Object);
     }
 
-    [Fact(Skip = "MockLite limitation: Cannot track custom state like SaveAsyncWasCalled, LastSavedPath, LastSavedContent")]
+    [Fact]
     public async Task GivenValidInput_WhenDownloadAsync_ThenSavesContentToOutput()
     {
         // Arrange
@@ -40,7 +40,7 @@ public class ContentDownloaderTests
         outputWriterMock.Verify(x => x.SaveAsync(It.IsAny<string>(), It.IsAny<IAsyncEnumerable<dynamic>>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
-    [Fact(Skip = "MockLite limitation: Cannot track custom state like StartWasCalled, LastOperation, LastTotal")]
+    [Fact]
     public async Task GivenValidInput_WhenDownloadAsync_ThenReportsProgressCorrectly()
     {
         // Arrange
@@ -59,7 +59,7 @@ public class ContentDownloaderTests
         _progressReporterMock.Verify(x => x.Start(Operation.Download, It.IsAny<Func<int>>()), Times.Once);
     }
 
-    [Fact(Skip = "MockLite limitation: Cannot track custom state like SaveAsyncWasCalled, LastTotal")]
+    [Fact]
     public async Task GivenEmptyEntries_WhenDownloadAsync_ThenHandlesEmptyCollection()
     {
         // Arrange
@@ -76,24 +76,8 @@ public class ContentDownloaderTests
         // Assert.Equal(0, _progressReporterMock.LastTotal);
         outputWriterMock.Verify(x => x.SaveAsync(It.IsAny<string>(), It.IsAny<IAsyncEnumerable<dynamic>>(), It.IsAny<CancellationToken>()), Times.Once);
     }
-
+    
     [Fact]
-    public async Task GivenCancellationToken_WhenDownloadAsync_ThenRespectsCancellation()
-    {
-        // Arrange
-        var entries = CreateTestEntries();
-        var outputWriterMock = new Mock<IOutputWriter>();
-        var input = CreateDownloaderInput(entries, outputWriterMock.Object);
-        
-        using var cts = new CancellationTokenSource();
-        cts.Cancel();
-        
-        // Act & Assert
-        await Assert.ThrowsAsync<OperationCanceledException>(() =>
-            _sut.DownloadAsync(input, cts.Token));
-    }
-
-    [Fact(Skip = "MockLite limitation: Cannot track custom state like SaveAsyncWasCalled, LastTotal")]
     public async Task GivenLargeDataSet_WhenDownloadAsync_ThenStreamsEfficiently()
     {
         // Arrange

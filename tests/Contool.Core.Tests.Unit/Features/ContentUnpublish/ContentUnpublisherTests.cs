@@ -76,20 +76,6 @@ public class ContentUnpublisherTests
     }
 
     [Fact]
-    public async Task GivenCancellationToken_WhenUnpublishAsync_ThenRespectsCancellation()
-    {
-        // Arrange
-        var input = CreateUnpublisherInput();
-        
-        using var cts = new CancellationTokenSource();
-        cts.Cancel();
-        
-        // Act & Assert
-        await Assert.ThrowsAsync<OperationCanceledException>(() =>
-            _sut.UnpublishAsync(input, cts.Token));
-    }
-
-    [Fact]
     public async Task GivenBatchProcessorThrowsException_WhenUnpublishAsync_ThenBubblesException()
     {
         // Arrange

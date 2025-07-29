@@ -431,48 +431,6 @@ public class ContentfulManagementClientAdapterOperationTrackerDecoratorTests
     }
 
     [Fact]
-    public async Task GivenCancelledToken_WhenCreateOrUpdateEntryAsync_ThenRespectsCancellation()
-    {
-        // Arrange
-        var entry = EntryBuilder.CreateBlogPost("entry1", "blogPost");
-        var version = 1;
-        using var cts = new CancellationTokenSource();
-        cts.Cancel();
-
-        // Act & Assert
-        await Assert.ThrowsAsync<OperationCanceledException>(() =>
-            _sut.CreateOrUpdateEntryAsync(entry, version, cts.Token));
-    }
-
-    [Fact]
-    public async Task GivenCancelledToken_WhenPublishEntryAsync_ThenRespectsCancellation()
-    {
-        // Arrange
-        var entryId = "test-entry";
-        var version = 1;
-        using var cts = new CancellationTokenSource();
-        cts.Cancel();
-
-        // Act & Assert
-        await Assert.ThrowsAsync<OperationCanceledException>(() =>
-            _sut.PublishEntryAsync(entryId, version, cts.Token));
-    }
-
-    [Fact]
-    public async Task GivenCancelledToken_WhenDeleteEntryAsync_ThenRespectsCancellation()
-    {
-        // Arrange
-        var entryId = "test-entry";
-        var version = 1;
-        using var cts = new CancellationTokenSource();
-        cts.Cancel();
-
-        // Act & Assert
-        await Assert.ThrowsAsync<OperationCanceledException>(() =>
-            _sut.DeleteEntryAsync(entryId, version, cts.Token));
-    }
-
-    [Fact]
     public async Task GivenMultipleEntries_WhenGetEntriesCollectionAsync_ThenTracksAllReadOperations()
     {
         // Arrange

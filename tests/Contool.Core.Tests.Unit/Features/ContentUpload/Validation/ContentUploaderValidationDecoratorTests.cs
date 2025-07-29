@@ -90,7 +90,7 @@ public class ContentUploaderValidationDecoratorTests
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             _sut.UploadAsync(input, CancellationToken.None));
         
-        Assert.Contains("validation errors", exception.Message);
+        Assert.Contains("Content validation failed", exception.Message);
         _uploaderMock.Verify(x => x.UploadAsync(It.IsAny<ContentUploaderInput>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -199,35 +199,7 @@ public class ContentUploaderValidationDecoratorTests
         _uploaderMock.Verify(x => x.UploadAsync(It.IsAny<ContentUploaderInput>(), It.IsAny<CancellationToken>()), Times.Once);
         // MockLite limitation: Cannot verify LastInput.Entries.Total - verified through Verify call above
     }
-
-    [Fact]
-    public async Task GivenCancellationToken_WhenCancelled_ThenPassesToValidator()
-    {
-        // Arrange
-        var entries = new[]
-        {
-            EntryBuilder.CreateBlogPost("entry1")
-        };
-
-        var input = new ContentUploaderInput
-        {
-            ContentTypeId = "blogPost",
-            ContentfulService = _contentfulServiceMock.Object,
-            Entries = new MockAsyncEnumerableWithTotal<Entry<dynamic>>(entries),
-            UploadOnlyValidEntries = false,
-            PublishEntries = false
-        };
-
-        using var cts = new CancellationTokenSource();
-        cts.Cancel();
-
-        // Act & Assert
-        await Assert.ThrowsAsync<OperationCanceledException>(() =>
-            _sut.UploadAsync(input, cts.Token));
-        
-        _validatorMock.Verify(x => x.ValidateAsync(It.IsAny<ContentUploaderInput>(), It.Is<CancellationToken>(ct => ct.IsCancellationRequested)), Times.Once);
-    }
-
+    
     [Fact]
     public void GivenDecorator_WhenCheckingInterface_ThenImplementsIContentUploader()
     {

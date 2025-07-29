@@ -1,3 +1,4 @@
+using System;
 using Contool.Core.Infrastructure.IO.Models;
 using Contool.Core.Infrastructure.IO.Services;
 using OfficeOpenXml;
@@ -7,6 +8,21 @@ namespace Contool.Core.Tests.Unit.Infrastructure.IO.Services;
 public class ExcelInputReaderTests
 {
     private readonly ExcelInputReader _sut = new();
+
+    static ExcelInputReaderTests()
+    {
+        // Set EPPlus license for testing - non-commercial use
+        try
+        {
+            // For EPPlus 8.x and later, use the License property
+            // TODO: Fix EPPlus license configuration
+            // ExcelPackage.License.NonCommercial = true;
+        }
+        catch
+        {
+            // If setting license fails, the tests will fail with license exception - that's expected
+        }
+    }
 
     [Fact]
     public void GivenExcelInputReader_WhenInstantiated_ThenDataSourceIsCorrect()
@@ -273,19 +289,13 @@ public class ExcelInputReaderTests
         });
         
         using var cts = new CancellationTokenSource();
-        cts.Cancel();
+        await cts.CancelAsync();
 
         try
         {
             // Act & Assert
             var result = _sut.ReadAsync(filePath, cts.Token);
-            await Assert.ThrowsAsync<OperationCanceledException>(async () =>
-            {
-                await foreach (var record in result)
-                {
-                    // This should throw immediately due to cancellation
-                }
-            });
+            await Assert.ThrowsAsync<OperationCanceledException>(async () => await result.ToListAsync());
         }
         finally
         {
@@ -432,6 +442,7 @@ public class ExcelInputReaderTests
 
     private static MemoryStream CreateExcelFile(Action<ExcelWorksheet> populateWorksheet)
     {
+        SetLicense();
         using var package = new ExcelPackage();
         var worksheet = package.Workbook.Worksheets.Add("Sheet1");
         populateWorksheet(worksheet);
@@ -444,6 +455,7 @@ public class ExcelInputReaderTests
 
     private static string CreateExcelFileAsPath(Action<ExcelWorksheet> populateWorksheet)
     {
+        SetLicense();
         using var package = new ExcelPackage();
         var worksheet = package.Workbook.Worksheets.Add("Sheet1");
         populateWorksheet(worksheet);
@@ -454,6 +466,19 @@ public class ExcelInputReaderTests
         
         package.SaveAs(new FileInfo(excelPath));
         return excelPath;
+    }
+
+    private static void SetLicense()
+    {
+        try
+        {
+            // TODO: Fix EPPlus license configuration
+            // ExcelPackage.License.NonCommercial = true;
+        }
+        catch
+        {
+            // Ignore license setting failures
+        }
     }
 
     private async Task<T> ExecuteWithTempFile<T>(Action<ExcelWorksheet> populateWorksheet, Func<string, Task<T>> testAction)
