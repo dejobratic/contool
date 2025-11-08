@@ -24,6 +24,6 @@ public class ContentEntrySerializerFactory : IContentEntrySerializerFactory
     {
         var locales = await contentfulService.GetLocalesAsync(cancellationToken);
 
-        return new ContentLocales(locales);
+        return new ContentLocales(locales.ToList());
     }
 }

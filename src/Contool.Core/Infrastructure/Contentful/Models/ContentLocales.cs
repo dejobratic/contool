@@ -3,7 +3,7 @@ using System.Collections;
 
 namespace Contool.Core.Infrastructure.Contentful.Models;
 
-public class ContentLocales(IEnumerable<Locale> locales) : IEnumerable<string>
+public class ContentLocales(IReadOnlyList<Locale> locales) : IEnumerable<string>
 {
     private readonly List<string> _locales = [.. locales
         .Select(l => l.Code)

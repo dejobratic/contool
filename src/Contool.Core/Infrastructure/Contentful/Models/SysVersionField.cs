@@ -9,7 +9,7 @@ internal class SysVersionField() : SysField("sys.Version")
 
     protected override void Apply(SystemProperties sys, object? value)
     {
-        _ = int.TryParse(value?.ToString(), out int v);
+        _ = int.TryParse(value?.ToString(), out var v);
         sys.Version = v;
     }
 }
